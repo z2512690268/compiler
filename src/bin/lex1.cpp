@@ -9,8 +9,38 @@
 #include <algorithm>
 #include "defs.h"
 
-#define MAX_NODE 10000
-int flag[MAX_NODE] = {0};
+#define TRANSFER_STAR -1
+#define TRANSFER_OR -2
+#define TRANSFER_LBRACKET -3
+#define TRANSFER_RBRACKET -4
+#define TRANSFER_CONCAT -5
+#define TRANSFER_DOT -6
+
+char Transfer(char ch) {
+    switch (ch)
+    {
+        case '*':   return TRANSFER_STAR;
+        case '|':   return TRANSFER_OR;
+        case '(':   return TRANSFER_LBRACKET;
+        case ')':   return TRANSFER_RBRACKET;
+        case '-':   return TRANSFER_CONCAT;
+        case '.':   return TRANSFER_DOT;
+        default:    return ch;
+    }
+}
+
+int Transback(char ch) {
+    switch (ch)
+    {
+        case TRANSFER_STAR:     return '*';
+        case TRANSFER_OR:       return '|';
+        case TRANSFER_LBRACKET: return '(';
+        case TRANSFER_RBRACKET: return ')';
+        case TRANSFER_CONCAT:   return '-';
+        case TRANSFER_DOT:   return '.';
+        default:                return ch;
+    }
+}
 
 struct Node {
     int ch;   // 当前节点包含的数据
@@ -37,7 +67,7 @@ struct Node {
             next.push_back(i);
         }
     }
-    void Print(int flag[]) {
+    void Print(std::unordered_map<int, int>& flag) {
         flag[id] = 1;
         std::cout << "id: " << id << " ch: " << ch << " token: " << token << std::endl;
         for(int i = 0; i < next.size(); i++) {
@@ -48,7 +78,7 @@ struct Node {
                 next[i]->Print(flag);
         }
     }
-    void GenerateMap(int flag[], std::unordered_map<int, Node*>& id2node) {
+    void GenerateMap(std::unordered_map<int, int>& flag, std::unordered_map<int, Node*>& id2node) {
         id2node[id] = this;
         flag[id] = 1;
         for(int i = 0; i < next.size(); i++) {
@@ -71,7 +101,7 @@ struct AutoMachine {
         return count;
     }
     void GenerateMap() {
-        memset(flag, 0, sizeof(flag));
+        std::unordered_map<int, int> flag;
         id2node.clear();
         head->GenerateMap(flag, id2node);
     }
@@ -101,6 +131,28 @@ std::string Vector2State(std::vector<Node*>& vec) {
     return str;
 }
 
+std::string Unprint2Trans(std::string in_str) {
+    std::string str;
+    for(int i = 0; i < in_str.size(); i++) {
+        switch (in_str[i])
+        {
+            case '\n':
+                str += "\\n";
+                break;
+            case '\t':
+                str += "\\t";
+                break;  
+            case '\r':
+                str += "\\r";
+                break;
+            default:
+                str += in_str[i];
+                break;  
+        }
+    }
+    return str;
+}
+
 void State2Vector(std::string str, std::vector<Node*>& vec, AutoMachine& NFA) {
     vec.clear();
     int pos = 0;
@@ -114,7 +166,7 @@ void State2Vector(std::string str, std::vector<Node*>& vec, AutoMachine& NFA) {
         pos = next_pos+1;
     }
 }
-#include <unistd.h> 
+// #include <unistd.h> 
 int main(int argc, char* argv[])
 {
     if (argc < 4) {
@@ -127,6 +179,14 @@ int main(int argc, char* argv[])
     std::ifstream fin(tmp + argv[1]);
     std::ifstream input(tmp + argv[2]);
     std::ofstream output(tmp + argv[3]);
+    if(!fin.is_open()) {
+        std::cout << "rule file open failed" << std::endl;
+        return 1;
+    }
+    if(!input.is_open()) {
+        std::cout << "input file open failed" << std::endl;
+        return 1;
+    }
     // std::ifstream fin("rule.txt");
     // std::ifstream input(argv[2]);
     // std::ofstream output(argv[3]);
@@ -156,7 +216,123 @@ int main(int argc, char* argv[])
         std::string token = buffer.substr(0, pos);
         token_list.push_back(token);
         std::string regex = buffer.substr(pos+1);
+
+        // regex预处理
+        // ()\*|
+        // 前后加括号
         regex = "(" + regex + ")";
+        // 处理-运算符, 将a-z转换为(a|b|c|...|z), 只支持两侧均为小写字母或大写字母或数字，且左侧小于等于右侧的情况，否则报错
+        for(int i = 0; i < regex.size(); i++) {
+            if(regex[i] == '-') {  
+                if(i == 0 || i == regex.size() - 1) {
+                    std::cout << "Error: - must be between two characters" << std::endl;
+                    return 1;
+                }
+                int judger = (islower(regex[i-1]) && islower(regex[i+1]) && regex[i-1] <= regex[i+1])
+                            || (isupper(regex[i-1]) && isupper(regex[i+1]) && regex[i-1] <= regex[i+1])
+                            || (isdigit(regex[i-1]) && isdigit(regex[i+1]) && regex[i-1] <= regex[i+1]);
+                if(judger) {
+                    std::string pre = regex.substr(0, i - 1);
+                    std::string post = regex.substr(i + 2); 
+                    std::string new_regex;
+                    new_regex += '(';
+                    for(char ch = regex[i-1]; ch <= regex[i+1]; ch++) {
+                        new_regex += ch;
+                        if(ch != regex[i+1])
+                            new_regex += '|';
+                    }
+                    new_regex += ')';
+                    regex = pre + new_regex + post;
+                } else {
+                    std::cout << "Error: - must be between two characters with same type and left <= right" << std::endl;
+                    return 1;
+                }
+            }
+        }
+
+        // 处理转义
+        std::string new_regex;
+        for(int i = 0; i < regex.size(); i++) {
+            if(regex[i] == '\\') {
+                if(i == regex.size() - 1) {
+                    std::cout << "Error: \\ must be followed by a character" << std::endl;
+                    return 1;
+                }
+                i++;
+                switch(regex[i]) {
+                    case 'n':
+                        new_regex += '\n';
+                        break;
+                    case 't':
+                        new_regex += '\t';
+                        break;
+                    case 'r':
+                        new_regex += '\r';
+                        break;
+                    case '\\':
+                        new_regex += '\\';
+                        break;
+                    case 'd':
+                        new_regex += "(";
+                        for(char ch = '0'; ch <= '9'; ch++) {
+                            new_regex += ch;
+                            if(ch != '9')
+                                new_regex += '|';
+                        }
+                        new_regex += ")";
+                        break;
+                    case 'w':
+                        new_regex += "(";
+                        for(char ch = 'a'; ch <= 'z'; ch++) {
+                            new_regex += ch;
+                            new_regex += '|';
+                        }
+                        for(char ch = 'A'; ch <= 'Z'; ch++) {
+                            new_regex += ch;
+                            new_regex += '|';
+                        }
+                        for(char ch = '0'; ch <= '9'; ch++) {
+                            new_regex += ch;
+                            new_regex += '|';
+                        }
+                        new_regex += "_)";
+                        break;
+                    case '*':
+                    case '|':
+                    case '(':
+                    case ')':
+                    case '-':
+                    case '.':
+                        new_regex += Transfer(regex[i]);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                new_regex += regex[i];
+            }
+        }
+        regex = new_regex;
+
+        // 处理通配符.
+        new_regex.clear();
+        for(int i = 0; i < regex.size(); ++i){
+            if(regex[i] == '.') {
+                new_regex += "(";
+                for(char ch = 0x20; ch <= 0x7e; ch++) {
+                    new_regex += Transfer(ch);
+                    if(ch != 0x7e)
+                        new_regex += '|';
+                }
+                new_regex += ")";
+            } else {
+                new_regex += regex[i];
+            }
+        }
+        regex = new_regex;
+
+        std::cout << "#14# " << Unprint2Trans(regex) << std::endl;
+
         // std::cout << token << " " << regex << std::endl;
         // regex paser to NFA
         Node* start, *end;
@@ -218,24 +394,14 @@ int main(int argc, char* argv[])
                 }
                 end = newNode2;
                 start = end;
-            } else if(regex[i] == '\\') {
-                // TODO: 转义字符处理
-                // switch (regex[i + 1])
-                // {
-                // case 'n':
-                //     regex[i + 1] = '\n';
-                //     break;
-                // case 't':
-                //     regex[i + 1] = '\t';
-                //     break;
-                // case '\\':
-                //     regex[i + 1] = '\\';
-                //     break;
-                // default:
-                //     break;
-                // }
-                // continue;
             } else {
+                if(regex[i] < 0) {
+                    regex[i] = Transback(regex[i]);
+                    if(regex[i] < 0) {
+                        std::cout << "error: " << buffer << std::endl;
+                        return 1;
+                    }
+                }
                 Node* newNode = new Node(NFA.GetCount(), regex[i]);
                 end->next.push_back(newNode);
                 end = newNode;
@@ -257,13 +423,13 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "step final:" << std::endl;
-    memset(flag, 0, sizeof(flag));
+    std::unordered_map<int, int> flag;
     NFA.head->Print(flag);
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << std::endl;
-
+        // exit(0);
     // NFA to DFA
     NFA.GenerateMap();
     AutoMachine DFA; 
@@ -404,7 +570,7 @@ int main(int argc, char* argv[])
         //     exit(0);
     }
     std::cout << "step "<< "final" << std::endl;
-    memset(flag, 0, sizeof(flag));
+    flag.clear();
     DFA.head->Print(flag);
     std::cout << std::endl;
     std::cout << std::endl;
@@ -421,7 +587,7 @@ int main(int argc, char* argv[])
         int i;
         input.get(ch);
         int cur_next_size = cur->next.size();
-        // std::cout << "#5# " << ch << std::endl;
+        std::cout << "#5# " << int(ch) << std::endl;
         // 还能匹配就继续匹配
         for(i = 0; i < cur->next.size(); i++) {
             if(cur->next[i]->ch == ch) {
@@ -430,15 +596,15 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-        // std::cout << "#7# " << cur->id << " " <<  i << std::endl;
+        std::cout << "#7# " << cur->id << " " <<  i << std::endl;
         if(i == cur_next_size || input.eof()) {
             // 无法匹配
-            // std::cout << "#6 " << ch << " " << match << " " << cur->token << std::endl;
+            std::cout << "#6 " << int(ch) << " " << match << " " << cur->token << std::endl;
             std::vector<Node*> state_vec;
             State2Vector(cur->token, state_vec, NFA);
             std::unordered_set<std::string> token_vec;
             for(int j = 0; j < state_vec.size(); j++) {
-                // std::cout << "#8# " << state_vec[j]->id << " " << state_vec[j]->token << std::endl;
+                std::cout << "#8# " << state_vec[j]->id << " " << state_vec[j]->token << std::endl;
                 if(state_vec[j]->token != "") {
                     token_vec.insert(state_vec[j]->token);
                 }
@@ -449,12 +615,12 @@ int main(int argc, char* argv[])
                     token = token_list[j];
                     if(i == cur_next_size)
                         input.unget();
-                    // std::cout << "#11# " << token << " " << match << std::endl;
+                    std::cout << "#11# " << token << " " << match << std::endl;
                     break;
                 }
             }
             if(j == token_list.size()) {
-                // std::cout << "#12# " << match << std::endl;
+                std::cout << "#12# " << match << std::endl;
                 match += ch;
                 int cnt = match.size();
                 while(cnt > 1) {
@@ -466,7 +632,7 @@ int main(int argc, char* argv[])
                 token += "'";
                 match = match.substr(0, 1);
             }
-            output << token << " " << match << std::endl;
+            output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             cur = DFA.head;
             match = "";
             token = "";
