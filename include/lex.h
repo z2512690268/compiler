@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -169,7 +171,6 @@ struct AutoMachine {
         id2node.clear();
         head->GenerateMap(flag, id2node);
     }
-
 };
 
 std::string Vector2State(std::vector<Node*>& vec) {
@@ -201,31 +202,9 @@ void State2Vector(std::string str, std::vector<Node*>& vec, AutoMachine& NFA) {
         pos = next_pos+1;
     }
 }
-// #include <unistd.h> 
-int main(int argc, char* argv[])
-{
-    if (argc < 4) {
-        std::cout << "Usage: " << argv[0] << " <rule-file>" << " " << "<input-file>" << " " << "<output-file>" << std::endl;
-        return 1;
-    }
-    std::string tmp = PROJECT_ROOT_DIR;
-    // std::cout << tmp + argv[1] << std::endl;
-    // return 0;
-    std::ifstream fin(tmp + "/test/lex/" + argv[1] + ".l");
-    std::ifstream input(tmp + "/test/pipeline/" + argv[2] + ".input");
-    std::ofstream output(tmp + "/test/pipeline/" + argv[3] + ".lex");
-    if(!fin.is_open()) {
-        std::cout << "rule file open failed" << std::endl;
-        return 1;
-    }
-    if(!input.is_open()) {
-        std::cout << "input file open failed" << std::endl;
-        return 1;
-    }
-    // std::ifstream fin("rule.txt");
-    // std::ifstream input(argv[2]);
-    // std::ofstream output(argv[3]);
 
+int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::string, std::string>>& output)
+{
     // paser rule file to NFA
     // rule regex defination: 
     //  support |, *, (), default concat, \n, \t, \\, \:/**/
@@ -676,7 +655,8 @@ int main(int argc, char* argv[])
                 token += "'";
                 match = match.substr(0, 1);
             }
-            output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
+            // output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
+            output.push_back(std::make_pair(token, match));
             DEBUG_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
             cur = DFA.head;
             match = "";

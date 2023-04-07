@@ -74,6 +74,9 @@ target("lex")
     add_includedirs("include")
     add_files("src/bin/lex1.cpp")
     add_deps("staticlib")
+    add_syslinks("pthread")
+    add_packages("glog")
+
 
 
 -- target("lextest")
