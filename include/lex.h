@@ -203,7 +203,7 @@ void State2Vector(std::string str, std::vector<Node*>& vec, AutoMachine& NFA) {
     }
 }
 
-int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::string, std::string>>& output)
+int lexer(std::ifstream& fin, std::ifstream& input, std::vector<std::pair<std::string, std::string>>& output)
 {
     // paser rule file to NFA
     // rule regex defination: 
@@ -604,6 +604,10 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     while(!input.eof()) {
         int i;
         input.get(ch);
+        if(input.fail())    {
+            DEBUG_MATCH std::cout << "End of input file!" << std::endl;
+            break;
+        }
         int cur_next_size = cur->next.size();
         // 还能匹配就继续匹配
         DEBUG_MATCH std::cout << std::endl << std::endl;
@@ -668,4 +672,5 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             // }
         }
     }
+    return 0;
 }

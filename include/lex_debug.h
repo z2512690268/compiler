@@ -1,11 +1,11 @@
 #pragma once
 // 开关部分
 // 打印预处理正则表达式
-#define DEBUG_NEWREGEX if(1)
+// #define DEBUG_NEWREGEX if(1)
 // 打印NFA
-#define DEBUG_NFA if(1)
+// #define DEBUG_NFA if(1)
 // 打印DFA
-#define DEBUG_DFA if(1) 
+// #define DEBUG_DFA if(1) 
 // 打印匹配过程
 #define DEBUG_MATCH if(1)
 
