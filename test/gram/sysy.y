@@ -29,7 +29,7 @@ Stmt          ::= LVal "=" Exp ";"
 Exp           ::= LOrExp;
 LVal          ::= IDENT {"[" Exp "]"};
 PrimaryExp    ::= "(" Exp ")" | LVal | Number;
-Number        ::= INT_CONST;
+Number        ::= Integer;
 UnaryExp      ::= PrimaryExp | IDENT "(" [FuncRParams] ")" | UnaryOp UnaryExp;
 UnaryOp       ::= "+" | "-" | "!";
 FuncRParams   ::= Exp {"," Exp};
@@ -40,3 +40,4 @@ EqExp         ::= RelExp | EqExp ("==" | "!=") RelExp;
 LAndExp       ::= EqExp | LAndExp "&&" EqExp;
 LOrExp        ::= LAndExp | LOrExp "||" LAndExp;
 ConstExp      ::= Exp;
+Integer       ::= DEC_INTEGER | OCT_INTEGER | HEX_INTEGER;

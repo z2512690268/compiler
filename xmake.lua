@@ -76,15 +76,15 @@ target("lex")
     add_deps("staticlib")
     add_syslinks("pthread")
     add_packages("glog")
-
-
-
--- target("lextest")
---     set_kind("binary")
---     add_includedirs("include")
---     add_files("test/unit/*/*.cpp")
---     add_files("test/testmain.cpp")
---     add_packages("gtest")
---     add_packages("glog")
---     add_packages("gflags")
---     add_deps("lexlib")
+    
+    
+target("test")
+    set_kind("binary")
+    add_includedirs("include")
+    add_files("test/unit/*/*.cpp")
+    add_files("test/testmain.cpp")
+    add_syslinks("pthread")
+    add_packages("gtest")
+    add_packages("glog")
+    add_packages("gflags")
+    add_deps("staticlib")

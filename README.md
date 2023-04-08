@@ -122,3 +122,7 @@ example:
 xmake run lex test/lex/rule1.txt test/lex/input.txt test/lex/output1.txt
 xmake run lex test/lex/sysy.l test/lex/sysy.input test/lex/sysy.output
 ```
+
+## 单元测试
+
+项目采用gtest单元测试，通过`xmake build test`编译测试, 具体单元测试参数和帮助可以通过`xmake run test /?`查询

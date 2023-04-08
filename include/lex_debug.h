@@ -7,7 +7,7 @@
 // 打印DFA
 // #define DEBUG_DFA if(1) 
 // 打印匹配过程
-#define DEBUG_MATCH if(1)
+// #define DEBUG_MATCH if(1)
 
 
 
