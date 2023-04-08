@@ -20,6 +20,7 @@ if is_plat("windows") then
 elseif is_plat("linux") then
     add_defines("PLATFORM_OS=\"linux\"")
     add_defines("PROJECT_ROOT_DIR=\"" .. os.projectdir() .. "/\"")
+    add_syslinks("pthread")
 end
 
 
@@ -74,7 +75,6 @@ target("lex")
     add_includedirs("include")
     add_files("src/bin/lex1.cpp")
     add_deps("staticlib")
-    add_syslinks("pthread")
     add_packages("glog")
     
     
@@ -83,7 +83,6 @@ target("test")
     add_includedirs("include")
     add_files("test/unit/*/*.cpp")
     add_files("test/testmain.cpp")
-    add_syslinks("pthread")
     add_packages("gtest")
     add_packages("glog")
     add_packages("gflags")

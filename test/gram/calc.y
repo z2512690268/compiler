@@ -1,20 +1,7 @@
-#定义终止符
-%Integer
-%Float
-#定义非终止符
-&commands
-&exp
-&term
-&number
+start           :: commands
 
-#定义起点
-start:commands
+commands        ::= { exp "\n" }
 
-#commands
-commands:exp '\n'
-commands:commands exp '\n'
-
-#exp
 exp:term
 exp:exp + term
 exp:exp - term

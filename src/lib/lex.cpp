@@ -21,13 +21,11 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     //first_rule:a|b
     //second_rule:(a|b)*
     //third_rule:ab(sd)*a|b
-    AutoMachine NFA;
-    NFA.head = new LexNode(NFA.GetCount());
+    LexNFA NFA;
+    NFA.head = NFA.NewNode();
 
     std::string buffer;
 
-    std::vector<LexNode*> start_stack;
-    std::vector<LexNode*> end_stack;
     std::vector<std::string> token_list;
     
     int cnt = 1;
@@ -53,6 +51,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                     std::cout << "Error: - must be between two characters" << std::endl;
                     return 1;
                 }
+                if(regex[i-1] == '\\')  continue;
                 int judger = (regex[i-1] <= regex[i+1]);
                 if(judger) {
                     std::string pre = regex.substr(0, i - 1);
@@ -157,22 +156,24 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
 
         // std::cout << token << " " << regex << std::endl;
         // regex paser to NFA
+        std::vector<LexNode*> start_stack;
+        std::vector<LexNode*> end_stack;
         LexNode* start, *end;
-        LexNode* newNode = new LexNode(NFA.GetCount());
+        LexNode* newNode = NFA.NewNode();
         NFA.head->next.push_back(newNode);
         start = newNode;
         end = newNode;
         for(int i = 0; i < regex.size(); i++) {
             if(regex[i] == '(') {
                 // 左括号压一个start栈
-                LexNode* newNode = new LexNode(NFA.GetCount());
+                LexNode* newNode = NFA.NewNode();
                 end->next.push_back(newNode);
                 start = newNode;
                 end = newNode;
                 start_stack.push_back(end);
             } else if(regex[i] == ')') {
                 // 右括号弹一个start栈，压入一个end栈，弹len(start->next)个end栈
-                LexNode* newNode = new LexNode(NFA.GetCount());
+                LexNode* newNode = NFA.NewNode();
                 end_stack.push_back(end);
                 if(start_stack.empty()) {
                     std::cout << "error: " << buffer << std::endl;
@@ -197,8 +198,8 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 start = end;
             } else if(regex[i] == '*') {
                 // start, end循环
-                LexNode* newNode1 = new LexNode(NFA.GetCount());
-                LexNode* newNode2 = new LexNode(NFA.GetCount());
+                LexNode* newNode1 = NFA.NewNode();
+                LexNode* newNode2 = NFA.NewNode();
                 newNode1->Copy(start);
                 start->Copy(newNode2);
                 if(start == end) {
@@ -224,7 +225,8 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                         return 1;
                     }
                 }
-                LexNode* newNode = new LexNode(NFA.GetCount(), regex[i]);
+                LexNode* newNode = NFA.NewNode();
+                newNode->ch = regex[i];
                 end->next.push_back(newNode);
                 end = newNode;
                 start = end;
@@ -256,133 +258,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     }
         // exit(0);
     // NFA to DFA
-    NFA.GenerateMap();
-    AutoMachine DFA; 
-    std::unordered_map<std::string, LexNode*> states2node;
-
-    std::queue<std::pair<std::string, int> > q;
-    std::vector<LexNode*> cur_state_vec;
-    std::string cur_state_string;
-    cur_state_vec.push_back(NFA.head);
-    cur_state_string = Vector2State(cur_state_vec);
-    q.push(std::make_pair(cur_state_string, 0));
-    cnt=1;
-    while(!q.empty()) {
-        std::pair<std::string, int> qtop = q.front();
-        q.pop();
-        if(qtop.second == 0) {
-            // 若第一次处理，则创建节点，并将完整的当前状态和所有可能的输出字符压入队列
-            // 找到所有能空转移的状态（排除重复）
-            // std::cout << "hsjkdahkdjhaj " << qtop.first << " " << qtop.second << std::endl;
-            std::unordered_map<int, int> id_map;
-            cur_state_vec.clear();
-            State2Vector(qtop.first, cur_state_vec, NFA);
-            // for(int i = 0; i < cur_state_vec.size(); i++) {
-            //     std::cout << "ttttssada " << cur_state_vec[i]->id << std::endl;
-            //     for(int j = 0; j < cur_state_vec[i]->next.size(); j++) {
-            //         std::cout << "ttttssada " << cur_state_vec[i]->next[j]->id << std::endl;
-            //     }
-            // }
-            // 寻找所有可能的转移字符 (排除重复)
-            std::unordered_map<int, int> ch_map;
-            std::vector<int> ch_vec;
-            for(int i = 0; i < cur_state_vec.size(); i++) {
-                id_map[cur_state_vec[i]->id] = 1;
-            }
-            for(int i = 0; i < cur_state_vec.size(); i++) {
-                for(int j = 0; j < cur_state_vec[i]->next.size(); j++) {
-                    LexNode* next = cur_state_vec[i]->next[j];
-                    if(next->ch == 0) {
-                        if(id_map.find(next->id) == id_map.end()) {
-                            id_map[next->id] = 1;
-                            cur_state_vec.push_back(next);
-                        }
-                    } else {
-                        if(ch_map.find(next->ch) == ch_map.end()) {
-                            ch_map[next->ch] = 1;
-                            ch_vec.push_back(next->ch);
-                        }
-                    }
-                    // std::cout << "#1# " << i << " " << j << " " << std::endl;
-                    // for(int k = 0; k < cur_state_vec.size(); k++) {
-                    //     std::cout << "ttttssada " << cur_state_vec[k]->id << std::endl;
-                    // }
-                    // for(int k = 0; k < ch_vec.size(); k++) {
-                    //     std::cout << "dsadaddas " << ch_vec[k] << std::endl;
-                    // }
-                }
-            }
-            cur_state_string = Vector2State(cur_state_vec);
-            // std::cout << "#2# " << cur_state_string << std::endl;
-            if(states2node.find(cur_state_string) == states2node.end()) {
-                // 未处理过
-                LexNode* newNode = new LexNode(DFA.GetCount());
-                newNode->token = cur_state_string;
-                states2node[cur_state_string] = newNode;
-                if(DFA.head == nullptr) {
-                    DFA.head = newNode;
-                }
-                // 将所有可能的转移字符压入队列
-                for(int i = 0; i < ch_vec.size(); i++) {
-                    q.push(std::make_pair(cur_state_string, ch_vec[i]));
-                }
-            }
-        } else {
-            // 若不是第一次处理，则在这里完成转移
-            cur_state_vec.clear();
-            State2Vector(qtop.first, cur_state_vec, NFA);
-            std::vector<LexNode*> next_state_vec;
-            // 转移单步
-            std::unordered_map<int, int> id_map;
-            for(int i = 0; i < cur_state_vec.size(); i++) {
-                for(int j = 0; j < cur_state_vec[i]->next.size(); j++) {
-                    LexNode* next = cur_state_vec[i]->next[j];
-                    if(next->ch == qtop.second) {
-                        if(id_map.find(next->id) == id_map.end()) {
-                            next_state_vec.push_back(next);
-                            id_map[next->id] = 1;
-                        }
-                    }
-                }
-            }
-            // 转移空
-            std::unordered_map<int, int> ch_map;
-            std::vector<int> ch_vec;
-            for(int i = 0; i < next_state_vec.size(); i++) {
-                id_map[next_state_vec[i]->id] = 1;
-            }
-            for(int i = 0; i < next_state_vec.size(); i++) {
-                for(int j = 0; j < next_state_vec[i]->next.size(); j++) {
-                    LexNode* next = next_state_vec[i]->next[j];
-                    if(next->ch == 0) {
-                        if(id_map.find(next->id) == id_map.end()) {
-                            id_map[next->id] = 1;
-                            next_state_vec.push_back(next);
-                        }
-                    } else {
-                        if(ch_map.find(next->ch) == ch_map.end()) {
-                            ch_map[next->ch] = 1;
-                            ch_vec.push_back(next->ch);
-                        }
-                    }
-                }
-            }
-            std::string next_state_string = Vector2State(next_state_vec);
-            // std::cout << "#3# " << next_state_string << std::endl;
-            if(states2node.find(next_state_string) == states2node.end()) {
-                // 新边未处理过, 则先建好新节点，再重新转移
-                LexNode* newNode = new LexNode(DFA.GetCount(), qtop.second);
-                newNode->token = next_state_string;
-                states2node[next_state_string] = newNode;
-                states2node[qtop.first]->next.push_back(newNode);
-                for(int i = 0; i < ch_vec.size(); i++) {
-                    q.push(std::make_pair(next_state_string, ch_vec[i]));
-                }
-            } else{
-                // 新边已处理过，直接转移
-                states2node[qtop.first]->next.push_back(states2node[next_state_string]);
-            }
-        } 
+ 
         // std::cout << "step "<< cnt << std::endl;
         // memset(flag, 0, sizeof(flag));
         // DFA.head->Print(flag);
@@ -393,12 +269,13 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // cnt++;
         // if(cnt >= 10)
         //     exit(0);
-    }
+    NFA.GenerateDFA();
+
     DEBUG_DFA
     { 
         std::cout << "step "<< "final" << std::endl;
         std::unordered_map<int, int> flag;
-        DFA.head->Print(flag);
+        NFA.DFA.head->Print(flag);
         std::cout << std::endl;
         std::cout << std::endl;
         std::cout << std::endl;
@@ -408,8 +285,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    int line = 1;
-    LexNode* cur = DFA.head;
+    LexNode* cur = NFA.DFA.head;
     while(!input.eof()) {
         int i;
         input.get(ch);
@@ -434,7 +310,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             // 无法匹配
             DEBUG_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->token << std::endl;
             std::vector<LexNode*> state_vec;
-            State2Vector(cur->token, state_vec, NFA);
+            NFA.State2Vector(cur->token, state_vec);
             std::unordered_set<std::string> token_vec;
             DEBUG_MATCH std::cout << "Token List: " << std::endl;
             for(int j = 0; j < state_vec.size(); j++) {
@@ -471,7 +347,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             // output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             output.push_back(std::make_pair(token, match));
             DEBUG_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
-            cur = DFA.head;
+            cur = NFA.DFA.head;
             match = "";
             token = "";
             // if(!input.eof()) {

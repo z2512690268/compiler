@@ -4,6 +4,8 @@
 // #define DEBUG_NEWREGEX if(1)
 // 打印NFA
 // #define DEBUG_NFA if(1)
+// 打印NFA转DFA过程
+// #define DEBUG_NFA2DFA if(1)
 // 打印DFA
 // #define DEBUG_DFA if(1) 
 // 打印匹配过程
@@ -23,6 +25,9 @@
 #endif
 #ifndef DEBUG_NFA
 #define DEBUG_NFA if(0)
+#endif
+#ifndef DEBUG_NFA2DFA
+#define DEBUG_NFA2DFA if(0)
 #endif
 #ifndef DEBUG_MATCH
 #define DEBUG_MATCH if(0)

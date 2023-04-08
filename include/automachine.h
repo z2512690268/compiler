@@ -5,26 +5,46 @@
 #include <unordered_map>
 #include <iostream>
 #include <algorithm>
+#include "lex_debug.h"
 
-template<typename Edge>
-struct Node {
+struct LexNode {
     int id;
-    Edge ch;              // 转移到该节点的边数据
+    int ch;              // 转移到该节点的边数据
     std::string token;  // 当前节点对应的终结token
-    std::vector<Node*> next; // 当前节点指向的节点
-    Node(int node_count) {
+    std::vector<LexNode*> next; // 当前节点指向的节点
+    LexNode(int node_count) {
         ch = 0;
         token = "";
         id = node_count;
     }
-    Node(int node_count, Edge ch) : ch(ch){
-        token = "";
-        id = node_count;
+    int NullDerive() {
+        return ch == 0;
     }
-    Node(int node_count, Edge ch, std::string token) : ch(ch), token(token) {
-        id = node_count;
+    int CanDerive(int in_ch) {
+        return in_ch == ch;
     }
-    void Copy(Node* node) {
+    void AllDeriveInput(std::vector<int>& ch_vec) {
+        for(auto& pnode : next) {
+            if(pnode->ch != 0) {
+                ch_vec.push_back(pnode->ch);
+            }
+        }
+    }
+    void AllDeriveId(std::vector<int>& id_vec) {
+        for(auto& pnode : next) {
+            if(pnode->ch == 0) {
+                id_vec.push_back(pnode->id);
+            }
+        }
+    }
+    void DeriveByInput(std::vector<int>& id_vec, int input) {
+        for(auto& pnode : next) {
+            if(pnode->ch == input) {
+                id_vec.push_back(pnode->id);
+            }
+        }
+    }
+    void Copy(LexNode* node) {
         ch = node->ch;
         token = node->token;
         next.clear();
@@ -34,7 +54,7 @@ struct Node {
     }
     void Print(std::unordered_map<int, int>& flag) {
         flag[id] = 1;
-        std::cout << "id: " << id << " ch:" << char(ch) << " token: " << token << std::endl;
+        std::cout << "id: " << id << " ch:" << ch << " token: " << token << std::endl;
         for(int i = 0; i < next.size(); i++) {
             std::cout << "\t" << "next: " << next[i]->id << std::endl;
         }
@@ -43,7 +63,7 @@ struct Node {
                 next[i]->Print(flag);
         }
     }
-    void GenerateMap(std::unordered_map<int, int>& flag, std::unordered_map<int, Node*>& id2node) {
+    void GenerateMap(std::unordered_map<int, int>& flag, std::unordered_map<int, LexNode*>& id2node) {
         id2node[id] = this;
         flag[id] = 1;
         for(int i = 0; i < next.size(); i++) {
@@ -53,12 +73,51 @@ struct Node {
     }
 };
 
-typedef Node<int> LexNode;
+struct GramNode {
+    int id;
+    std::string input;              // 转移到该节点的边数据
+    std::string token;  // 当前节点对应的终结token
+    std::vector<GramNode*> next; // 当前节点指向的节点
+    GramNode(int node_count) {
+        input = "";
+        token = "";
+        id = node_count;
+    }
+    void Copy(GramNode* node) {
+        input = node->input;
+        token = node->token;
+        next.clear();
+        for(auto& i : node->next) {
+            next.push_back(i);
+        }
+    }
+    void Print(std::unordered_map<int, int>& flag) {
+        flag[id] = 1;
+        std::cout << "id: " << id << " input:" << input << " token: " << token << std::endl;
+        for(int i = 0; i < next.size(); i++) {
+            std::cout << "\t" << "next: " << next[i]->id << std::endl;
+        }
+        for(int i = 0; i < next.size(); i++) {
+            if(flag[next[i]->id] == 0)
+                next[i]->Print(flag);
+        }
+    }
+    void GenerateMap(std::unordered_map<int, int>& flag, std::unordered_map<int, GramNode*>& id2node) {
+        id2node[id] = this;
+        flag[id] = 1;
+        for(int i = 0; i < next.size(); i++) {
+            if(flag[next[i]->id] == 0)
+                next[i]->GenerateMap(flag, id2node);
+        }
+    }
+};
 
-struct AutoMachine {
-    LexNode* head;
+template <typename NodeType>
+class AutoMachine {
+public:
+    NodeType* head;
     int count;
-    std::unordered_map<int, LexNode*> id2node;
+    std::unordered_map<int, NodeType*> id2node;
     AutoMachine() {
         count = 0;
         head = nullptr;
@@ -67,39 +126,179 @@ struct AutoMachine {
         count++;
         return count;
     }
+    NodeType* NewNode() {
+        NodeType* newnode = new NodeType(GetCount());
+        return newnode;
+    }
     void GenerateMap() {
         std::unordered_map<int, int> flag;
         id2node.clear();
         head->GenerateMap(flag, id2node);
     }
 };
+typedef AutoMachine<LexNode> LexAutoMachine;
 
-std::string Vector2State(std::vector<LexNode*>& vec) {
-    std::string str = "";
-    std::vector<int> id_vec;
-    for(int i = 0; i < vec.size(); i++) {
-        id_vec.push_back(vec[i]->id);
-    }
-    std::sort(id_vec.begin(), id_vec.end());
-    // 将状态从小到大排序
-    for(int i = 0; i < id_vec.size(); i++) {
-        str += std::to_string(id_vec[i]);
-        if(i != id_vec.size() - 1)
-            str += "#";
-    }
-    return str;
-}
+template <typename NodeType>
+class DFA : public AutoMachine<NodeType> {
+public:
 
-void State2Vector(std::string str, std::vector<LexNode*>& vec, AutoMachine& NFA) {
-    vec.clear();
-    int pos = 0;
-    while(pos < str.size()) {
-        int next_pos = str.find("#", pos);
-        if(next_pos == std::string::npos) {
-            next_pos = str.size();
+};
+typedef DFA<LexNode>         LexDFA;
+
+
+template <typename NodeType, typename InputType>
+class NFA : public AutoMachine<NodeType> {
+public:
+    DFA<NodeType> DFA;
+
+    void ExpandStates(std::vector<NodeType*>& states) {
+        std::unordered_map<int, int> id_map;
+        for(int i = 0; i < states.size(); i++) {
+            id_map[states[i]->id] = 1;
         }
-        int id = std::stoi(str.substr(pos, next_pos-pos));
-        vec.push_back(NFA.id2node[id]);
-        pos = next_pos+1;
+        for(int i = 0; i < states.size(); i++) {
+            std::vector<int> next_ids;
+            states[i]->AllDeriveId(next_ids);
+            for(int j = 0; j < next_ids.size(); j++) {
+                if(id_map.find(next_ids[j]) == id_map.end()) {
+                    id_map[next_ids[j]] = 1;
+                    states.push_back(this->id2node[next_ids[j]]);
+                }
+            }
+        }
     }
-}
+
+    void GetAllNextInputs(std::vector<NodeType*>& states, std::vector<InputType>& ch_vec) {
+        std::unordered_map<int, int> ch_map;
+        for(int i = 0; i < states.size(); i++) {
+            std::vector<InputType> next_chs;
+            states[i]->AllDeriveInput(next_chs);
+            for(int j = 0; j < next_chs.size(); j++) {
+                if(ch_map.find(next_chs[j]) == ch_map.end()) {
+                    ch_map[next_chs[j]] = 1;
+                    ch_vec.push_back(next_chs[j]);
+                }
+            }
+        }
+    }
+
+    void DeriveByNextInput(std::vector<NodeType*>& cur_states, std::vector<NodeType*>& next_states, InputType input) {
+        std::unordered_map<int, int> id_map;
+        for(int i = 0; i < cur_states.size(); i++) {
+            std::vector<int> next_ids;
+            cur_states[i]->DeriveByInput(next_ids, input);
+            for(int j = 0; j < next_ids.size(); j++) {
+                if(id_map.find(next_ids[j]) == id_map.end()) {
+                    next_states.push_back(this->id2node[next_ids[j]]);
+                    id_map[next_ids[j]] = 1;
+                }
+            }
+        }
+    }
+
+    int GenerateDFA() {
+        this->GenerateMap();
+        std::unordered_map<std::string, NodeType*> states2node;
+
+        std::queue<std::pair<std::string, InputType> > q;
+        std::vector<NodeType*> cur_state_vec;
+        std::string cur_state_string;
+        // 拿到初始状态的最终状态
+        cur_state_vec.push_back(this->head);
+        ExpandStates(cur_state_vec);
+        // 初始状态的转移边
+        std::vector<InputType> ch_vec;
+        GetAllNextInputs(cur_state_vec, ch_vec);
+        // 压入栈中
+        cur_state_string = Vector2State(cur_state_vec);
+        NodeType* newNode = DFA.NewNode();
+        for(int i = 0; i < ch_vec.size(); i++) {
+            q.push(std::make_pair(cur_state_string, ch_vec[i]));
+        }
+        // 为DFA创建头节点
+        newNode->token = cur_state_string;
+        states2node[cur_state_string] = newNode;
+        DFA.head = newNode;
+        // cur_state_string = Vector2State(cur_state_vec);
+        // q.push(std::make_pair(cur_state_string, InputType()));
+        int cnt = 0;
+        while(!q.empty()) {
+            DEBUG_NFA2DFA std::cout << "Enter While, q has " << q.size() << " elements" << std::endl;
+            std::pair<std::string, InputType> qtop = q.front();
+            q.pop();
+            DEBUG_NFA2DFA std::cout << "queue top: cur_state_string:" << qtop.first << " " << "char:" << char(qtop.second) << std::endl;
+            cur_state_vec.clear();
+            State2Vector(qtop.first, cur_state_vec);
+            std::vector<NodeType*> next_state_vec;
+            // 转移单步
+            DeriveByNextInput(cur_state_vec, next_state_vec, qtop.second);
+
+            // 转移空
+            ExpandStates(next_state_vec);
+            std::vector<InputType> ch_vec;
+            GetAllNextInputs(next_state_vec, ch_vec);
+            std::string next_state_string = Vector2State(next_state_vec);
+
+            DEBUG_NFA2DFA std::cout << "Transfered state:" << next_state_string << std::endl;
+            DEBUG_NFA2DFA {
+                std::cout << "may input char list:";
+                for(auto& ch : ch_vec){
+                    std::cout << char(ch);
+                }
+                std::cout << std::endl;
+            }
+            // std::cout << "#3# " << next_state_string << std::endl;
+            if(states2node.find(next_state_string) == states2node.end()) {
+                // 新边未处理过, 则先建好新节点，再重新转移
+                DEBUG_NFA2DFA std::cout << "Set as a new State" << std::endl;
+                NodeType* newNode = DFA.NewNode();
+                newNode->ch = qtop.second;
+                newNode->token = next_state_string;
+                states2node[next_state_string] = newNode;
+                states2node[qtop.first]->next.push_back(newNode);
+                for(int i = 0; i < ch_vec.size(); i++) {
+                    q.push(std::make_pair(next_state_string, ch_vec[i]));
+                }
+            } else{
+                // 新边已处理过，直接转移
+                states2node[qtop.first]->next.push_back(states2node[next_state_string]);
+            }
+            // }
+            DEBUG_NFA2DFA std::cout << std::endl << std::endl;
+        }
+        return 0;
+    }
+
+
+    std::string Vector2State(std::vector<NodeType*>& vec) {
+        std::string str = "";
+        std::vector<int> id_vec;
+        for(int i = 0; i < vec.size(); i++) {
+            id_vec.push_back(vec[i]->id);
+        }
+        std::sort(id_vec.begin(), id_vec.end());
+        // 将状态从小到大排序
+        for(int i = 0; i < id_vec.size(); i++) {
+            str += std::to_string(id_vec[i]);
+            if(i != id_vec.size() - 1)
+                str += "#";
+        }
+        return str;
+    }
+
+    void State2Vector(std::string str, std::vector<NodeType*>& vec) {
+        vec.clear();
+        int pos = 0;
+        while(pos < str.size()) {
+            int next_pos = str.find("#", pos);
+            if(next_pos == std::string::npos) {
+                next_pos = str.size();
+            }
+            int id = std::stoi(str.substr(pos, next_pos-pos));
+            vec.push_back(this->id2node[id]);
+            pos = next_pos+1;
+        }
+    }
+
+};
+typedef NFA<LexNode, int>         LexNFA;
