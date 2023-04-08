@@ -160,14 +160,14 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         std::vector<LexNode*> end_stack;
         LexNode* start, *end;
         LexNode* newNode = NFA.NewNode();
-        NFA.head->next.push_back(newNode);
+        NFA.head->AddNext(newNode);
         start = newNode;
         end = newNode;
         for(int i = 0; i < regex.size(); i++) {
             if(regex[i] == '(') {
                 // 左括号压一个start栈
                 LexNode* newNode = NFA.NewNode();
-                end->next.push_back(newNode);
+                end->AddNext(newNode);
                 start = newNode;
                 end = newNode;
                 start_stack.push_back(end);
@@ -188,7 +188,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                     }
                     LexNode* endtop = end_stack.back();
                     end_stack.pop_back();
-                    endtop->next.push_back(newNode);
+                    endtop->AddNext(newNode);
                 }
                 end = newNode;
             } else if(regex[i] == '|') {
@@ -204,16 +204,16 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 start->Copy(newNode2);
                 if(start == end) {
                     // 单字符+*
-                    start->next.push_back(newNode1);
-                    start->next.push_back(newNode2);
-                    newNode1->next.push_back(newNode1);
-                    newNode1->next.push_back(newNode2);
+                    start->AddNext(newNode1);
+                    start->AddNext(newNode2);
+                    newNode1->AddNext(newNode1);
+                    newNode1->AddNext(newNode2);
                 } else {
                     // 括号+*
-                    start->next.push_back(newNode1);
-                    start->next.push_back(newNode2);
-                    end->next.push_back(newNode1);
-                    end->next.push_back(newNode2);
+                    start->AddNext(newNode1);
+                    start->AddNext(newNode2);
+                    end->AddNext(newNode1);
+                    end->AddNext(newNode2);
                 }
                 end = newNode2;
                 start = end;
@@ -226,8 +226,8 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                     }
                 }
                 LexNode* newNode = NFA.NewNode();
-                newNode->ch = regex[i];
-                end->next.push_back(newNode);
+                newNode->SetInput(regex[i]);
+                end->AddNext(newNode);
                 end = newNode;
                 start = end;
             }
@@ -235,7 +235,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // newNode = new LexNode();
         // end->next.push_back(newNode);
         // end = newNode;
-        end->token = token;
+        end->SetToken(token);
         // std::cout << "step "<< cnt << std::endl;
         // memset(flag, 0, sizeof(flag));
         // NFA.head->Print(flag);
@@ -285,7 +285,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    LexNode* cur = NFA.DFA.head;
+    ATMNode* cur = NFA.DFA.head;
     while(!input.eof()) {
         int i;
         input.get(ch);
@@ -299,7 +299,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         DEBUG_MATCH std::cout << "Round Start:" << "Id:" << cur->id << " matched:" << match << std::endl;
         DEBUG_MATCH std::cout << "New Char:" << ch << std::endl;
         for(i = 0; i < cur->next.size(); i++) {
-            if(cur->next[i]->ch == ch) {
+            if(cur->next[i]->GetInput() == ch) {
                 cur = cur->next[i];
                 match += ch;
                 break;
