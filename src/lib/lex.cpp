@@ -8,7 +8,7 @@
 #include <fstream>
 #include <algorithm>
 #include "defs.h"
-#include "lex_debug.h"
+#include "debug.h"
 #include "transfer.h"
 #include "automachine.h"
 
@@ -235,7 +235,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // newNode = new LexNode();
         // end->next.push_back(newNode);
         // end = newNode;
-        end->SetToken(token);
+        end->token = token;
         // std::cout << "step "<< cnt << std::endl;
         // memset(flag, 0, sizeof(flag));
         // NFA.head->Print(flag);
@@ -285,7 +285,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    ATMNode* cur = NFA.DFA.head;
+    ATMNode<int>* cur = NFA.DFA.head;
     while(!input.eof()) {
         int i;
         input.get(ch);

@@ -75,7 +75,12 @@ target("lex")
     add_includedirs("include")
     add_files("src/bin/lex1.cpp")
     add_deps("staticlib")
-    add_packages("glog")
+    
+target("gram")
+    set_kind("binary")
+    add_includedirs("include")
+    add_files("src/bin/gram.cpp")
+    add_deps("staticlib")
     
     
 target("test")

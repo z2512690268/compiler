@@ -1,9 +1,11 @@
 #空白
 WHITESPACE:( |\t|\n|\r)( |\t|\n|\r)*
 #注释
-LineComment:\\\\.*
+LineComment://.*
 #推导符
 INFER:::=
+#保留符
+RESERVED:[|]|{|}|\(|\)|\||;
 #字符串常量,用双引号括起来的不包括双引号的任意字符串
 STRING:"( |\t|\n|\r|!|#-~)*"
 #终结符

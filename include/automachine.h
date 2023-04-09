@@ -4,64 +4,82 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <queue>
 #include <algorithm>
-#include "lex_debug.h"
+#include "debug.h"
 
+template<typename InputType>
 struct ATMNode {
-    virtual int NullDerive() = 0;
-    virtual int CanDerive(int in_ch) = 0;
-    virtual int GetInput() = 0;
-    virtual void Print(std::unordered_map<int, int>& flag) = 0;
+    ATMNode<InputType> (int node_count) {
+        token = "";
+        id = node_count;
+    }
 
-    void AllDeriveInput(std::vector<int>& ch_vec) {
+    virtual int NullDerive() = 0;
+    virtual int CanDerive(InputType in_ch) = 0;
+    virtual InputType GetInput() = 0;
+    virtual void SetInput(InputType input) = 0;
+
+    virtual void Copy(ATMNode<InputType>* node) {
+        SetInput(node->GetInput());
+        token = node->token;
+        next.clear();
+        for(auto& i : node->next) {
+            next.push_back(i);
+        }
+    }
+
+    virtual void AddNext(ATMNode<InputType>* newNext) {
+        next.push_back(newNext);
+    }
+
+    virtual void AllDeriveInput(std::vector<InputType>& ch_vec) {
         for(auto& pnode : next) {
             if(!pnode->NullDerive()) {
                 ch_vec.push_back(pnode->GetInput());
             }
         }      
     };
-    void AllDeriveId(std::vector<int>& id_vec) {
+    virtual void AllDeriveId(std::vector<int>& id_vec) {
         for(auto& pnode : next) {
             if(pnode->NullDerive()) {
                 id_vec.push_back(pnode->id);
             }
         }
     }
-    void DeriveByInput(std::vector<int>& id_vec, int input) {
+    virtual void DeriveByInput(std::vector<int>& id_vec, InputType input) {
         for(auto& pnode : next) {
             if(pnode->CanDerive(input)) {
                 id_vec.push_back(pnode->id);
             }
         }
     }
+    virtual void Print(std::unordered_map<int, int>& flag) {
+        flag[id] = 1;
+        std::cout << "id: " << id << " input:" << GetInput() << " token: " << token << std::endl;
+        for(int i = 0; i < next.size(); i++) {
+            std::cout << "\t" << "next: " << next[i]->id << std::endl;
+        }
+        for(int i = 0; i < next.size(); i++) {
+            if(flag[next[i]->id] == 0)
+                next[i]->Print(flag);
+        }
+    }
     int id;
-    std::vector<ATMNode*> next; // 当前节点指向的节点
+    std::vector<ATMNode<InputType>*> next; // 当前节点指向的节点
     std::string token;  // 当前节点对应的终结token
 };
 
-struct LexNode : public ATMNode{
-    LexNode(int node_count) {
+struct LexNode : public ATMNode<int>{
+    LexNode(int node_count) : ATMNode<int>(node_count) {
         ch = 0;
-        token = "";
-        id = node_count;
     }
-    int GetId() {
-        return id;
-    }
+
     int GetInput() {
         return ch;
     }
     void SetInput(int input) {
         ch = input;
-    }
-    std::string GetToken() {
-        return token;
-    }
-    void SetToken(std::string in_token) {
-        token = in_token;
-    }
-    void AddNext(LexNode* newNext) {
-        next.push_back(newNext);
     }
 
     int NullDerive() {
@@ -71,65 +89,27 @@ struct LexNode : public ATMNode{
         return in_ch == ch;
     }
 
-    void Copy(LexNode* node) {
-        ch = node->ch;
-        token = node->token;
-        next.clear();
-        for(auto& i : node->next) {
-            next.push_back(i);
-        }
-    }
-    void Print(std::unordered_map<int, int>& flag) {
-        flag[id] = 1;
-        std::cout << "id: " << id << " ch:" << ch << " token: " << token << std::endl;
-        for(int i = 0; i < next.size(); i++) {
-            std::cout << "\t" << "next: " << next[i]->id << std::endl;
-        }
-        for(int i = 0; i < next.size(); i++) {
-            if(flag[next[i]->id] == 0)
-                next[i]->Print(flag);
-        }
-    }
     int ch;              // 转移到该节点的边数据
 };
 
-struct GramNode {
-    int id;
-    std::string input;              // 转移到该节点的边数据
-    std::string token;  // 当前节点对应的终结token
-    std::vector<GramNode*> next; // 当前节点指向的节点
-    GramNode(int node_count) {
-        input = "";
-        token = "";
-        id = node_count;
+struct GramNode : public ATMNode<std::string> {
+    GramNode(int node_count) : ATMNode<std::string>(node_count)  {
+        str = "";
     }
-    void Copy(GramNode* node) {
-        input = node->input;
-        token = node->token;
-        next.clear();
-        for(auto& i : node->next) {
-            next.push_back(i);
-        }
+    std::string GetInput() {
+        return str;
     }
-    void Print(std::unordered_map<int, int>& flag) {
-        flag[id] = 1;
-        std::cout << "id: " << id << " input:" << input << " token: " << token << std::endl;
-        for(int i = 0; i < next.size(); i++) {
-            std::cout << "\t" << "next: " << next[i]->id << std::endl;
-        }
-        for(int i = 0; i < next.size(); i++) {
-            if(flag[next[i]->id] == 0)
-                next[i]->Print(flag);
-        }
+    void SetInput(std::string input_str) {
+        str = input_str;
     }
-    void GenerateMap(std::unordered_map<int, int>& flag, std::unordered_map<int, GramNode*>& id2node) {
-        id2node[id] = this;
-        flag[id] = 1;
-        for(int i = 0; i < next.size(); i++) {
-            if(flag[next[i]->id] == 0)
-                next[i]->GenerateMap(flag, id2node);
-        }
+
+    int NullDerive() {
+        return str == "";
     }
+    int CanDerive(std::string in_str) {
+        return in_str == str;
+    }
+    std::string str;              // 转移到该节点的边数据
 };
 
 template <typename NodeType>
@@ -155,9 +135,7 @@ struct AutoMachine {
 
 template <typename NodeType>
 struct DFA : public AutoMachine<NodeType> {
-
 };
-typedef DFA<LexNode>         LexDFA;
 
 
 template <typename NodeType, typename InputType>
@@ -209,6 +187,18 @@ struct NFA : public AutoMachine<NodeType> {
         }
     }
 
+    void GetAllStateTokens(std::vector<NodeType*>& cur_states, std::vector<std::string>& tokens) {
+        std::unordered_map<std::string, int> token_map;
+        for(int i = 0; i < cur_states.size(); ++i) {
+            if(cur_states[i]->token != "") {
+                if(token_map.find(cur_states[i]->token) == token_map.end()) {
+                    tokens.push_back(cur_states[i]->token);
+                    token_map[cur_states[i]->token] = 1;
+                }
+            }
+        }
+    }
+
     int GenerateDFA() {
         std::unordered_map<std::string, NodeType*> states2node;
 
@@ -218,6 +208,17 @@ struct NFA : public AutoMachine<NodeType> {
         // 拿到初始状态的最终状态
         cur_state_vec.push_back(this->head);
         ExpandStates(cur_state_vec);
+        std::vector<std::string> cur_tokens;
+        GetAllStateTokens(cur_state_vec, cur_tokens);
+        if(cur_tokens.size() > 0) {
+            std::cout << "ERROR! null string may match some regex, which would lead to nondeterministic result!" << std::endl;
+            std::cout << "The error rules: ";
+            for(int i = 0; i < cur_tokens.size(); ++i) {
+                std::cout << cur_tokens[i] << " ";
+            }
+            std::cout << std::endl;
+            return 1;
+        }
         // 初始状态的转移边
         std::vector<InputType> ch_vec;
         GetAllNextInputs(cur_state_vec, ch_vec);
@@ -228,7 +229,7 @@ struct NFA : public AutoMachine<NodeType> {
             q.push(std::make_pair(cur_state_string, ch_vec[i]));
         }
         // 为DFA创建头节点
-        newNode->SetToken(cur_state_string);
+        newNode->token = cur_state_string;
         states2node[cur_state_string] = newNode;
         DFA.head = newNode;
         // cur_state_string = Vector2State(cur_state_vec);
@@ -265,7 +266,7 @@ struct NFA : public AutoMachine<NodeType> {
                 DEBUG_NFA2DFA std::cout << "Set as a new State" << std::endl;
                 NodeType* newNode = DFA.NewNode();
                 newNode->SetInput(qtop.second);
-                newNode->SetToken(next_state_string);
+                newNode->token = (next_state_string);
                 states2node[next_state_string] = newNode;
                 states2node[qtop.first]->AddNext(newNode);
                 for(int i = 0; i < ch_vec.size(); i++) {
@@ -313,4 +314,8 @@ struct NFA : public AutoMachine<NodeType> {
     }
 
 };
-typedef NFA<LexNode, int>         LexNFA;
+
+typedef DFA<LexNode>                LexDFA;
+typedef NFA<LexNode, int>           LexNFA;
+typedef DFA<GramNode>               GramDFA;
+typedef NFA<GramNode, std::string>  GramNFA;
