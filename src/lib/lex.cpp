@@ -42,7 +42,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // ()\*|
         // 前后加括号
         regex = "(" + regex + ")";
-        DEBUG_NEWREGEX std::cout << "Add Bracket:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "Add Bracket:" << Unprint2Trans(regex) << std::endl;
         // 处理-运算符, 将a-z转换为(a|b|c|...|z), 只支持两侧均为小写字母或大写字母或数字，且左侧小于等于右侧的情况，否则报错
         
         for(int i = 0; i < regex.size(); i++) {
@@ -72,7 +72,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 }
             }
         }
-        DEBUG_NEWREGEX std::cout << "Expand:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "Expand:" << Unprint2Trans(regex) << std::endl;
 
         // 处理转义
         std::string new_regex;
@@ -131,7 +131,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         }
         regex = new_regex;
 
-        DEBUG_NEWREGEX std::cout << "Transfer:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "Transfer:" << Unprint2Trans(regex) << std::endl;
 
         // 处理通配符.
         new_regex.clear();
@@ -150,30 +150,30 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         }
         regex = new_regex;
 
-        DEBUG_NEWREGEX std::cout << "general match sign:" << Unprint2Trans(regex) << std::endl;
-        DEBUG_NEWREGEX std::cout << "End the regex" << std::endl << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "general match sign:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "End the regex" << std::endl << std::endl;
 
 
         // std::cout << token << " " << regex << std::endl;
         // regex paser to NFA
-        std::vector<LexNode*> start_stack;
-        std::vector<LexNode*> end_stack;
-        LexNode* start, *end;
-        LexNode* newNode = NFA.NewNode();
+        std::vector<LexNFANode*> start_stack;
+        std::vector<LexNFANode*> end_stack;
+        LexNFANode* start, *end;
+        LexNFANode* newNode = NFA.NewNode();
         NFA.head->AddNext(newNode);
         start = newNode;
         end = newNode;
         for(int i = 0; i < regex.size(); i++) {
             if(regex[i] == '(') {
                 // 左括号压一个start栈
-                LexNode* newNode = NFA.NewNode();
+                LexNFANode* newNode = NFA.NewNode();
                 end->AddNext(newNode);
                 start = newNode;
                 end = newNode;
                 start_stack.push_back(end);
             } else if(regex[i] == ')') {
                 // 右括号弹一个start栈，压入一个end栈，弹len(start->next)个end栈
-                LexNode* newNode = NFA.NewNode();
+                LexNFANode* newNode = NFA.NewNode();
                 end_stack.push_back(end);
                 if(start_stack.empty()) {
                     std::cout << "error: " << buffer << std::endl;
@@ -186,7 +186,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                         std::cout << "error: " << buffer << std::endl;
                         return 1;
                     }
-                    LexNode* endtop = end_stack.back();
+                    LexNFANode* endtop = end_stack.back();
                     end_stack.pop_back();
                     endtop->AddNext(newNode);
                 }
@@ -198,8 +198,8 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 start = end;
             } else if(regex[i] == '*') {
                 // start, end循环
-                LexNode* newNode1 = NFA.NewNode();
-                LexNode* newNode2 = NFA.NewNode();
+                LexNFANode* newNode1 = NFA.NewNode();
+                LexNFANode* newNode2 = NFA.NewNode();
                 newNode1->Copy(start);
                 start->Copy(newNode2);
                 if(start == end) {
@@ -225,7 +225,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                         return 1;
                     }
                 }
-                LexNode* newNode = NFA.NewNode();
+                LexNFANode* newNode = NFA.NewNode();
                 newNode->SetInput(regex[i]);
                 end->AddNext(newNode);
                 end = newNode;
@@ -246,7 +246,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // cnt++;
     }
 
-    DEBUG_NFA
+    DEBUG_LEX_NFA
     {
         std::cout << "step final:" << std::endl;
         std::unordered_map<int, int> flag;
@@ -271,7 +271,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         //     exit(0);
     NFA.GenerateDFA();
 
-    DEBUG_DFA
+    DEBUG_LEX_DFA
     { 
         std::cout << "step "<< "final" << std::endl;
         std::unordered_map<int, int> flag;
@@ -285,19 +285,19 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    ATMNode<int>* cur = NFA.DFA.head;
+    ATMNode<int, std::string>* cur = NFA.DFA.head;
     while(!input.eof()) {
         int i;
         input.get(ch);
         if(input.fail())    {
-            DEBUG_MATCH std::cout << "End of input file!" << std::endl;
+            DEBUG_LEX_MATCH std::cout << "End of input file!" << std::endl;
             break;
         }
         int cur_next_size = cur->next.size();
         // 还能匹配就继续匹配
-        DEBUG_MATCH std::cout << std::endl << std::endl;
-        DEBUG_MATCH std::cout << "Round Start:" << "Id:" << cur->id << " matched:" << match << std::endl;
-        DEBUG_MATCH std::cout << "New Char:" << ch << std::endl;
+        DEBUG_LEX_MATCH std::cout << std::endl << std::endl;
+        DEBUG_LEX_MATCH std::cout << "Round Start:" << "Id:" << cur->id << " matched:" << match << std::endl;
+        DEBUG_LEX_MATCH std::cout << "New Char:" << ch << std::endl;
         for(i = 0; i < cur->next.size(); i++) {
             if(cur->next[i]->GetInput() == ch) {
                 cur = cur->next[i];
@@ -305,17 +305,17 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 break;
             }
         }
-        DEBUG_MATCH if(i != cur_next_size) std::cout << "next state:" << cur->id << " EdgeId:" << i << std::endl;
+        DEBUG_LEX_MATCH if(i != cur_next_size) std::cout << "next state:" << cur->id << " EdgeId:" << i << std::endl;
         if(i == cur_next_size || input.eof()) {
             // 无法匹配
-            DEBUG_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->token << std::endl;
-            std::vector<LexNode*> state_vec;
-            NFA.State2Vector(cur->token, state_vec);
+            DEBUG_LEX_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->GetToken() << std::endl;
+            std::vector<LexNFANode*> state_vec;
+            NFA.State2Vector(cur->GetToken(), state_vec);
             std::unordered_set<std::string> token_vec;
-            DEBUG_MATCH std::cout << "Token List: " << std::endl;
+            DEBUG_LEX_MATCH std::cout << "Token List: " << std::endl;
             for(int j = 0; j < state_vec.size(); j++) {
                 if(state_vec[j]->token != "") {
-                    DEBUG_MATCH std::cout << "\tNFAState:" << state_vec[j]->id << " token:" << state_vec[j]->token << std::endl;
+                    DEBUG_LEX_MATCH std::cout << "\tNFAState:" << state_vec[j]->id << " token:" << state_vec[j]->token << std::endl;
                     token_vec.insert(state_vec[j]->token);
                 }
             }
@@ -324,18 +324,18 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 if(token_vec.find(token_list[j]) != token_vec.end()) {
                     token = token_list[j];
                     if(i == cur_next_size){
-                        DEBUG_MATCH std::cout << "Unget char:" << ch << std::endl; 
+                        DEBUG_LEX_MATCH std::cout << "Unget char:" << ch << std::endl; 
                         input.unget();
                     }
                     break;
                 }
             }
             if(j == token_list.size()) {
-                DEBUG_MATCH std::cout << "Match Single Char" << std::endl;
+                DEBUG_LEX_MATCH std::cout << "Match Single Char" << std::endl;
                 match += ch;
                 int cnt = match.size();
                 while(cnt > 1) {
-                    DEBUG_MATCH std::cout << "Unget char:" << ch << std::endl;
+                    DEBUG_LEX_MATCH std::cout << "Unget char:" << ch << std::endl;
                     input.unget();
                     cnt--;
                 }
@@ -346,7 +346,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             }
             // output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             output.push_back(std::make_pair(token, match));
-            DEBUG_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
+            DEBUG_LEX_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
             cur = NFA.DFA.head;
             match = "";
             token = "";

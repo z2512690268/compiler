@@ -8,28 +8,33 @@
 #include <algorithm>
 #include "debug.h"
 
-template<typename InputType>
+
+
+
+template<typename InputType, typename TokenType>
 struct ATMNode {
     ATMNode<InputType> (int node_count) {
-        token = "";
         id = node_count;
     }
 
     virtual int NullDerive() = 0;
     virtual int CanDerive(InputType in_ch) = 0;
     virtual InputType GetInput() = 0;
-    virtual void SetInput(InputType input) = 0;
+    virtual void SetInput(const InputType& input) = 0;
+    virtual TokenType GetToken() = 0;
+    virtual void SetToken(const TokenType& token) = 0;
 
-    virtual void Copy(ATMNode<InputType>* node) {
+
+    virtual void Copy(ATMNode<InputType, TokenType>* node) {
         SetInput(node->GetInput());
-        token = node->token;
+        SetToken(node->GetToken());
         next.clear();
         for(auto& i : node->next) {
             next.push_back(i);
         }
     }
 
-    virtual void AddNext(ATMNode<InputType>* newNext) {
+    virtual void AddNext(ATMNode<InputType, TokenType>* newNext) {
         next.push_back(newNext);
     }
 
@@ -56,7 +61,7 @@ struct ATMNode {
     }
     virtual void Print(std::unordered_map<int, int>& flag) {
         flag[id] = 1;
-        std::cout << "id: " << id << " input:" << GetInput() << " token: " << token << std::endl;
+        std::cout << "id: " << id << " input:" << GetInput() << " token: " << GetToken() << std::endl;
         for(int i = 0; i < next.size(); i++) {
             std::cout << "\t" << "next: " << next[i]->id << std::endl;
         }
@@ -66,20 +71,31 @@ struct ATMNode {
         }
     }
     int id;
-    std::vector<ATMNode<InputType>*> next; // 当前节点指向的节点
-    std::string token;  // 当前节点对应的终结token
+    std::vector<ATMNode<InputType, TokenType>*> next; // 当前节点指向的节点
 };
 
-struct LexNode : public ATMNode<int>{
-    LexNode(int node_count) : ATMNode<int>(node_count) {
+struct LexNFANode : public ATMNode<int, std::string>{
+    LexNFANode(int node_count) : ATMNode<int, std::string>(node_count) {
         ch = 0;
+        token = "";
+    }
+
+    LexNFANode* GetNodePtr() {
+        return this;
     }
 
     int GetInput() {
         return ch;
     }
-    void SetInput(int input) {
+    void SetInput(const int& input) {
         ch = input;
+    }
+    std::string GetToken() {
+        return token;
+    }
+
+    void SetToken(const std::string& token_str) {
+        token = token_str;
     }
 
     int NullDerive() {
@@ -90,10 +106,48 @@ struct LexNode : public ATMNode<int>{
     }
 
     int ch;              // 转移到该节点的边数据
+    std::string token;  // 当前节点对应的终结token
 };
 
-struct GramNode : public ATMNode<std::string> {
-    GramNode(int node_count) : ATMNode<std::string>(node_count)  {
+struct LexDFANode : public ATMNode<int, std::string>{
+    LexDFANode(int node_count) : ATMNode<int, std::string>(node_count) {
+        ch = 0;
+        token = "";
+    }
+
+    LexDFANode* GetNodePtr() {
+        return this;
+    }
+
+    int GetInput() {
+        return ch;
+    }
+    void SetInput(const int& input) {
+        ch = input;
+    }
+
+    std::string GetToken() {
+        return token;
+    }
+
+    void SetToken(const std::string& token_str) {
+        token = token_str;
+    }
+
+
+    int NullDerive() {
+        return ch == 0;
+    }
+    int CanDerive(int in_ch) {
+        return in_ch == ch;
+    }
+
+    int ch;              // 转移到该节点的边数据
+    std::string token;  // 当前节点对应的终结token
+};
+
+struct GramNode : public ATMNode<std::string, std::string> {
+    GramNode(int node_count) : ATMNode<std::string, std::string>(node_count)  {
         str = "";
     }
     std::string GetInput() {
@@ -236,10 +290,10 @@ struct NFA : public AutoMachine<NodeType> {
         // q.push(std::make_pair(cur_state_string, InputType()));
         int cnt = 0;
         while(!q.empty()) {
-            DEBUG_NFA2DFA std::cout << "Enter While, q has " << q.size() << " elements" << std::endl;
+            DEBUG_ATM_NFA2DFA std::cout << "Enter While, q has " << q.size() << " elements" << std::endl;
             std::pair<std::string, InputType> qtop = q.front();
             q.pop();
-            DEBUG_NFA2DFA std::cout << "queue top: cur_state_string:" << qtop.first << " " << "char:" << char(qtop.second) << std::endl;
+            DEBUG_ATM_NFA2DFA std::cout << "queue top: cur_state_string:" << qtop.first << " " << "char:" << char(qtop.second) << std::endl;
             cur_state_vec.clear();
             State2Vector(qtop.first, cur_state_vec);
             std::vector<NodeType*> next_state_vec;
@@ -252,8 +306,8 @@ struct NFA : public AutoMachine<NodeType> {
             GetAllNextInputs(next_state_vec, ch_vec);
             std::string next_state_string = Vector2State(next_state_vec);
 
-            DEBUG_NFA2DFA std::cout << "Transfered state:" << next_state_string << std::endl;
-            DEBUG_NFA2DFA {
+            DEBUG_ATM_NFA2DFA std::cout << "Transfered state:" << next_state_string << std::endl;
+            DEBUG_ATM_NFA2DFA {
                 std::cout << "may input char list:";
                 for(auto& ch : ch_vec){
                     std::cout << char(ch);
@@ -263,7 +317,7 @@ struct NFA : public AutoMachine<NodeType> {
             // std::cout << "#3# " << next_state_string << std::endl;
             if(states2node.find(next_state_string) == states2node.end()) {
                 // 新边未处理过, 则先建好新节点，再重新转移
-                DEBUG_NFA2DFA std::cout << "Set as a new State" << std::endl;
+                DEBUG_ATM_NFA2DFA std::cout << "Set as a new State" << std::endl;
                 NodeType* newNode = DFA.NewNode();
                 newNode->SetInput(qtop.second);
                 newNode->token = (next_state_string);
@@ -277,7 +331,7 @@ struct NFA : public AutoMachine<NodeType> {
                 states2node[qtop.first]->AddNext(states2node[next_state_string]);
             }
             // }
-            DEBUG_NFA2DFA std::cout << std::endl << std::endl;
+            DEBUG_ATM_NFA2DFA std::cout << std::endl << std::endl;
         }
         return 0;
     }
@@ -315,7 +369,7 @@ struct NFA : public AutoMachine<NodeType> {
 
 };
 
-typedef DFA<LexNode>                LexDFA;
-typedef NFA<LexNode, int>           LexNFA;
+typedef DFA<LexDFANode>                LexDFA;
+typedef NFA<LexNFANode, int>           LexNFA;
 typedef DFA<GramNode>               GramDFA;
 typedef NFA<GramNode, std::string>  GramNFA;
