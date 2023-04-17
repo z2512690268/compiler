@@ -4,7 +4,9 @@
 #include "defs.h"
 #include "automachine.h" 
 #include "lex.h"
+#include "gram.h"
 #include "debug.h"
+#include "table.h"
 
 struct Grammer {
     std::string nonterminal;
@@ -49,6 +51,32 @@ struct GramTokenNode {
 
 };
 
+void FindFirstSet(const std::string token, const std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams, 
+                    std::unordered_map<std::string, std::vector<std::string>>& firsts) {
+    if(firsts.find(token) != firsts.end()) {
+        // 若已经计算过，则直接返回
+        return ;
+    }
+    if(grams.find(token) == grams.end()) {
+        // 若是终结符，则直接返回
+        firsts[token].push_back(token);
+        return ;
+    }
+    for(auto& gram : grams.at(token)) {
+        // 若是非终结符，则递归计算
+        if(gram[0] == token) {
+            // 若是自身，则跳过
+            continue;
+        }
+        FindFirstSet(gram[0], grams, firsts);
+        for(auto& first_token : firsts[gram[0]]) {
+            if(std::find(firsts[token].begin(), firsts[token].end(), first_token) == firsts[token].end())
+                firsts[token].push_back(first_token);
+        }
+    }
+
+}
+
 int main(int argc, char *argv[]) {
     if(argc < 4) {
         std::cout << "Usage: " << argv[0] << " <grammer-rule> <lex-output> <grammer-output>" << std::endl;
@@ -78,6 +106,8 @@ int main(int argc, char *argv[]) {
     int cur_node_count = 1;
     int repeat_count;
     GramTokenNode* cur;
+    std::unordered_map<std::string, int> terminal_map;
+
     for(auto& token_match : gram_lex) {
         std::string token = token_match.first;
         std::string match = token_match.second;
@@ -101,6 +131,7 @@ int main(int argc, char *argv[]) {
                 GramTokenNode* newNode = new GramTokenNode(cur_node_count++);
                 newNode->token = match;
                 newNode->is_terminal = 0;   //Non terminal
+                terminal_map[match] = 0;
                 cur->next.push_back(newNode);
                 cur = newNode;
             }
@@ -108,12 +139,14 @@ int main(int argc, char *argv[]) {
                 GramTokenNode* newNode = new GramTokenNode(cur_node_count++);
                 newNode->token = match;
                 newNode->is_terminal = 1;   //terminal
+                terminal_map[match] = 1;
                 cur->next.push_back(newNode);
                 cur = newNode;
         } else if(token == "STRING") {
                 GramTokenNode* newNode = new GramTokenNode(cur_node_count++);
                 newNode->token = match;
                 newNode->is_terminal = 1;   //terminal
+                terminal_map[match] = 1;
                 cur->next.push_back(newNode);
                 cur = newNode;
         } else if(token == "RESERVED") {
@@ -143,6 +176,7 @@ int main(int argc, char *argv[]) {
                 GramTokenNode* newNode = new GramTokenNode(cur_node_count++);   //开启新语法
                 repeat_count++;
                 newNode->token = cur_origin_gram + "$" + std::to_string(repeat_count);
+                terminal_map[newNode->token] = 0;
                 GramTokenNode* nextNewNode = new GramTokenNode(cur_node_count++);   //新语法左递归自己
                 nextNewNode->token = newNode->token;
                 newNode->next.push_back(nextNewNode);
@@ -177,7 +211,17 @@ int main(int argc, char *argv[]) {
             std::cout << std::endl << std::endl;
         }
     }
+    terminal_map["$"] = 1;
 
+
+    GramTokenNode* startNode = new GramTokenNode(cur_node_count++);
+    startNode->token = "$START";
+    startNode->is_terminal = 0;
+    GramTokenNode* newNode = new GramTokenNode(cur_node_count++);
+    newNode->token = gram_nodes[0]->token;
+    newNode->is_terminal = 0;
+    startNode->next.push_back(newNode);
+    gram_nodes.push_back(startNode);
     // for(auto& gram_node : gram_nodes) {
     //     std::unordered_map<int, int> flags;
     //     gram_node->Print(flags);
@@ -203,4 +247,251 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    // 计算first集, follow集
+    std::unordered_map<std::string, std::vector<std::string>> firsts;
+    std::unordered_map<std::string, std::vector<std::string>> follows;
+
+    firsts["$"].push_back("$");
+    for(auto& gram : grams) {
+        FindFirstSet(gram.first, grams, firsts);
+    }
+
+    DEBUG_GRAM_FIRST {
+        std::cout << std::endl << std::endl;
+        for(auto& first : firsts) {
+            std::cout << first.first << ": ";
+            for(auto& token : first.second) {
+                std::cout << token << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl << std::endl;
+    }
+    
+    // 计算follow集
+
+    // follows["$START"].push_back("$");
+    // for(auto& gram : grams) {
+    //     FindFollowSet(gram.first, grams, firsts, follows);
+    // }
+
+    // DEBUG_GRAM_FOLLOW {
+    //     std::cout << std::endl << std::endl;
+    //     for(auto& follow : follows) {
+    //         std::cout << follow.first << ": ";
+    //         for(auto& token : follow.second) {
+    //             std::cout << token << " ";
+    //         }
+    //         std::cout << std::endl;
+    //     }
+    // }
+
+
+    // 构造NFA
+    std::unordered_map<std::string,                                    //cur_token
+        std::unordered_map<int,                                        //gram_id
+        std::unordered_map<std::string, GramNFANode*>>> token2nodes;  // next_token -> node
+    GramNFA gramNFA;
+    GramNFANode* start = gramNFA.NewNode();
+    start->token.cur_token = "$START";
+    start->token.next_token = "$";    // 初始的next_token为$
+    start->token.stack_pos = 0;
+    start->token.gram_id = 0;
+    gramNFA.head = start;
+    token2nodes["$START"][0]["$"] = start;
+
+    std::unordered_map<int, int> flags;
+    gramNFA.head->Print(grams, flags);
+    std::cout << std::endl << std::endl;
+
+    std::queue<GramNFANode*> q;
+    q.push(start);
+    while(!q.empty()) {
+        GramNFANode* cur = q.front();
+        q.pop();
+        // std::cout << cur->id << ":start" << std::endl;
+        // flags.clear();
+        // gramNFA.head->Print(grams, flags);
+        // std::cout << std::endl << std::endl;
+        const LR1Item& cur_item = cur->token;
+        const std::vector<std::string>& gram = grams[cur_item.cur_token][cur_item.gram_id];
+        if(cur_item.stack_pos == gram.size()){
+            continue;
+        }
+        std::string input_token = gram[cur_item.stack_pos];
+        if(terminal_map[input_token] != 0) {
+            //若为terminal
+            GramNFANode* newNode = gramNFA.NewNode();
+            newNode->str = input_token;
+            newNode->token.cur_token = cur_item.cur_token;
+            newNode->token.next_token = cur_item.next_token;
+            newNode->token.stack_pos = cur_item.stack_pos + 1;
+            newNode->token.gram_id = cur_item.gram_id;
+            cur->next.push_back(newNode);
+            q.push(newNode);   
+        } else {
+            GramNFANode* newNode = gramNFA.NewNode();
+            newNode->str = input_token;
+            newNode->token.cur_token = cur_item.cur_token;
+            newNode->token.next_token = cur_item.next_token;
+            newNode->token.stack_pos = cur_item.stack_pos + 1;
+            newNode->token.gram_id = cur_item.gram_id;
+            cur->next.push_back(newNode);
+            q.push(newNode);
+            
+            std::string next_input_token = cur_item.stack_pos + 1 < gram.size() ? gram[cur_item.stack_pos + 1] : cur_item.next_token; 
+            std::vector<std::string>& next_input_firsts = firsts[next_input_token];
+            // std::cout << "next_input_token:" << next_input_token << std::endl;
+            // std::cout << "next_input_firsts:" << std::endl;
+            // for(auto& next_input_first : next_input_firsts) {
+            //     std::cout << next_input_first << " ";
+            // }
+            // std::cout << std::endl;
+            for(auto& next_input_first : next_input_firsts) {
+                for(int j = 0; j < grams[input_token].size(); ++j) {
+                    if(token2nodes[input_token][j].find(next_input_first) != token2nodes[input_token][j].end()) {
+                        GramNFANode* newNode2 = token2nodes[input_token][j][next_input_first];
+                        cur->next.push_back(newNode2);
+                        continue;
+                    }
+                    GramNFANode* newNode2 = gramNFA.NewNode();
+                    newNode2->str = "";
+                    newNode2->token.cur_token = input_token;
+                    newNode2->token.next_token = next_input_first;
+                    newNode2->token.stack_pos = 0;
+                    newNode2->token.gram_id = j;
+                    cur->next.push_back(newNode2);
+                    q.push(newNode2);
+                    token2nodes[input_token][j][next_input_first] = newNode2;
+                }
+            }
+
+        }
+        // flags.clear();
+        // gramNFA.head->Print(grams, flags);
+        // std::cout << std::endl << std::endl;
+    }
+    std::cout << "NFA states number : " << gramNFA.count << std::endl;
+    flags.clear();
+    gramNFA.head->Print(grams, flags);
+    std::cout << std::endl << std::endl;
+
+    gramNFA.GenerateDFA();
+
+    flags.clear();
+    gramNFA.DFA.head->Print(grams, flags, gramNFA);
+    // gramNFA.DFA.head->Print(flags);
+
+    // 生成LR1分析表
+    // State-Input
+    std::unordered_map<int,         // state id
+        std::unordered_map<std::string, //Input String 
+        std::tuple<int, std::string, int> >> LR1_table;      // tuple<type, gram_name, rule_id> | tuple<type, -1, next_state_id>
+    // type: 4: shift, 1: reduce, 2: accept, 3: goto
+
+    // // 初始化LR1分析表
+
+    for(auto& id2node : gramNFA.DFA.id2node) {
+        int state_id = id2node.first;
+        GramDFANode<GramNFANode>* cur_node = id2node.second;
+        std::string input_string = cur_node->str;
+
+        std::string cur_node_state = cur_node->GetToken();
+        // std::cout << "cur_node_state:" << cur_node_state << std::endl;
+
+        std::vector<GramNFANode*> cur_node_states_vec;
+        gramNFA.State2Vector(cur_node_state, cur_node_states_vec);
+        for(auto& nfa_node : cur_node_states_vec) {
+            const LR1Item& cur_item = nfa_node->token;
+            const std::vector<std::string>& gram = grams[cur_item.cur_token][cur_item.gram_id];
+            if(cur_item.stack_pos == gram.size()) {
+                // reduce
+                if(cur_item.cur_token == "$START" && cur_item.next_token == "$") {
+                    // accept
+                    LR1_table[state_id]["$"] = std::make_tuple(2, "", -1);
+                } else {
+                    LR1_table[state_id][cur_item.next_token] = std::make_tuple(1, cur_item.cur_token, cur_item.gram_id);
+                }
+            }
+        }
+
+        for(auto& next_node : cur_node->next) {
+            if(terminal_map[next_node->str] != 0) {
+                // shift
+                LR1_table[state_id][next_node->str] = std::make_tuple(4, "", next_node->id);
+            } else {
+                // goto
+                LR1_table[state_id][next_node->str] = std::make_tuple(3, "", next_node->id);
+            }
+        }
+
+    }
+
+    // 打印LR1分析表
+    std::cout << std::endl << std::endl << "LR1_table:" << std::endl;
+    Table table(gramNFA.DFA.count + 5, terminal_map.size() + 5);
+    table.Set(0, 0, "state\\input");
+    int tablei = 1;
+    int tablej = 0;
+    for(auto& terminal : terminal_map) {
+        if(terminal.second != 0) {
+            table.Set(tablej, tablei, terminal.first);
+            ++tablei;
+        }
+    }
+    
+    for(auto& terminal : terminal_map) {
+        if(terminal.second == 0) {
+            table.Set(tablej, tablei, terminal.first);
+            ++tablei;
+        }
+    }
+    ++tablej;
+    tablei = 0;
+    for(auto& state2input : LR1_table) {
+        table.Set(tablej, tablei, std::to_string(state2input.first));
+        ++tablei;
+        for(auto& terminal : terminal_map) {
+            if(terminal.second != 0) {
+                std::tuple<int, std::string, int>& t = state2input.second[terminal.first];
+                if(std::get<0>(t) == 4) {
+                    // std::cout << "shift " << std::get<2>(t) << "\t";
+                    table.Set(tablej, tablei, "shift " + std::to_string(std::get<2>(t)));
+                } else if(std::get<0>(t) == 1) {
+                    // std::cout << "reduce " << std::get<1>(t) << " " << std::get<2>(t) << "\t";
+                    table.Set(tablej, tablei, "reduce " + std::get<1>(t) + " " + std::to_string(std::get<2>(t)));
+                } else if(std::get<0>(t) == 2) {
+                    // std::cout << "accept\t";
+                    table.Set(tablej, tablei, "accept");
+                } else {
+                    // std::cout << "error\t";
+                    table.Set(tablej, tablei, "error");
+                }
+                ++tablei;
+            }
+        }
+        for(auto& terminal : terminal_map) {
+            if(terminal.second == 0) {
+                std::tuple<int, std::string, int>& t = state2input.second[terminal.first];
+                if(std::get<0>(t) == 3) {
+                    // std::cout << "goto " << std::get<2>(t) << "\t";
+                    table.Set(tablej, tablei, "goto " + std::to_string(std::get<2>(t)));
+                } else {
+                    // std::cout << "error\t";
+                    table.Set(tablej, tablei, "error");
+                }
+                ++tablei;
+            }
+        }
+        // std::cout << state2input.first << std::endl;
+        ++tablej;
+        tablei = 0;
+    }
+
+    table.Print();
+
+    // LR1分析
+    std::vector<std::string>    symbol_stack;
+    std::vector<int>            state_stack;
+    
 }

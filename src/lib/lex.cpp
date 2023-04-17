@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "transfer.h"
 #include "automachine.h"
+#include "lex.h"
 
 int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::string, std::string>>& output)
 {
@@ -285,7 +286,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    ATMNode<int, std::string>* cur = NFA.DFA.head;
+    LexDFANode* cur = NFA.DFA.head;
     while(!input.eof()) {
         int i;
         input.get(ch);
@@ -308,7 +309,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         DEBUG_LEX_MATCH if(i != cur_next_size) std::cout << "next state:" << cur->id << " EdgeId:" << i << std::endl;
         if(i == cur_next_size || input.eof()) {
             // 无法匹配
-            DEBUG_LEX_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->GetToken() << std::endl;
+            DEBUG_LEX_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->PrintToken() << std::endl;
             std::vector<LexNFANode*> state_vec;
             NFA.State2Vector(cur->GetToken(), state_vec);
             std::unordered_set<std::string> token_vec;

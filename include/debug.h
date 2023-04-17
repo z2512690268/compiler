@@ -18,6 +18,12 @@
 // #define DEBUG_GRAM_TOKENNODE if(1) 
 // 打印由转移图得到的语法列表
 #define DEBUG_GRAM_DEFTRACE if(1)
+// 打印GRAM NFA构建过程
+// #define DEBUG_GRAM_NFA if(1)
+// 打印GRAM First集求解
+#define DEBUG_GRAM_FIRST if(1)
+// 打印GRAM Follow集求解
+// #define DEBUG_GRAM_FOLLOW if(1)
 
 
 
@@ -46,4 +52,13 @@
 #endif
 #ifndef DEBUG_GRAM_DEFTRACE
 #define DEBUG_GRAM_DEFTRACE if(0)
+#endif
+#ifndef DEBUG_GRAM_NFA
+#define DEBUG_GRAM_NFA if(0)
+#endif
+#ifndef DEBUG_GRAM_FIRST
+#define DEBUG_GRAM_FIRST if(0)
+#endif
+#ifndef DEBUG_GRAM_FOLLOW
+#define DEBUG_GRAM_FOLLOW if(0)
 #endif
