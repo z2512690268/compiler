@@ -287,28 +287,49 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     std::string match;
     std::string token;
     LexDFANode* cur = NFA.DFA.head;
-    while(!input.eof()) {
+    while(true) {
         int i;
         input.get(ch);
+        int cur_next_size;
+        int flag = 0;
+        // 1. 当前字符读取失败， match不为空，输出match
+        // 2. 当前字符读取失败 match为空，break
+        // 3. 当前字符读取成功，match匹配成功，加入match继续读取
+        // 4. 当前字符读取成功，match匹配失败，输出match， unget当前字符
         if(input.fail())    {
-            DEBUG_LEX_MATCH std::cout << "End of input file!" << std::endl;
-            break;
-        }
-        int cur_next_size = cur->next.size();
-        // 还能匹配就继续匹配
-        DEBUG_LEX_MATCH std::cout << std::endl << std::endl;
-        DEBUG_LEX_MATCH std::cout << "Round Start:" << "Id:" << cur->id << " matched:" << match << std::endl;
-        DEBUG_LEX_MATCH std::cout << "New Char:" << ch << std::endl;
-        for(i = 0; i < cur->next.size(); i++) {
-            if(cur->next[i]->GetInput() == ch) {
-                cur = cur->next[i];
-                match += ch;
+            if(match == ""){
+                DEBUG_LEX_MATCH std::cout << "End of input file!" << std::endl;
                 break;
+            } else {
+                flag = 2;
+            }
+        } else {
+            cur_next_size = cur->next.size();
+            // 还能匹配就继续匹配
+            DEBUG_LEX_MATCH std::cout << std::endl << std::endl;
+            DEBUG_LEX_MATCH std::cout << "Round Start:" << "Id:" << cur->id << " matched:" << match << std::endl;
+            DEBUG_LEX_MATCH std::cout << "New Char:" << ch << std::endl;
+            for(i = 0; i < cur->next.size(); i++) {
+                // std::cout << "cur->next[i]->GetInput():" << char(cur->next[i]->GetInput()) << std::endl;
+                if(cur->next[i]->GetInput() == ch) {
+                    cur = cur->next[i];
+                    match += ch;
+                    // std::cout << i << std::endl;
+                    break;
+                }
+            }
+
+            if(i == cur_next_size) {
+                // 不能匹配了
+                flag = 4;
+            } else {
+                // 还能匹配， 继续匹配
+                continue;
             }
         }
-        DEBUG_LEX_MATCH if(i != cur_next_size) std::cout << "next state:" << cur->id << " EdgeId:" << i << std::endl;
-        if(i == cur_next_size || input.eof()) {
-            // 无法匹配
+        // std::cout << "flag:" << flag << std::endl;
+        if(flag) {
+            // 进行匹配输出
             DEBUG_LEX_MATCH std::cout << "Unmatched! StateId:" << cur->id << " NFAStates:" << cur->PrintToken() << std::endl;
             std::vector<LexNFANode*> state_vec;
             NFA.State2Vector(cur->GetToken(), state_vec);
@@ -324,16 +345,13 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             for(j = 0; j < token_list.size(); j++) {
                 if(token_vec.find(token_list[j]) != token_vec.end()) {
                     token = token_list[j];
-                    if(i == cur_next_size){
-                        DEBUG_LEX_MATCH std::cout << "Unget char:" << ch << std::endl; 
-                        input.unget();
-                    }
                     break;
                 }
             }
-            if(j == token_list.size()) {
+            if(j == token_list.size()) {    // 未匹配到任何token，输出单个字符
+                // std::cout << "ssd2" << std::endl;
                 DEBUG_LEX_MATCH std::cout << "Match Single Char" << std::endl;
-                match += ch;
+                if(flag == 4) match += ch;
                 int cnt = match.size();
                 while(cnt > 1) {
                     DEBUG_LEX_MATCH std::cout << "Unget char:" << ch << std::endl;
@@ -344,8 +362,12 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 token.push_back(match[0]);
                 token += "'";
                 match = match.substr(0, 1);
+            } else if(flag == 4){   
+                // 匹配到token，输出token
+                DEBUG_LEX_MATCH std::cout << "Unget char:" << ch << std::endl; 
+                input.unget();
             }
-            // output << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
+            // std::cout << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             output.push_back(std::make_pair(token, match));
             DEBUG_LEX_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
             cur = NFA.DFA.head;

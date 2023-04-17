@@ -1,0 +1,16 @@
+int var;
+
+int func(int x) {
+  var = var + x;
+  return var;
+}
+
+int main() {
+  // putint and putch are SysY lib functions
+  // SysY lib can be used without any declaration
+  putint(func(1));
+  var = var * 10;
+  putint(func(2));
+  putch(10);
+  return var;
+}

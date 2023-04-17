@@ -68,8 +68,8 @@ TEST(TestLex, Rule1Test) {
 TEST(TestLex, SysyTest) {
     std::string projdir = PROJECT_ROOT_DIR;
     std::ifstream rule_in(projdir + "test/lex/sysy.l");
-    std::ifstream input_in(projdir + "test/pipeline/sysy.input");
-    std::ifstream output_in(projdir + "test/pipeline/sysy.lex");
+    std::ifstream input_in(projdir + "test/pipeline/sysy_t1.input");
+    std::ifstream output_in(projdir + "test/pipeline/sysy_t1.lex");
 
     ASSERT_TRUE(rule_in.is_open());
     ASSERT_TRUE(input_in.is_open());

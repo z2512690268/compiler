@@ -51,6 +51,11 @@ struct GramTokenNode {
 
 };
 
+struct GrammerTreeNode : BaseNode<GrammerTreeNode>{
+    GrammerTreeNode(int node_count) : BaseNode<GrammerTreeNode>(node_count) {
+    }
+};
+
 void FindFirstSet(const std::string token, const std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams, 
                     std::unordered_map<std::string, std::vector<std::string>>& firsts) {
     if(firsts.find(token) != firsts.end()) {
@@ -155,7 +160,7 @@ int main(int argc, char *argv[]) {
             } else if(match == "]") {
                 GramTokenNode* start_top = start_stack.back();
                 start_stack.pop_back();
-                GramTokenNode* newNode = new GramTokenNode(cur_node_count++);
+                GramTokenNode* newNode = new GramTokenNode(cur_node_count++);   //会合空转移
                 cur->next.push_back(newNode);   // 语句执行一次
                 start_top->next.push_back(newNode); // 语句执行零次
                 cur = newNode;
@@ -186,8 +191,12 @@ int main(int argc, char *argv[]) {
 
                 GramTokenNode* originNewNode = new GramTokenNode(cur_node_count++); //原语法也要添加该语法节点
                 originNewNode->token = newNode->token;
+                GramTokenNode* originNewNewNode = new GramTokenNode(cur_node_count++); // 执行0次的空转移
                 cur->next.push_back(originNewNode);
-                start_stack.push_back(originNewNode);
+                originNewNode->next.push_back(originNewNewNode);
+                cur->next.push_back(originNewNewNode);
+
+                start_stack.push_back(originNewNewNode);
                 gram_nodes.push_back(newNode);
                 
                 cur = nextNewNewNode;  //先处理嵌套语法
@@ -254,6 +263,14 @@ int main(int argc, char *argv[]) {
     firsts["$"].push_back("$");
     for(auto& gram : grams) {
         FindFirstSet(gram.first, grams, firsts);
+    }
+
+    for(auto& terminal : terminal_map) {
+        if(terminal.second == 1) {
+            if(std::find(firsts[terminal.first].begin(), firsts[terminal.first].end(), terminal.first) == firsts[terminal.first].end()) {
+                firsts[terminal.first].push_back(terminal.first);
+            }
+        }
     }
 
     DEBUG_GRAM_FIRST {
@@ -354,7 +371,7 @@ int main(int argc, char *argv[]) {
                         cur->next.push_back(newNode2);
                         continue;
                     }
-                    GramNFANode* newNode2 = gramNFA.NewNode();
+                    GramNFANode* newNode2 = gramNFA.NewNode ();
                     newNode2->str = "";
                     newNode2->token.cur_token = input_token;
                     newNode2->token.next_token = next_input_first;
@@ -459,7 +476,12 @@ int main(int argc, char *argv[]) {
                     table.Set(tablej, tablei, "shift " + std::to_string(std::get<2>(t)));
                 } else if(std::get<0>(t) == 1) {
                     // std::cout << "reduce " << std::get<1>(t) << " " << std::get<2>(t) << "\t";
-                    table.Set(tablej, tablei, "reduce " + std::get<1>(t) + " " + std::to_string(std::get<2>(t)));
+                    std::vector<std::string>& gram = grams[std::get<1>(t)][std::get<2>(t)];
+                    std::string gram_str =  std::get<1>(t) + " <- ";
+                    for(auto& g : gram) {
+                        gram_str += g + " ";
+                    }
+                    table.Set(tablej, tablei, "reduce " + gram_str);
                 } else if(std::get<0>(t) == 2) {
                     // std::cout << "accept\t";
                     table.Set(tablej, tablei, "accept");
@@ -491,7 +513,106 @@ int main(int argc, char *argv[]) {
     table.Print();
 
     // LR1分析
-    std::vector<std::string>    symbol_stack;
-    std::vector<int>            state_stack;
-    
+    std::vector<std::string>                 symbol_stack;
+    std::vector<int>                         state_stack;
+    Tree<GrammerTreeNode>                    grammer_tree;
+    symbol_stack.push_back("$");
+    state_stack.push_back(gramNFA.DFA.head->id);
+
+    std::vector<std::pair<std::string, std::string> > token_stream;
+    while(!token_in.eof()) {
+        std::string token;
+        std::string value;
+        token_in >> token >> value;
+        token_stream.push_back(std::make_pair(token, value));
+    }
+    token_stream.pop_back();
+    token_stream.push_back(std::make_pair("$", "$"));
+
+    int token_stream_pos = 0;
+    while(token_stream_pos < token_stream.size()) {
+        std::string& input_token = token_stream[token_stream_pos].first;
+        std::string& match_value = token_stream[token_stream_pos].second;
+
+        std::cout << "token_stream_pos: " << token_stream_pos << "\t";
+        std::cout << "input_token: " << input_token << "\t";
+        std::cout << "match_value: " << match_value << std::endl;
+
+        int state_id = state_stack.back();
+        if(input_token == "RESERVED") {
+            input_token = match_value;
+        }
+
+        if(terminal_map.find(input_token) == terminal_map.end()) {
+            token_stream_pos++;
+            continue;
+        }
+
+        if(terminal_map[input_token] == 0) {
+            std::cout << "error: " << input_token << " is not a terminal" << std::endl;
+            return 1;
+        }
+
+        if(LR1_table[state_id].find(input_token) == LR1_table[state_id].end()) {
+            std::cout << "error: " << input_token << " is not in LR1_table" << std::endl;
+            return 1;
+        }
+
+        std::cout << "input_token: " << input_token << "\t";
+        std::tuple<int, std::string, int>& t = LR1_table[state_id][input_token];
+
+        if(std::get<0>(t) == 4) {
+            // shift
+            symbol_stack.push_back(input_token);
+            state_stack.push_back(std::get<2>(t));
+            std::cout << "shift " << std::get<2>(t) << std::endl;
+            token_stream_pos++;
+        } else if(std::get<0>(t) == 1) {
+            // reduce
+            std::string& reduce_token = std::get<1>(t);
+            int reduce_gram_id = std::get<2>(t);
+            const std::vector<std::string>& reduce_gram = grams[reduce_token][reduce_gram_id];
+            for(int i = 0; i < reduce_gram.size(); ++i) {
+                symbol_stack.pop_back();
+                state_stack.pop_back();
+            }
+            symbol_stack.push_back(reduce_token);
+            if(LR1_table[state_stack.back()].find(reduce_token) == LR1_table[state_stack.back()].end()) {
+                std::cout << "error: " << reduce_token << " is not in LR1_table" << std::endl;
+                return 1;
+            }
+            state_stack.push_back(std::get<2>(LR1_table[state_stack.back()][reduce_token]));
+            std::cout << "reduce " << reduce_token << " <- ";
+            for(auto& g : reduce_gram) {
+                std::cout << g << " ";
+            }
+            std::cout << std::endl;
+        } else if(std::get<0>(t) == 2) {
+            // accept
+            std::cout << "accept" << std::endl;
+            break;
+        } else if(std::get<0>(t) == 3) {
+            // goto
+            symbol_stack.push_back(input_token);
+            state_stack.push_back(std::get<2>(t));
+            std::cout << "goto " << std::get<2>(t) << std::endl;
+        } else {
+            std::cout << "error" << std::endl;
+            return 1;
+        }
+
+        // symbol_stack
+        std::cout << "symbol_stack: ";
+        for(auto& symbol : symbol_stack) {
+            std::cout << symbol << " ";
+        }
+        std::cout << std::endl;
+        // state_stack
+        std::cout << "state_stack: ";
+        for(auto& state : state_stack) {
+            std::cout << state << " ";
+        }
+        std::cout << std::endl << std::endl;
+    }
+
 }
