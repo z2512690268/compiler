@@ -1,0 +1,15 @@
+s : c c 
+	c : "c" c 
+		RESERVED : "c"
+		c : "c" c 
+			RESERVED : "c"
+			c : "c" c 
+				RESERVED : "c"
+				c : "d" 
+					RESERVED : "d"
+	c : "c" c 
+		RESERVED : "c"
+		c : "c" c 
+			RESERVED : "c"
+			c : "d" 
+				RESERVED : "d"

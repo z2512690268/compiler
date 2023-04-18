@@ -169,3 +169,5 @@ struct GramDFANode : public ATMNode<std::string, std::string, GramDFANode<GramNF
 };
 
 using GramNFA = NFA<GramNFANode, GramDFANode<GramNFANode>, std::string, LR1Item>;
+
+int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_in, std::ostream& gram_out);
