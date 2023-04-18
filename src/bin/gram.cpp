@@ -82,6 +82,26 @@ void FindFirstSet(const std::string token, const std::unordered_map<std::string,
 
 }
 
+// type: 4: shift, 1: reduce, 2: accept, 3: goto
+std::string StringLR1TableItem(const std::tuple<int, std::string, int>& lr1TableItem, 
+                    std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams) {
+    std::string ret;
+    if(std::get<0>(lr1TableItem) == 4) {
+        ret += "shift " + std::get<2>(lr1TableItem);
+    } else if(std::get<0>(lr1TableItem) == 1) {
+        ret += "reduce " + std::get<1>(lr1TableItem) + " -> ";
+        std::vector<std::string>& gram = grams[std::get<1>(lr1TableItem)][std::get<2>(lr1TableItem)];
+        for(auto& token : gram) {
+            ret += token + " ";
+        }
+    } else if(std::get<0>(lr1TableItem) == 2) {
+        ret += "accept";
+    } else if(std::get<0>(lr1TableItem) == 3) {
+        ret += "goto " + std::get<2>(lr1TableItem);
+    }
+    return ret;
+}
+
 int main(int argc, char *argv[]) {
     if(argc < 4) {
         std::cout << "Usage: " << argv[0] << " <grammer-rule> <lex-output> <grammer-output>" << std::endl;
@@ -425,9 +445,26 @@ int main(int argc, char *argv[]) {
                 // reduce
                 if(cur_item.cur_token == "$START" && cur_item.next_token == "$") {
                     // accept
+                    if(LR1_table[state_id].find("$") != LR1_table[state_id].end()){
+                        std::cout << "LR1_table[" << state_id << "][\"$\"] has been set" << std::endl;
+                        std::cout << "Old value: " << std::get<0>(LR1_table[state_id]["$"]) << " " 
+                                                << std::get<1>(LR1_table[state_id]["$"]) << " " 
+                                                << std::get<2>(LR1_table[state_id]["$"]) << std::endl;
+                        std::cout << "New value: " << "accept" << std::endl;
+                        return 1;
+                    }
                     LR1_table[state_id]["$"] = std::make_tuple(2, "", -1);
                 } else {
+                    if(LR1_table[state_id].find(cur_item.next_token) != LR1_table[state_id].end()){
+                        std::cout << "LR1_table[" << state_id << "][\"" << cur_item.next_token << "\"] has been set" << std::endl;
+                        std::cout << "Old value: " << std::get<0>(LR1_table[state_id][cur_item.next_token]) << " " 
+                                                << std::get<1>(LR1_table[state_id][cur_item.next_token]) << " " 
+                                                << std::get<2>(LR1_table[state_id][cur_item.next_token]) << std::endl;
+                        std::cout << "New value: " << "reduce" << " " << cur_item.cur_token << " " << cur_item.gram_id << std::endl;
+                        return 1;
+                    }
                     LR1_table[state_id][cur_item.next_token] = std::make_tuple(1, cur_item.cur_token, cur_item.gram_id);
+
                 }
             }
         }
@@ -435,9 +472,25 @@ int main(int argc, char *argv[]) {
         for(auto& next_node : cur_node->next) {
             if(terminal_map[next_node->str] != 0) {
                 // shift
+                if(LR1_table[state_id].find(next_node->str) != LR1_table[state_id].end()){
+                    std::cout << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] has been set" << std::endl;
+                    std::cout << "Old value: " << std::get<0>(LR1_table[state_id][next_node->str]) << " " 
+                                            << std::get<1>(LR1_table[state_id][next_node->str]) << " " 
+                                            << std::get<2>(LR1_table[state_id][next_node->str]) << std::endl;
+                    std::cout << "New value: " << "shift" << " " << next_node->id << std::endl;
+                    return 1;
+                }
                 LR1_table[state_id][next_node->str] = std::make_tuple(4, "", next_node->id);
             } else {
                 // goto
+                if(LR1_table[state_id].find(next_node->str) != LR1_table[state_id].end()){
+                    std::cout << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] has been set" << std::endl;
+                    std::cout << "Old value: " << std::get<0>(LR1_table[state_id][next_node->str]) << " " 
+                                            << std::get<1>(LR1_table[state_id][next_node->str]) << " " 
+                                            << std::get<2>(LR1_table[state_id][next_node->str]) << std::endl;
+                    std::cout << "New value: " << "goto" << " " << next_node->id << std::endl;
+                    return 1;
+                }
                 LR1_table[state_id][next_node->str] = std::make_tuple(3, "", next_node->id);
             }
         }

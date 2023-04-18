@@ -1,32 +1,36 @@
 CompUnit    ::= [CompUnit] FuncDef;
 
-FuncDef     ::= FuncType IDENT "(" [FuncFParams] ")" Block;
-FuncType    ::= "void" | "int";
+FuncDef     ::= Type IDENT "(" [FuncFParams] ")" Block;
+Type    ::= "void" | "int";
 FuncFParams ::= FuncFParam {"," FuncFParam};
-FuncFParam  ::= BType IDENT;
+FuncFParam  ::= Type IDENT;
 
-UnaryExp    ::= UnaryExp      ::= PrimaryExp 
-            | IDENT "(" [FuncRParams] ")" 
-            | UnaryOp UnaryExp;
+UnaryExp      ::= PrimaryExp | IDENT "(" [FuncRParams] ")" | UnaryOp UnaryExp;
 FuncRParams ::= Exp {"," Exp};
 
 Decl          ::= ConstDecl | VarDecl;
-ConstDecl     ::= "const" BType ConstDef {"," ConstDef} ";";
-BType         ::= "int";
+ConstDecl     ::= "const" Type ConstDef {"," ConstDef} ";";
 ConstDef      ::= IDENT "=" ConstInitVal;
 ConstInitVal  ::= ConstExp;
-VarDecl       ::= BType VarDef {"," VarDef} ";";
+VarDecl       ::= Type VarDef {"," VarDef} ";";
 VarDef        ::= IDENT | IDENT "=" InitVal;
 InitVal       ::= Exp;
 
 
 Block         ::= "{" {BlockItem} "}";
 BlockItem     ::= Decl | Stmt;
-Stmt          ::= LVal "=" Exp ";"
+Stmt          ::= "if" "(" Exp ")" ElseStmt "else" Stmt
+                | "if" "(" Exp ")" Stmt
+                | "while" "(" Exp ")" Stmt
+                | NoIfStmt;
+                
+ElseStmt    ::= "if" "(" Exp ")" ElseStmt "else" ElseStmt
+                | "while" "(" Exp ")" ElseStmt
+                | NoIfStmt;
+
+NoIfStmt    ::= LVal "=" Exp ";"
                 | [Exp] ";"
                 | Block
-                | "if" "(" Exp ")" Stmt ["else" Stmt]
-                | "while" "(" Exp ")" Stmt
                 | "break" ";"
                 | "continue" ";"
                 | "return" [Exp] ";";
