@@ -1,0 +1,16 @@
+CompUnit : FuncDef 
+	FuncDef : FuncType IDENT "(" ")" Block 
+		FuncType : "int" 
+			RESERVED : "int"
+		IDENT = "main"
+		RESERVED : "("
+		RESERVED : ")"
+		Block : "{" Stmt "}" 
+			RESERVED : "{"
+			Stmt : "return" Number ";" 
+				RESERVED : "return"
+				Number : Integer 
+					Integer : OCT_INTEGER 
+						OCT_INTEGER = "0"
+				RESERVED : ";"
+			RESERVED : "}"

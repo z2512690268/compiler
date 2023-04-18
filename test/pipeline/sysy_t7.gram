@@ -1,0 +1,121 @@
+CompUnit : FuncDef 
+	FuncDef : FuncType IDENT "(" ")" Block 
+		FuncType : "int" 
+			RESERVED : "int"
+		IDENT = "main"
+		RESERVED : "("
+		RESERVED : ")"
+		Block : "{" Block$1 "}" 
+			RESERVED : "{"
+			Block$1 : Block$1 BlockItem 
+				Block$1 : Block$1 BlockItem 
+					Block$1 : BlockItem 
+						BlockItem : Decl 
+							Decl : VarDecl 
+								VarDecl : BType VarDef VarDecl$1 ";" 
+									BType : "int" 
+										RESERVED : "int"
+									VarDef : IDENT "=" InitVal 
+										IDENT = "a"
+										RESERVED : "="
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "1"
+									VarDecl$1 : "," VarDef 
+										RESERVED : ","
+										VarDef : IDENT "=" InitVal 
+											IDENT = "b"
+											RESERVED : "="
+											InitVal : Exp 
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : MulExp 
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : Number 
+																					Number : Integer 
+																						Integer : DEC_INTEGER 
+																							DEC_INTEGER = "2"
+									RESERVED : ";"
+					BlockItem : Stmt 
+						Stmt : Block 
+							Block : "{" Block$1 "}" 
+								RESERVED : "{"
+								Block$1 : Block$1 BlockItem 
+									Block$1 : BlockItem 
+										BlockItem : Decl 
+											Decl : VarDecl 
+												VarDecl : BType VarDef ";" 
+													BType : "int" 
+														RESERVED : "int"
+													VarDef : IDENT "=" InitVal 
+														IDENT = "a"
+														RESERVED : "="
+														InitVal : Exp 
+															Exp : LOrExp 
+																LOrExp : LAndExp 
+																	LAndExp : EqExp 
+																		EqExp : RelExp 
+																			RelExp : AddExp 
+																				AddExp : MulExp 
+																					MulExp : UnaryExp 
+																						UnaryExp : PrimaryExp 
+																							PrimaryExp : Number 
+																								Number : Integer 
+																									Integer : DEC_INTEGER 
+																										DEC_INTEGER = "2"
+													RESERVED : ";"
+									BlockItem : Stmt 
+										Stmt : LVal "=" Exp ";" 
+											LVal : IDENT 
+												IDENT = "b"
+											RESERVED : "="
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : AddExp "+" MulExp 
+																	AddExp : MulExp 
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : LVal 
+																					LVal : IDENT 
+																						IDENT = "b"
+																	RESERVED : "+"
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : LVal 
+																				LVal : IDENT 
+																					IDENT = "a"
+											RESERVED : ";"
+								RESERVED : "}"
+				BlockItem : Stmt 
+					Stmt : "return" Exp ";" 
+						RESERVED : "return"
+						Exp : LOrExp 
+							LOrExp : LAndExp 
+								LAndExp : EqExp 
+									EqExp : RelExp 
+										RelExp : AddExp 
+											AddExp : MulExp 
+												MulExp : UnaryExp 
+													UnaryExp : PrimaryExp 
+														PrimaryExp : LVal 
+															LVal : IDENT 
+																IDENT = "b"
+						RESERVED : ";"
+			RESERVED : "}"

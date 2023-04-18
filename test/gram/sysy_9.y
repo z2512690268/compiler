@@ -14,11 +14,18 @@ FuncType      ::= "int";
 
 Block         ::= "{" {BlockItem} "}";
 BlockItem     ::= Decl | Stmt;
-Stmt          ::= LVal "=" Exp ";"
+Stmt          ::= "if" "(" Exp ")" ElseStmt "else" Stmt
+                | "if" "(" Exp ")" Stmt
+                | "while" "(" Exp ")" Stmt
+                | NoIfStmt;
+                
+ElseStmt    ::= "if" "(" Exp ")" ElseStmt "else" ElseStmt
+                | "while" "(" Exp ")" ElseStmt
+                | NoIfStmt;
+
+NoIfStmt    ::= LVal "=" Exp ";"
                 | [Exp] ";"
                 | Block
-                | "if" "(" Exp ")" Stmt ["else" Stmt]
-                | "while" "(" Exp ")" Stmt
                 | "break" ";"
                 | "continue" ";"
                 | "return" [Exp] ";";

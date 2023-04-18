@@ -1,0 +1,105 @@
+CompUnit : CompUnit FuncDef 
+	CompUnit : CompUnit FuncDef 
+		CompUnit : FuncDef 
+			FuncDef : Type IDENT "(" FuncFParams ")" Block 
+				Type : "int" 
+					RESERVED : "int"
+				IDENT = "half"
+				RESERVED : "("
+				FuncFParams : FuncFParam 
+					FuncFParam : Type IDENT 
+						Type : "int" 
+							RESERVED : "int"
+						IDENT = "x"
+				RESERVED : ")"
+				Block : "{" Block$1 "}" 
+					RESERVED : "{"
+					Block$1 : BlockItem 
+						BlockItem : Stmt 
+							Stmt : NoIfStmt 
+								NoIfStmt : "return" Exp ";" 
+									RESERVED : "return"
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : MulExp "/" UnaryExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : LVal 
+																			LVal : IDENT 
+																				IDENT = "x"
+																RESERVED : "/"
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : DEC_INTEGER 
+																				DEC_INTEGER = "2"
+									RESERVED : ";"
+					RESERVED : "}"
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "void" 
+				RESERVED : "void"
+			IDENT = "f"
+			RESERVED : "("
+			RESERVED : ")"
+			Block : "{" "}" 
+				RESERVED : "{"
+				RESERVED : "}"
+	FuncDef : Type IDENT "(" ")" Block 
+		Type : "int" 
+			RESERVED : "int"
+		IDENT = "main"
+		RESERVED : "("
+		RESERVED : ")"
+		Block : "{" Block$1 "}" 
+			RESERVED : "{"
+			Block$1 : Block$1 BlockItem 
+				Block$1 : BlockItem 
+					BlockItem : Stmt 
+						Stmt : NoIfStmt 
+							NoIfStmt : Exp ";" 
+								Exp : LOrExp 
+									LOrExp : LAndExp 
+										LAndExp : EqExp 
+											EqExp : RelExp 
+												RelExp : AddExp 
+													AddExp : MulExp 
+														MulExp : UnaryExp 
+															UnaryExp : IDENT "(" ")" 
+																IDENT = "f"
+																RESERVED : "("
+																RESERVED : ")"
+								RESERVED : ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							RESERVED : "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "half"
+															RESERVED : "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : PrimaryExp 
+																								PrimaryExp : Number 
+																									Number : Integer 
+																										Integer : DEC_INTEGER 
+																											DEC_INTEGER = "10"
+															RESERVED : ")"
+							RESERVED : ";"
+			RESERVED : "}"
