@@ -1,0 +1,114 @@
+CompUnit: CompUnit Decl 
+CompUnit: CompUnit FuncDef 
+CompUnit: Decl 
+CompUnit: FuncDef 
+Decl: ConstDecl 
+Decl: VarDecl 
+ConstDecl: "const" Type ConstDef ConstDecl$1 ";" 
+ConstDecl: "const" Type ConstDef ";" 
+ConstDecl$1: ConstDecl$1 "," ConstDef 
+ConstDecl$1: "," ConstDef 
+ConstDef: IDENT ConstDef$1 "=" ConstInitVal 
+ConstDef: IDENT "=" ConstInitVal 
+ConstDef$1: ConstDef$1 "[" ConstExp "]" 
+ConstDef$1: "[" ConstExp "]" 
+ConstInitVal: ConstExp 
+ConstInitVal: "{" ConstInitVal ConstInitVal$1 "}" 
+ConstInitVal: "{" ConstInitVal "}" 
+ConstInitVal: "{" "}" 
+ConstInitVal$1: ConstInitVal$1 "," ConstInitVal 
+ConstInitVal$1: "," ConstInitVal 
+VarDecl: Type VarDef VarDecl$1 ";" 
+VarDecl: Type VarDef ";" 
+VarDecl$1: VarDecl$1 "," VarDef 
+VarDecl$1: "," VarDef 
+VarDef: VarDefLeft 
+VarDef: VarDefLeft "=" InitVal 
+VarDefLeft: IDENT VarDefLeft$1 
+VarDefLeft: IDENT 
+VarDefLeft$1: VarDefLeft$1 "[" ConstExp "]" 
+VarDefLeft$1: "[" ConstExp "]" 
+InitVal: Exp 
+InitVal: "{" InitVal InitVal$1 "}" 
+InitVal: "{" InitVal "}" 
+InitVal: "{" "}" 
+InitVal$1: InitVal$1 "," InitVal 
+InitVal$1: "," InitVal 
+FuncDef: Type IDENT "(" FuncFParams ")" Block 
+FuncDef: Type IDENT "(" ")" Block 
+Type: "void" 
+Type: "int" 
+FuncFParams: FuncFParam FuncFParams$1 
+FuncFParams: FuncFParam 
+FuncFParams$1: FuncFParams$1 "," FuncFParam 
+FuncFParams$1: "," FuncFParam 
+FuncFParam: Type IDENT "[" "]" FuncFParam$1 
+FuncFParam: Type IDENT "[" "]" 
+FuncFParam: Type IDENT 
+FuncFParam$1: FuncFParam$1 "[" ConstExp "]" 
+FuncFParam$1: "[" ConstExp "]" 
+Block: "{" Block$1 "}" 
+Block: "{" "}" 
+Block$1: Block$1 BlockItem 
+Block$1: BlockItem 
+BlockItem: Decl 
+BlockItem: Stmt 
+Stmt: "if" "(" Exp ")" ElseStmt "else" Stmt 
+Stmt: "if" "(" Exp ")" Stmt 
+Stmt: "while" "(" Exp ")" Stmt 
+Stmt: NoIfStmt 
+ElseStmt: "if" "(" Exp ")" ElseStmt "else" ElseStmt 
+ElseStmt: "while" "(" Exp ")" ElseStmt 
+ElseStmt: NoIfStmt 
+NoIfStmt: LVal "=" Exp ";" 
+NoIfStmt: Exp ";" 
+NoIfStmt: ";" 
+NoIfStmt: Block 
+NoIfStmt: "break" ";" 
+NoIfStmt: "continue" ";" 
+NoIfStmt: "return" Exp ";" 
+NoIfStmt: "return" ";" 
+Exp: LOrExp 
+LVal: IDENT LVal$1 
+LVal: IDENT 
+LVal$1: LVal$1 "[" Exp "]" 
+LVal$1: "[" Exp "]" 
+PrimaryExp: "(" Exp ")" 
+PrimaryExp: LVal 
+PrimaryExp: Number 
+Number: Integer 
+UnaryExp: PrimaryExp 
+UnaryExp: IDENT "(" FuncRParams ")" 
+UnaryExp: IDENT "(" ")" 
+UnaryExp: UnaryOp UnaryExp 
+UnaryOp: "+" 
+UnaryOp: "-" 
+UnaryOp: "!" 
+FuncRParams: Exp FuncRParams$1 
+FuncRParams: Exp 
+FuncRParams$1: FuncRParams$1 "," Exp 
+FuncRParams$1: "," Exp 
+MulExp: UnaryExp 
+MulExp: MulExp "*" UnaryExp 
+MulExp: MulExp "/" UnaryExp 
+MulExp: MulExp "%" UnaryExp 
+AddExp: MulExp 
+AddExp: AddExp "+" MulExp 
+AddExp: AddExp "-" MulExp 
+RelExp: AddExp 
+RelExp: RelExp "<" AddExp 
+RelExp: RelExp ">" AddExp 
+RelExp: RelExp "<=" AddExp 
+RelExp: RelExp ">=" AddExp 
+EqExp: RelExp 
+EqExp: EqExp "==" RelExp 
+EqExp: EqExp "!=" RelExp 
+LAndExp: EqExp 
+LAndExp: LAndExp "&&" EqExp 
+LOrExp: LAndExp 
+LOrExp: LOrExp "||" LAndExp 
+ConstExp: Exp 
+Integer: DEC_INTEGER 
+Integer: OCT_INTEGER 
+Integer: HEX_INTEGER 
+$START: CompUnit 

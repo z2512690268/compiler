@@ -17,3 +17,6 @@ std::string InputTrans(char ch);
 std::string Char2Str(char ch);
 
 std::string Unprint2Trans(std::string in_str);
+
+std::string VisableString(const std::string& token);
+std::string AsciiString(const std::string& token);

@@ -1,4 +1,11 @@
 #include "transfer.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 char Transfer(char ch) {
     switch (ch)
@@ -88,3 +95,80 @@ std::string Unprint2Trans(std::string in_str) {
     }
     return str;
 }
+
+// Encode a token by replacing whitespace and unprintable characters with escape sequences
+std::string VisableString(const std::string& token) {
+    std::string out;
+    for(int i = 0; i < token.size(); i++) {
+        switch (token[i])
+        {
+        case ' ':
+            out += "\\s";
+            break;
+        case '\t':
+            out += "\\t";
+            break;
+        case '\n':
+            out += "\\n";
+            break;
+        case '\r':
+            out += "\\r";
+            break;
+        default:
+            if (std::isprint(token[i])) {
+                out += token[i];
+            }
+            else {
+                out += "\\x" + std::to_string(static_cast<int>(token[i]));
+            }
+        }
+    }
+    return out;
+}
+// Decode a token by replacing escape sequences with whitespace and unprintable characters
+std::string AsciiString(const std::string& token) {
+    std::string out;
+    for(int i = 0; i < token.size(); i++) {
+        if (token[i] == '\\') {
+            if (i + 1 < token.size()) {
+                switch (token[i + 1]) {
+                case 's':
+                    out += ' ';
+                    break;
+                case 't':
+                    out += '\t';
+                    break;
+                case 'n':
+                    out += '\n';
+                    break;
+                case 'r':
+                    out += '\r';
+                    break;
+                case 'x': {
+                    int code;
+                    if (i + 2 < token.size()) {
+                        std::istringstream iss(token.substr(i + 2, 2));
+                        iss >> std::hex >> code;
+                        out += static_cast<char>(code);
+                        i += 2;
+                    }
+                    else {
+                        out += token[i];
+                    }
+                    break;
+                }
+                default:
+                    out += token[i];
+                }
+            }
+            else {
+                out += token[i];
+            }
+        }
+        else {
+            out += token[i];
+        }
+    }
+    return out;
+}
+    
