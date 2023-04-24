@@ -629,9 +629,6 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             symbol_stack.push_back(input_token);
             state_stack.push_back(std::get<2>(t));
             GrammerTreeNode* node = grammer_tree.NewNode();
-            if(input_token == match_value) {
-                input_token = "RESERVED";
-            }
             node->token = input_token;
             node->match = match_value;
             grammer_stack.push_back(node);

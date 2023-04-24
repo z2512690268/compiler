@@ -6,6 +6,9 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <codecvt>
+#include <locale>
+#include <iomanip>
 
 char Transfer(char ch) {
     switch (ch)
@@ -119,7 +122,9 @@ std::string VisableString(const std::string& token) {
                 out += token[i];
             }
             else {
-                out += "\\x" + std::to_string(static_cast<int>(token[i]));
+                std::stringstream ss;
+                ss << std::hex << +static_cast<unsigned char>(token[i]);
+                out += "\\x" + ss.str();
             }
         }
     }
@@ -134,23 +139,27 @@ std::string AsciiString(const std::string& token) {
                 switch (token[i + 1]) {
                 case 's':
                     out += ' ';
+                    i++;
                     break;
                 case 't':
                     out += '\t';
+                    i++;
                     break;
                 case 'n':
                     out += '\n';
+                    i++;
                     break;
                 case 'r':
                     out += '\r';
+                    i++;
                     break;
                 case 'x': {
                     int code;
                     if (i + 2 < token.size()) {
                         std::istringstream iss(token.substr(i + 2, 2));
                         iss >> std::hex >> code;
-                        out += static_cast<char>(code);
-                        i += 2;
+                        out += static_cast<unsigned char>(code);
+                        i += 3;
                     }
                     else {
                         out += token[i];
@@ -171,4 +180,53 @@ std::string AsciiString(const std::string& token) {
     }
     return out;
 }
-    
+
+std::string VisableUtf8String(const std::string& token) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    std::wstring wstr = conv.from_bytes(token);
+    std::string out;
+    for (int i = 0; i < wstr.size(); i++) {
+        if (wstr[i] < 0x80) {
+            out += static_cast<char>(wstr[i]);
+        }
+        else {
+            out += "\\u" + std::to_string(static_cast<int>(wstr[i]));
+        }
+    }
+    return out;
+}
+
+std::string Utf8String(const std::string& token) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    std::wstring wstr;
+    for (int i = 0; i < token.size(); i++) {
+        if (token[i] == '\\') {
+            if (i + 1 < token.size()) {
+                switch (token[i + 1]) {
+                case 'u': {
+                    int code;
+                    if (i + 5 < token.size()) {
+                        std::istringstream iss(token.substr(i + 2, 4));
+                        iss >> std::hex >> code;
+                        wstr += static_cast<wchar_t>(code);
+                        i += 4;
+                    }
+                    else {
+                        wstr += token[i];
+                    }
+                    break;
+                }
+                default:
+                    wstr += token[i];
+                }
+            }
+            else {
+                wstr += token[i];
+            }
+        }
+        else {
+            wstr += token[i];
+        }
+    }
+    return conv.to_bytes(wstr);
+}

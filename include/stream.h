@@ -7,6 +7,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include "transfer.h"
 
 template <typename T>
 class TokenStream {
@@ -42,8 +43,7 @@ public:
             throw std::runtime_error("TokenStream::export_to_file: Failed to open file");
         }
         for (auto token : tokens) {
-            std::string 
-            out_file << encode_token_string(token) << std::endl;
+            out_file << token << std::endl;
         }
         out_file.close();
     }
@@ -54,22 +54,26 @@ public:
         if (!in_file.is_open()) {
             throw std::runtime_error("TokenStream::load_from_file: Failed to open file");
         }
-        std::string line;
-        while (std::getline(in_file, line)) {
-            tokens.push_back(decode_token(line));
+        while(true) {
+            T token;
+            in_file >> token;
+            if(in_file.fail()) {
+                break;
+            }
+            tokens.push_back(token);
         }
         in_file.close();
-        current_token_index = -1;
+        current_token_index = 0;
     }
 
     // Check if the tokens enter end
     bool Eof() {
-        return current_token_index + 1 >= tokens.size();
+        return current_token_index >= tokens.size();
     }
 
     // Get a token
     void GetToken(T &token) {
-        if (current_token_index + 1 >= tokens.size()) {
+        if (current_token_index >= tokens.size()) {
             throw std::out_of_range("TokenStream::operator>>: Stream out of tokens");
         }
         token = tokens[current_token_index];
@@ -87,7 +91,7 @@ public:
 
     // Add a token to the end of the stream
     void AddToken(const T& token) {
-        tokens.push_back(token.to_string());
+        tokens.push_back(token);
     }
 
     // Get the number of tokens in the stream
@@ -98,8 +102,57 @@ public:
 private:
     std::vector<T> tokens;
     int current_token_index;
-
-
 };
 
-// class TokenStream<std::string> {
+struct GrammerToken {
+	std::string token;
+    std::vector<std::string> rule;
+    int terminal;
+
+	GrammerToken() : token(""), terminal(0) {}
+    GrammerToken(const std::string& token, const std::vector<std::string>& rule, int terminal) : token(token), rule(rule), terminal(terminal) {}
+	
+    friend std::ostream& operator<<(std::ostream& os, const GrammerToken& token) {
+        os << VisableString(token.token);
+        if(!token.terminal) {
+            os << " : ";
+        } else {
+            os << " = ";
+        }
+        for(auto word : token.rule) {
+            os << VisableString(word) << " ";
+        }
+		return os;
+	}
+
+	friend std::istream& operator>>(std::istream& is, GrammerToken& token) {
+        std::string line;
+        std::getline(is, line);
+        std::stringstream ss(line);
+        std::cout << line.c_str() << std::endl;
+        ss >> token.token;
+        token.token = AsciiString(token.token);
+        std::string equal;
+        ss >> equal;
+        if(equal == ":") {
+            token.terminal = 0;
+        } else if(equal == "=") {
+            token.terminal = 1;
+        } else {
+            if(is.eof()) {
+                return is;
+            }
+            throw std::runtime_error("GrammerToken::operator>>: Invalid token");
+        }
+        std::string word;
+        while(ss >> word) {
+            token.rule.push_back(AsciiString(word));
+        }
+
+        return is;
+	}
+    
+	bool operator==(const GrammerToken& other) const {
+        return token == other.token && rule == other.rule && terminal == other.terminal;
+    }
+};

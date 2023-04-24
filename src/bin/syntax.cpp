@@ -2,25 +2,27 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "defs.h"
+#include "stream.h"
 
-// 获取一行，并按照空格分割，忽略其他字符，多个空格视为一个空格，返回分割后的字符串数组
-std::vector<std::string> getLine(std::ifstream &file) {
-    std::vector<std::string> result;
-    std::string line;
-    std::getline(file, line);
-    std::string word;
-    for (auto c : line) {
-        if (c == ' ') {
-            if (word != "") {
-                result.push_back(word);
-                word = "";
-            }
-        } else {
-            word += c;
-        }
-    }
-    if (word != "") {
-        result.push_back(word);
-    }
-    return result;
+void ConstructSyntaxTree(TokenStream<GrammerToken>& stream) {
+
+}
+
+int main() {
+    std::string project_dir = PROJECT_ROOT_DIR;
+    std::string file_name = (project_dir + "test/pipeline/maze.gram");
+    
+    TokenStream<GrammerToken> stream;
+    stream.LoadFile(file_name);
+
+    // while(!stream.Eof()) {
+    //     GrammerToken temp;
+    //     stream.GetToken(temp);
+    //     std::cout << temp << std::endl;
+    // }
+
+    ConstructSyntaxTree(stream);
+
+    return 0;
 }

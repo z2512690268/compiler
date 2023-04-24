@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     std::ofstream gram_out(tmp + "/test/pipeline/" + argv[3] + ".gram");
 
     // 解析语法文件
-    std::ifstream gram_rule(tmp + "test/lex/gram.l");
+    std::ifstream gram_rule(tmp + "src/res/gram.l");
     if(!gram_rule.is_open())  { std::cout << "gram_rule open failed!" << std::endl; return 1; }
 
     int ret = grammer(gram_in, gram_rule, token_in, gram_out);

@@ -81,7 +81,12 @@ target("gram")
     add_includedirs("include")
     add_files("src/bin/gram.cpp")
     add_deps("staticlib")
-    
+
+target("syntax")
+    set_kind("binary")
+    add_includedirs("include")
+    add_files("src/bin/syntax.cpp")
+    add_deps("staticlib")
     
 target("test")
     set_kind("binary")
