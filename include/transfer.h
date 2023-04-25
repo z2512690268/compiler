@@ -1,17 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
-#define TRANSFER_STAR -1
-#define TRANSFER_OR -2
-#define TRANSFER_LBRACKET -3
-#define TRANSFER_RBRACKET -4
-#define TRANSFER_CONCAT -5
-#define TRANSFER_DOT -6
 
-char Transfer(char ch);
-
-int Transback(char ch);
+std::string TransferHex(uint8_t ch);
+uint8_t TransBackHex(char ch0, char ch1);
 
 std::string InputTrans(char ch);
 std::string Char2Str(char ch);

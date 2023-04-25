@@ -31,8 +31,8 @@ TEST(TestLex, GrammerLexTest) {
         token_in = line.substr(0, space_pos);
         match_in = line.substr(space_pos + 1); 
         SCOPED_TRACE(std::to_string(i));
-        ASSERT_EQ(Unprint2Trans(lex_output[i].first), token_in);
-        ASSERT_EQ(Unprint2Trans("\"" + lex_output[i].second + "\""), match_in);
+        ASSERT_EQ(VisableString(lex_output[i].first), token_in);
+        ASSERT_EQ(VisableString("\"" + lex_output[i].second + "\""), match_in);
     }
 }
 
@@ -60,8 +60,8 @@ TEST(TestLex, Rule1Test) {
         token_in = line.substr(0, space_pos);
         match_in = line.substr(space_pos + 1); 
         SCOPED_TRACE(std::to_string(i));
-        ASSERT_EQ(Unprint2Trans(lex_output[i].first), token_in);
-        ASSERT_EQ(Unprint2Trans("\"" + lex_output[i].second + "\""), match_in);
+        ASSERT_EQ(VisableString(lex_output[i].first), token_in);
+        ASSERT_EQ(VisableString("\"" + lex_output[i].second + "\""), match_in);
     }
 }
 
@@ -89,8 +89,8 @@ TEST(TestLex, SysyTest) {
         token_in = line.substr(0, space_pos);
         match_in = line.substr(space_pos + 1); 
         SCOPED_TRACE(std::to_string(i));
-        ASSERT_EQ(Unprint2Trans(lex_output[i].first), token_in);
-        ASSERT_EQ(Unprint2Trans("\"" + lex_output[i].second + "\""), match_in);
+        ASSERT_EQ(VisableString(lex_output[i].first), token_in);
+        ASSERT_EQ(VisableString("\"" + lex_output[i].second + "\""), match_in);
     }
 }
 
@@ -118,7 +118,7 @@ TEST(TestLex, MazeTest) {
         token_in = line.substr(0, space_pos);
         match_in = line.substr(space_pos + 1); 
         SCOPED_TRACE(std::to_string(i));
-        ASSERT_EQ(Unprint2Trans(lex_output[i].first), token_in);
-        ASSERT_EQ(Unprint2Trans("\"" + lex_output[i].second + "\""), match_in);
+        ASSERT_EQ(VisableString(lex_output[i].first), token_in);
+        ASSERT_EQ(VisableString("\"" + lex_output[i].second + "\""), match_in);
     }
 }

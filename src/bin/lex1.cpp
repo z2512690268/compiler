@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         return 1;
     }
     for(auto& outline : output){
-        fout << Unprint2Trans(outline.first) << " \"" << Unprint2Trans(outline.second) << "\"" << std::endl;
+        fout << VisableString(outline.first) << " \"" << VisableString(outline.second) << "\"" << std::endl;
     }
     return 0;
 }

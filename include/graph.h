@@ -1,4 +1,7 @@
-#pragma
+#pragma once
+#include <iostream>
+#include <vector>
+#include <unordered_map>
 
 template <typename SubClassType>
 struct BaseNode {

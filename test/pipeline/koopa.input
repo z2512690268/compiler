@@ -1,4 +1,5 @@
 // `putchar` function in libc.
+// 测试中文解析
 decl @putchar(i32): i32
 
 // A helper function for printing strings (integer arrays).

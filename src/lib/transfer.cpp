@@ -1,6 +1,9 @@
 #include "transfer.h"
+#include <cctype>
+#include <cstdint>
 #include <iostream>
 #include <fstream>
+#include <sys/types.h>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -10,30 +13,44 @@
 #include <locale>
 #include <iomanip>
 
-char Transfer(char ch) {
-    switch (ch)
-    {
-        case '*':   return TRANSFER_STAR;
-        case '|':   return TRANSFER_OR;
-        case '(':   return TRANSFER_LBRACKET;
-        case ')':   return TRANSFER_RBRACKET;
-        case '-':   return TRANSFER_CONCAT;
-        case '.':   return TRANSFER_DOT;
-        default:    return ch;
+std::string TransferHex(uint8_t ch) {
+    std::string res = "\\x";
+    uint8_t high = ch >> 4;
+    uint8_t low = ch & 0x0f;
+
+    if(high < 10) {
+        res += (high + '0');
+    } else {
+        res += (high - 10 + 'A');
     }
+    if(low < 10) {
+        res += (low + '0');
+    } else {
+        res += (low - 10 + 'A');
+    }
+    return res;
 }
 
-int Transback(char ch) {
-    switch (ch)
-    {
-        case TRANSFER_STAR:     return '*';
-        case TRANSFER_OR:       return '|';
-        case TRANSFER_LBRACKET: return '(';
-        case TRANSFER_RBRACKET: return ')';
-        case TRANSFER_CONCAT:   return '-';
-        case TRANSFER_DOT:   return '.';
-        default:                return ch;
+uint8_t TransBackHex(char ch0, char ch1) {
+    ch0 = toupper(ch0);
+    ch1 = toupper(ch1);
+    if(ch0 >= '0' && ch0 <= '9') {
+        ch0 -= '0';
+    } else if(ch0 >= 'A' && ch0 <= 'F') {
+        ch0 -= 'A' - 10;
+    } else {
+        throw std::runtime_error("Invalid hex character");
+        return 0;
     }
+    if(ch1 >= '0' && ch1 <= '9') {
+        ch1 -= '0';
+    } else if(ch1 >= 'A' && ch1 <= 'F') {
+        ch1 -= 'A' - 10;
+    } else {
+        throw std::runtime_error("Invalid hex character");
+        return 0;
+    }
+    return (ch0 << 4) + ch1;
 }
 
 std::string InputTrans(char ch) {
@@ -56,48 +73,48 @@ std::string Char2Str(char ch) {
     return str;
 }
 
-std::string Unprint2Trans(std::string in_str) {
-    std::string str;
-    for(int i = 0; i < in_str.size(); i++) {
-        switch (in_str[i])
-        {
-            case '\n':
-                str += "\\n";
-                break;
-            case '\t':
-                str += "\\t";
-                break;  
-            case '\r':
-                str += "\\r";
-                break;
-            case ' ':
-                str += "\\_";
-                break;
-            case TRANSFER_STAR:
-                str += "\\STAR";
-                break;
-            case TRANSFER_OR:
-                str += "\\OR";
-                break;
-            case TRANSFER_CONCAT:
-                str += "\\CONCAT";
-                break;
-            case TRANSFER_DOT:
-                str += "\\DOT";
-                break;
-            case TRANSFER_LBRACKET:
-                str += "\\LBRACKET";
-                break;
-            case TRANSFER_RBRACKET:
-                str += "\\RBRACKET";
-                break;
-            default:
-                str += in_str[i];
-                break;  
-        }
-    }
-    return str;
-}
+// std::string Unprint2Trans(std::string in_str) {
+//     std::string str;
+//     for(int i = 0; i < in_str.size(); i++) {
+//         switch (in_str[i])
+//         {
+//             case '\n':
+//                 str += "\\n";
+//                 break;
+//             case '\t':
+//                 str += "\\t";
+//                 break;  
+//             case '\r':
+//                 str += "\\r";
+//                 break;
+//             case ' ':
+//                 str += "\\_";
+//                 break;
+//             case TRANSFER_STAR:
+//                 str += "\\STAR";
+//                 break;
+//             case TRANSFER_OR:
+//                 str += "\\OR";
+//                 break;
+//             case TRANSFER_CONCAT:
+//                 str += "\\CONCAT";
+//                 break;
+//             case TRANSFER_DOT:
+//                 str += "\\DOT";
+//                 break;
+//             case TRANSFER_LBRACKET:
+//                 str += "\\LBRACKET";
+//                 break;
+//             case TRANSFER_RBRACKET:
+//                 str += "\\RBRACKET";
+//                 break;
+//             default:
+//                 str += in_str[i];
+//                 break;  
+//         }
+//     }
+//     return str;
+// }
 
 // Encode a token by replacing whitespace and unprintable characters with escape sequences
 std::string VisableString(const std::string& token) {
@@ -116,6 +133,12 @@ std::string VisableString(const std::string& token) {
             break;
         case '\r':
             out += "\\r";
+            break;
+        case '\f':
+            out += "\\f";
+            break;
+        case '\v':
+            out += "\\v";
             break;
         default:
             if (std::isprint(token[i])) {
@@ -151,6 +174,14 @@ std::string AsciiString(const std::string& token) {
                     break;
                 case 'r':
                     out += '\r';
+                    i++;
+                    break;
+                case 'f':
+                    out += '\f';
+                    i++;
+                    break;
+                case 'v':
+                    out += '\v';
                     i++;
                     break;
                 case 'x': {

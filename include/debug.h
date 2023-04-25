@@ -2,7 +2,7 @@
 // lex
 // 开关部分
 // 打印预处理正则表达式
-// #define DEBUG_LEX_NEWREGEX if(1)
+#define DEBUG_LEX_NEWREGEX if(1)
 // 打印NFA
 // #define DEBUG_LEX_NFA if(1)
 // 打印NFA转DFA过程
@@ -21,11 +21,11 @@
 // 打印GRAM NFA
 // #define DEBUG_GRAM_NFA if(1)
 // 打印GRAM DFA
-#define DEBUG_GRAM_DFA if(1)
+// #define DEBUG_GRAM_DFA if(1)
 // 打印GRAM First集求解
 // #define DEBUG_GRAM_FIRST if(1)
 // 打印GRAM LR1 Table
-#define DEBUG_GRAM_LR1TABLE if(1)
+// #define DEBUG_GRAM_LR1TABLE if(1)
 // 打印GRAM LR1 Analyze
 // #define DEBUG_GRAM_LR1ANALYZE if(1)
 

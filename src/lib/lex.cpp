@@ -1,3 +1,5 @@
+#include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -28,7 +30,9 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     std::string buffer;
 
     std::vector<std::string> token_list;
-    
+    std::vector<int> lex_operations = {
+        '(', ')', '*', '+', '.', '?', '\\', '{', '}', '|', '-', '[', ']'
+    };
     int cnt = 1;
     while(std::getline(fin, buffer)) {
         if(buffer.empty() || buffer[0] == '#')
@@ -43,39 +47,9 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // ()\*|
         // 前后加括号
         regex = "(" + regex + ")";
-        DEBUG_LEX_NEWREGEX std::cout << "Add Bracket:" << Unprint2Trans(regex) << std::endl;
-        // 处理-运算符, 将a-z转换为(a|b|c|...|z), 只支持两侧均为小写字母或大写字母或数字，且左侧小于等于右侧的情况，否则报错
-        
-        for(int i = 0; i < regex.size(); i++) {
-            if(regex[i] == '-') {  
-                if(i == 0 || i == regex.size() - 1) {
-                    std::cout << "Error: - must be between two characters" << std::endl;
-                    return 1;
-                }
-                if(regex[i-1] == '\\')  continue;
-                int judger = (regex[i-1] <= regex[i+1]);
-                if(judger) {
-                    std::string pre = regex.substr(0, i - 1);
-                    std::string post = regex.substr(i + 2); 
-                    std::string new_regex;
-                    new_regex += '(';
-                    for(char ch = regex[i-1]; ch <= regex[i+1]; ch++) {
-                        new_regex += InputTrans(ch);
-                        if(ch != regex[i+1])
-                            new_regex += '|';
-                    }
-                    new_regex += ')';
-                    regex = pre + new_regex + post;
-                    i = (pre + new_regex).size() - 1;
-                } else {
-                    std::cout << "Error: - must be between two characters and left <= right" << std::endl;
-                    return 1;
-                }
-            }
-        }
-        DEBUG_LEX_NEWREGEX std::cout << "Expand:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "Add Bracket:" << regex << std::endl;
 
-        // 处理转义
+        // 将所有字符转化为十六进制
         std::string new_regex;
         for(int i = 0; i < regex.size(); i++) {
             if(regex[i] == '\\') {
@@ -83,24 +57,26 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                     std::cout << "Error: \\ must be followed by a character" << std::endl;
                     return 1;
                 }
-                i++;
-                switch(regex[i]) {
+                switch(regex[i + 1]) {
                     case 'n':
-                        new_regex += '\n';
+                        new_regex += TransferHex('\n');
                         break;
                     case 't':
-                        new_regex += '\t';
+                        new_regex += TransferHex('\t');
                         break;
                     case 'r':
-                        new_regex += '\r';
+                        new_regex += TransferHex('\r');
                         break;
-                    case '\\':
-                        new_regex += '\\';
+                    case 'v':
+                        new_regex += TransferHex('\v');
+                        break;
+                    case 'f':
+                        new_regex += TransferHex('\f');
                         break;
                     case 'd':
                         new_regex += "(";
-                        for(char ch = '0'; ch <= '9'; ch++) {
-                            new_regex += ch;
+                        for(uint8_t ch = '0'; ch <= '9'; ch++) {
+                            new_regex += TransferHex(ch);
                             if(ch != '9')
                                 new_regex += '|';
                         }
@@ -108,41 +84,108 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                         break;
                     case 'w':
                         new_regex += "(";
-                        for(char ch = 'a'; ch <= 'z'; ch++) {
-                            new_regex += ch;
+                        for(uint8_t ch = 'a'; ch <= 'z'; ch++) {
+                            new_regex += TransferHex(ch);
                             new_regex += '|';
                         }
-                        for(char ch = 'A'; ch <= 'Z'; ch++) {
-                            new_regex += ch;
+                        for(uint8_t ch = 'A'; ch <= 'Z'; ch++) {
+                            new_regex += TransferHex(ch);
                             new_regex += '|';
                         }
-                        for(char ch = '0'; ch <= '9'; ch++) {
-                            new_regex += ch;
+                        for(uint8_t ch = '0'; ch <= '9'; ch++) {
+                            new_regex += TransferHex(ch);
                             new_regex += '|';
                         }
-                        new_regex += "_)";
+                        new_regex += TransferHex('_') + ")";
+                        break;
+                    case 'x':
+                        if(i + 3 >= regex.size()) {
+                            std::cout << "Error: \\x must be followed by two hex digits" << std::endl;
+                            return 1;
+                        }
+                        if(!isxdigit(regex[i + 2]) || !isxdigit(regex[i + 3])) {
+                            std::cout << "Error: \\x must be followed by two hex digits" << std::endl;
+                            return 1;
+                        }
+                        new_regex += toupper(regex[i + 2]) + toupper(regex[i + 3]);
+                        i += 2;
                         break;
                     default:
-                        new_regex += Transfer(regex[i]);
+                        new_regex += TransferHex(regex[i + 1]);
                         break;
                 }
+                i++;
             } else {
-                new_regex += regex[i];
+                if(std::find(lex_operations.begin(), lex_operations.end(), regex[i]) != lex_operations.end()) {
+                    new_regex += regex[i];
+                } else {
+                    new_regex += TransferHex(regex[i]);
+                }
             }
         }
         regex = new_regex;
 
-        DEBUG_LEX_NEWREGEX std::cout << "Transfer:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "Transfer:" << regex << std::endl;
+        // 处理-运算
+
+        new_regex.clear();
+        // 寻找所有的-
+        std::vector<int> pos_list;
+        for(int i = 0; i < regex.size(); i++) {
+            if(regex[i] == '-') {
+                pos_list.push_back(i);
+            }
+        }
+        std::cout << pos_list.size() << std::endl;;
+        // 处理-运算, 前后必须是十六进制字符，否则报错
+        int j = 0;
+        for(int i = 0; i < pos_list.size(); ++i) {
+            if(pos_list[i] - 4 < 0 || pos_list[i] + 4 >= regex.size()) {
+                std::cout << "Error: - must be surrounded by two hex digits" << std::endl;
+                return 1;
+            }
+            if(regex[pos_list[i] - 4] != '\\' || regex[pos_list[i] - 3] != 'x' ||
+                !isxdigit(regex[pos_list[i] - 2]) || !isxdigit(regex[pos_list[i] - 1]) ||
+                regex[pos_list[i] + 1] != '\\' || regex[pos_list[i] + 2] != 'x' ||
+                !isxdigit(regex[pos_list[i] + 3]) || !isxdigit(regex[pos_list[i] + 4])) {
+                std::cout << "Error: - must be surrounded by two hex digits" << std::endl;
+                return 1;
+            }
+            for(; j < pos_list[i] - 4; j++) {
+                new_regex += regex[j];
+            }
+            uint8_t start = TransBackHex(regex[pos_list[i] - 2], regex[pos_list[i] - 1]);
+            uint8_t end = TransBackHex(regex[pos_list[i] + 3], regex[pos_list[i] + 4]);
+            if(start > end) {
+                std::cout << "Error: - left must be less than right" << std::endl;
+                return 1;
+            }
+            new_regex += "(";
+            for(uint8_t ch = start; ch <= end; ch++) {
+                new_regex += TransferHex(ch);
+                if(ch != end)
+                    new_regex += '|';
+            }
+            new_regex += ")";
+            j = pos_list[i] + 5;
+        }
+        for(; j < regex.size(); j++) {
+            new_regex += regex[j];
+        }
+        regex = new_regex;
+        DEBUG_LEX_NEWREGEX std::cout << "Expand:" << regex << std::endl;
+
 
         // 处理通配符.
         new_regex.clear();
         for(int i = 0; i < regex.size(); ++i){
             if(regex[i] == '.') {
                 new_regex += "(";
-                for(char ch = 0x20; ch <= 0x7e; ch++) {
-                    new_regex += Transfer(ch);
-                    if(ch != 0x7e)
+                for(uint8_t ch = 0x01; ch != 0x00; ch++) {
+                    new_regex += TransferHex(ch);
+                    if(ch != 0xff)
                         new_regex += '|';
+                // DEBUG_LEX_NEWREGEX std::cout << ch << " general match sign:" << regex << std::endl;
                 }
                 new_regex += ")";
             } else {
@@ -151,8 +194,9 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         }
         regex = new_regex;
 
-        DEBUG_LEX_NEWREGEX std::cout << "general match sign:" << Unprint2Trans(regex) << std::endl;
+        DEBUG_LEX_NEWREGEX std::cout << "general match sign:" << regex << std::endl;
         DEBUG_LEX_NEWREGEX std::cout << "End the regex" << std::endl << std::endl;
+
 
 
         // std::cout << token << " " << regex << std::endl;
@@ -218,19 +262,20 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 }
                 end = newNode2;
                 start = end;
-            } else {
-                if(regex[i] < 0) {
-                    regex[i] = Transback(regex[i]);
-                    if(regex[i] < 0) {
-                        std::cout << "error: " << buffer << std::endl;
-                        return 1;
-                    }
+            } else if(regex[i] == '\\'){
+                // 转义字符, 后跟至少三个字符\xXX
+                if(i + 3 >= regex.size()) {
+                    std::cout << "error: " << buffer << std::endl;
+                    return 1;
                 }
+                uint8_t ch = TransBackHex(regex[i + 2], regex[i + 3]);
+
                 LexNFANode* newNode = NFA.NewNode();
-                newNode->SetInput(regex[i]);
+                newNode->SetInput(ch);
                 end->AddNext(newNode);
                 end = newNode;
                 start = end;
+                i += 3;
             }
         }
         // newNode = new LexNode();
@@ -246,7 +291,6 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         // std::cout << std::endl;
         // cnt++;
     }
-
     DEBUG_LEX_NFA
     {
         std::cout << "step final:" << std::endl;
@@ -369,7 +413,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             }
             // std::cout << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             output.push_back(std::make_pair(token, match));
-            DEBUG_LEX_MATCH std::cout << "Matched!!!, token:" << Unprint2Trans(token) << " matched:" << Unprint2Trans(match) << std::endl;
+            DEBUG_LEX_MATCH std::cout << "Matched!!!, token:" << token << " matched:" << match << std::endl;
             cur = NFA.DFA.head;
             match = "";
             token = "";
