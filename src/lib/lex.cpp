@@ -181,9 +181,9 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
         for(int i = 0; i < regex.size(); ++i){
             if(regex[i] == '.') {
                 new_regex += "(";
-                for(uint8_t ch = 0x01; ch != 0x00; ch++) {
+                for(uint8_t ch = 0x20; ch != 0x7f; ch++) {
                     new_regex += TransferHex(ch);
-                    if(ch != 0xff)
+                    if(ch != 0x7e)
                         new_regex += '|';
                 // DEBUG_LEX_NEWREGEX std::cout << ch << " general match sign:" << regex << std::endl;
                 }

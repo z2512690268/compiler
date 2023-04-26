@@ -2,7 +2,7 @@
 // lex
 // 开关部分
 // 打印预处理正则表达式
-#define DEBUG_LEX_NEWREGEX if(1)
+// #define DEBUG_LEX_NEWREGEX if(1)
 // 打印NFA
 // #define DEBUG_LEX_NFA if(1)
 // 打印NFA转DFA过程

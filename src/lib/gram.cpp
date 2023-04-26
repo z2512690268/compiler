@@ -1,6 +1,8 @@
 #include <iostream>
+#include <queue>
 #include <string>
 #include <fstream>
+#include <vector>
 #include "defs.h"
 #include "automachine.h" 
 #include "lex.h"
@@ -693,6 +695,29 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             std::cout << std::endl << std::endl;
         }
     }
+    // // 去除额外语法树节点
+    // GrammerTreeNode* node = grammer_tree.head;
+    // std::queue<GrammerTreeNode*> delete_q;
+    // delete_q.push(node);
+    // while(!delete_q.empty()) {
+    //     GrammerTreeNode* node = delete_q.front();
+    //     delete_q.pop();
+    //     std::vector<GrammerTreeNode*> new_next;
+    //     for(auto& child : node->next) {
+    //         if(child->token.find('$') != std::string::npos){
+    //             for(auto& grandchild : child->next) {
+    //                 new_next.push_back(grandchild);
+    //             }
+    //         } else {
+    //             new_next.push_back(child);
+    //         }
+    //     }
+    //     node->next = new_next;
+        
+    //     for(auto& child : node->next) {
+    //         delete_q.push(child);
+    //     }
+    // }
 
     // 语法树
     grammer_tree.head->Print(0, terminal_map, gram_out);
