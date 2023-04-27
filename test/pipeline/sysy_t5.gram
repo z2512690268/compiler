@@ -1,23 +1,23 @@
 CompUnit : FuncDef 
 	FuncDef : FuncType IDENT "(" ")" Block 
 		FuncType : "int" 
-			RESERVED : "int"
+			"int" = "int"
 		IDENT = "main"
-		RESERVED : "("
-		RESERVED : ")"
+		"(" = "("
+		")" = ")"
 		Block : "{" Block$1 "}" 
-			RESERVED : "{"
+			"{" = "{"
 			Block$1 : Block$1 BlockItem 
 				Block$1 : BlockItem 
 					BlockItem : Decl 
 						Decl : ConstDecl 
 							ConstDecl : "const" BType ConstDef ";" 
-								RESERVED : "const"
+								"const" = "const"
 								BType : "int" 
-									RESERVED : "int"
+									"int" = "int"
 								ConstDef : IDENT "=" ConstInitVal 
 									IDENT = "x"
-									RESERVED : "="
+									"=" = "="
 									ConstInitVal : ConstExp 
 										ConstExp : Exp 
 											Exp : LOrExp 
@@ -33,17 +33,17 @@ CompUnit : FuncDef
 																					Number : Integer 
 																						Integer : DEC_INTEGER 
 																							DEC_INTEGER = "1"
-																	RESERVED : "+"
+																	"+" = "+"
 																	MulExp : UnaryExp 
 																		UnaryExp : PrimaryExp 
 																			PrimaryExp : Number 
 																				Number : Integer 
 																					Integer : DEC_INTEGER 
 																						DEC_INTEGER = "1"
-								RESERVED : ";"
+								";" = ";"
 				BlockItem : Stmt 
 					Stmt : "return" Exp ";" 
-						RESERVED : "return"
+						"return" = "return"
 						Exp : LOrExp 
 							LOrExp : LAndExp 
 								LAndExp : EqExp 
@@ -55,5 +55,5 @@ CompUnit : FuncDef
 														PrimaryExp : LVal 
 															LVal : IDENT 
 																IDENT = "x"
-						RESERVED : ";"
-			RESERVED : "}"
+						";" = ";"
+			"}" = "}"

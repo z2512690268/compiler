@@ -26,6 +26,11 @@ struct Scope {
     SymbolTable* table;
     int TempVarNum = 0;
     std::vector<Statement> statements;
+
+    std::string func_name;
+    std::vector<std::string> func_params;
+    std::string func_ret_type;
+    
     Scope* parent;
     Scope(Scope* parent = nullptr) : parent(parent) {
         table = new SymbolTable(parent ? parent->table : nullptr);

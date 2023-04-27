@@ -1,12 +1,12 @@
 CompUnit : FuncDef 
 	FuncDef : FuncType IDENT "(" ")" Block 
 		FuncType : "int" 
-			RESERVED : "int"
+			"int" = "int"
 		IDENT = "main"
-		RESERVED : "("
-		RESERVED : ")"
+		"(" = "("
+		")" = ")"
 		Block : "{" Block$1 "}" 
-			RESERVED : "{"
+			"{" = "{"
 			Block$1 : Block$1 BlockItem 
 				Block$1 : Block$1 BlockItem 
 					Block$1 : Block$1 BlockItem 
@@ -14,12 +14,12 @@ CompUnit : FuncDef
 							BlockItem : Decl 
 								Decl : ConstDecl 
 									ConstDecl : "const" BType ConstDef ";" 
-										RESERVED : "const"
+										"const" = "const"
 										BType : "int" 
-											RESERVED : "int"
+											"int" = "int"
 										ConstDef : IDENT "=" ConstInitVal 
 											IDENT = "x"
-											RESERVED : "="
+											"=" = "="
 											ConstInitVal : ConstExp 
 												ConstExp : Exp 
 													Exp : LOrExp 
@@ -35,21 +35,21 @@ CompUnit : FuncDef
 																							Number : Integer 
 																								Integer : DEC_INTEGER 
 																									DEC_INTEGER = "233"
-																				RESERVED : "*"
+																				"*" = "*"
 																				UnaryExp : PrimaryExp 
 																					PrimaryExp : Number 
 																						Number : Integer 
 																							Integer : DEC_INTEGER 
 																								DEC_INTEGER = "4"
-										RESERVED : ";"
+										";" = ";"
 						BlockItem : Decl 
 							Decl : VarDecl 
 								VarDecl : BType VarDef ";" 
 									BType : "int" 
-										RESERVED : "int"
+										"int" = "int"
 									VarDef : IDENT "=" InitVal 
 										IDENT = "y"
-										RESERVED : "="
+										"=" = "="
 										InitVal : Exp 
 											Exp : LOrExp 
 												LOrExp : LAndExp 
@@ -63,12 +63,12 @@ CompUnit : FuncDef
 																				Number : Integer 
 																					Integer : DEC_INTEGER 
 																						DEC_INTEGER = "10"
-									RESERVED : ";"
+									";" = ";"
 					BlockItem : Stmt 
 						Stmt : LVal "=" Exp ";" 
 							LVal : IDENT 
 								IDENT = "y"
-							RESERVED : "="
+							"=" = "="
 							Exp : LOrExp 
 								LOrExp : LAndExp 
 									LAndExp : EqExp 
@@ -81,23 +81,23 @@ CompUnit : FuncDef
 																PrimaryExp : LVal 
 																	LVal : IDENT 
 																		IDENT = "y"
-													RESERVED : "+"
+													"+" = "+"
 													MulExp : MulExp "/" UnaryExp 
 														MulExp : UnaryExp 
 															UnaryExp : PrimaryExp 
 																PrimaryExp : LVal 
 																	LVal : IDENT 
 																		IDENT = "x"
-														RESERVED : "/"
+														"/" = "/"
 														UnaryExp : PrimaryExp 
 															PrimaryExp : Number 
 																Number : Integer 
 																	Integer : DEC_INTEGER 
 																		DEC_INTEGER = "2"
-							RESERVED : ";"
+							";" = ";"
 				BlockItem : Stmt 
 					Stmt : "return" Exp ";" 
-						RESERVED : "return"
+						"return" = "return"
 						Exp : LOrExp 
 							LOrExp : LAndExp 
 								LAndExp : EqExp 
@@ -109,5 +109,5 @@ CompUnit : FuncDef
 														PrimaryExp : LVal 
 															LVal : IDENT 
 																IDENT = "y"
-						RESERVED : ";"
-			RESERVED : "}"
+						";" = ";"
+			"}" = "}"

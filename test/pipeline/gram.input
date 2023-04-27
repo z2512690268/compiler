@@ -1,5 +1,5 @@
 CompUnit      ::= [CompUnit] (Decl | FuncDef);
-// 测试中文
+
 Decl          ::= ConstDecl | VarDecl;
 ConstDecl     ::= "const" Type ConstDef {"," ConstDef} ";";
 ConstDef      ::= IDENT {"[" ConstExp "]"} "=" ConstInitVal;

@@ -10,7 +10,7 @@
 TEST(TestLex, GrammerLexTest) {
     std::string projdir = PROJECT_ROOT_DIR;
     std::ifstream rule_in(projdir + "test/lex/gram.l");
-    std::ifstream input_in(projdir + "test/gram/sysy.y");
+    std::ifstream input_in(projdir + "test/pipeline/gram.input");
     std::ifstream output_in(projdir + "test/pipeline/gram.lex");
 
     ASSERT_TRUE(rule_in.is_open());

@@ -1,14 +1,14 @@
 CompUnit : FuncDef 
 	FuncDef : FuncType IDENT "(" ")" Block 
 		FuncType : "int" 
-			RESERVED : "int"
+			"int" = "int"
 		IDENT = "main"
-		RESERVED : "("
-		RESERVED : ")"
+		"(" = "("
+		")" = ")"
 		Block : "{" Stmt "}" 
-			RESERVED : "{"
+			"{" = "{"
 			Stmt : "return" Exp ";" 
-				RESERVED : "return"
+				"return" = "return"
 				Exp : AddExp 
 					AddExp : AddExp "+" MulExp 
 						AddExp : MulExp 
@@ -18,7 +18,7 @@ CompUnit : FuncDef
 										Number : Integer 
 											Integer : DEC_INTEGER 
 												DEC_INTEGER = "1"
-						RESERVED : "+"
+						"+" = "+"
 						MulExp : MulExp "*" UnaryExp 
 							MulExp : UnaryExp 
 								UnaryExp : PrimaryExp 
@@ -26,11 +26,11 @@ CompUnit : FuncDef
 										Number : Integer 
 											Integer : DEC_INTEGER 
 												DEC_INTEGER = "2"
-							RESERVED : "*"
+							"*" = "*"
 							UnaryExp : PrimaryExp 
 								PrimaryExp : Number 
 									Number : Integer 
 										Integer : DEC_INTEGER 
 											DEC_INTEGER = "3"
-				RESERVED : ";"
-			RESERVED : "}"
+				";" = ";"
+			"}" = "}"
