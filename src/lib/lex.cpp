@@ -136,19 +136,19 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 pos_list.push_back(i);
             }
         }
-        std::cout << pos_list.size() << std::endl;;
+        // std::cout << pos_list.size() << std::endl;;
         // 处理-运算, 前后必须是十六进制字符，否则报错
         int j = 0;
         for(int i = 0; i < pos_list.size(); ++i) {
             if(pos_list[i] - 4 < 0 || pos_list[i] + 4 >= regex.size()) {
-                std::cout << "Error: - must be surrounded by two hex digits" << std::endl;
+                std::cerr << "Error: - must be surrounded by two hex digits" << std::endl;
                 return 1;
             }
             if(regex[pos_list[i] - 4] != '\\' || regex[pos_list[i] - 3] != 'x' ||
                 !isxdigit(regex[pos_list[i] - 2]) || !isxdigit(regex[pos_list[i] - 1]) ||
                 regex[pos_list[i] + 1] != '\\' || regex[pos_list[i] + 2] != 'x' ||
                 !isxdigit(regex[pos_list[i] + 3]) || !isxdigit(regex[pos_list[i] + 4])) {
-                std::cout << "Error: - must be surrounded by two hex digits" << std::endl;
+                std::cerr << "Error: - must be surrounded by two hex digits" << std::endl;
                 return 1;
             }
             for(; j < pos_list[i] - 4; j++) {
@@ -221,14 +221,14 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                 LexNFANode* newNode = NFA.NewNode();
                 end_stack.push_back(end);
                 if(start_stack.empty()) {
-                    std::cout << "error: " << buffer << std::endl;
+                    std::cerr << "error: " << buffer << std::endl;
                     return 1;
                 }
                 start = start_stack.back();
                 start_stack.pop_back();
                 for(int j = 0; j < start->next.size(); j++) {
                     if(end_stack.empty()) {
-                        std::cout << "error: " << buffer << std::endl;
+                        std::cerr << "error: " << buffer << std::endl;
                         return 1;
                     }
                     LexNFANode* endtop = end_stack.back();
@@ -265,7 +265,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             } else if(regex[i] == '\\'){
                 // 转义字符, 后跟至少三个字符\xXX
                 if(i + 3 >= regex.size()) {
-                    std::cout << "error: " << buffer << std::endl;
+                    std::cerr << "error: " << buffer << std::endl;
                     return 1;
                 }
                 uint8_t ch = TransBackHex(regex[i + 2], regex[i + 3]);

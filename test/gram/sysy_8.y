@@ -16,11 +16,9 @@ Block         ::= "{" {BlockItem} "}";
 BlockItem     ::= Decl | Stmt;
 Stmt          ::= "if" "(" Exp ")" ElseStmt "else" Stmt
                 | "if" "(" Exp ")" Stmt
-                | "while" "(" Exp ")" Stmt
                 | NoIfStmt;
                 
 ElseStmt    ::= "if" "(" Exp ")" ElseStmt "else" ElseStmt
-                | "while" "(" Exp ")" ElseStmt
                 | NoIfStmt;
 
 NoIfStmt    ::= LVal "=" Exp ";"

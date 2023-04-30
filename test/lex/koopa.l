@@ -9,4 +9,4 @@ INT:(0|(1-9)(0-9)*)|(\-(0|(1-9)(0-9)*))
 #二元运算符
 BINARY_OP:(ne)|(eq)|(gt)|(lt)|(ge)|(le)|(add)|(sub)|(mul)|(div)|(mod)|(and)|(or)|(xor)|(shl)|(shr)|(sar)
 #保留串
-RESERVED:(i32)|(undef)|(zeroinit)|(global)|(alloc)|(load)|(store)|(getptr)|(getelemptr)|(jump)|(br)|(call)|(ret)|(fun)|(decl)|([|]|,|\*|\(|\)|:|{|}|=)
+RESERVED:(i32)|(undef)|(zeroinit)|(global)|(alloc)|(load)|(store)|(getptr)|(getelemptr)|(jump)|(br)|(call)|(ret)|(fun)|(decl)|(\[|\]|,|\*|\(|\)|:|\{|\}|=|;)

@@ -1,0 +1,220 @@
+CompUnits : CompUnit CompUnit CompUnit CompUnit 
+	CompUnit : FunDecl 
+		FunDecl : "decl" SYMBOL "(" FunDeclParams ")" ":" Type 
+			"decl" = "decl"
+			SYMBOL = "@putchar"
+			"(" = "("
+			FunDeclParams : Type 
+				Type : "i32" 
+					"i32" = "i32"
+			")" = ")"
+			":" = ":"
+			Type : "i32" 
+				"i32" = "i32"
+	CompUnit : FunDef 
+		FunDef : "fun" SYMBOL "(" FunParams ")" "{" Block Block Block Block "}" 
+			"fun" = "fun"
+			SYMBOL = "@putstr"
+			"(" = "("
+			FunParams : SYMBOL ":" Type 
+				SYMBOL = "@arr"
+				":" = ":"
+				Type : PointerType 
+					PointerType : "*" Type 
+						"*" = "*"
+						Type : "i32" 
+							"i32" = "i32"
+			")" = ")"
+			"{" = "{"
+			Block : SYMBOL ":" EndStatement ";" 
+				SYMBOL = "%entry"
+				":" = ":"
+				EndStatement : Jump 
+					Jump : "jump" SYMBOL BlockArgList 
+						"jump" = "jump"
+						SYMBOL = "%loop_entry"
+						BlockArgList : "(" Value ")" 
+							"(" = "("
+							Value : SYMBOL 
+								SYMBOL = "@arr"
+							")" = ")"
+				";" = ";"
+			Block : SYMBOL BlockParamList ":" Statement ";" EndStatement ";" 
+				SYMBOL = "%loop_entry"
+				BlockParamList : "(" SYMBOL ":" Type ")" 
+					"(" = "("
+					SYMBOL = "%ptr"
+					":" = ":"
+					Type : PointerType 
+						PointerType : "*" Type 
+							"*" = "*"
+							Type : "i32" 
+								"i32" = "i32"
+					")" = ")"
+				":" = ":"
+				Statement : SymbolDef 
+					SymbolDef : SYMBOL "=" Load 
+						SYMBOL = "%cur"
+						"=" = "="
+						Load : "load" SYMBOL 
+							"load" = "load"
+							SYMBOL = "%ptr"
+				";" = ";"
+				EndStatement : Branch 
+					Branch : "br" Value "," SYMBOL "," SYMBOL 
+						"br" = "br"
+						Value : SYMBOL 
+							SYMBOL = "%cur"
+						"," = ","
+						SYMBOL = "%loop_body"
+						"," = ","
+						SYMBOL = "%end"
+				";" = ";"
+			Block : SYMBOL ":" Statement ";" Statement ";" EndStatement ";" 
+				SYMBOL = "%loop_body"
+				":" = ":"
+				Statement : FunCall 
+					FunCall : "call" SYMBOL "(" Value ")" 
+						"call" = "call"
+						SYMBOL = "@putchar"
+						"(" = "("
+						Value : SYMBOL 
+							SYMBOL = "%cur"
+						")" = ")"
+				";" = ";"
+				Statement : SymbolDef 
+					SymbolDef : SYMBOL "=" GetPointer 
+						SYMBOL = "%next"
+						"=" = "="
+						GetPointer : "getptr" SYMBOL "," Value 
+							"getptr" = "getptr"
+							SYMBOL = "%ptr"
+							"," = ","
+							Value : INT 
+								INT = "1"
+				";" = ";"
+				EndStatement : Jump 
+					Jump : "jump" SYMBOL BlockArgList 
+						"jump" = "jump"
+						SYMBOL = "%loop_entry"
+						BlockArgList : "(" Value ")" 
+							"(" = "("
+							Value : SYMBOL 
+								SYMBOL = "%next"
+							")" = ")"
+				";" = ";"
+			Block : SYMBOL ":" EndStatement ";" 
+				SYMBOL = "%end"
+				":" = ":"
+				EndStatement : Return 
+					Return : "ret" 
+						"ret" = "ret"
+				";" = ";"
+			"}" = "}"
+	CompUnit : GlobalSymbolDef 
+		GlobalSymbolDef : "global" SYMBOL "=" GlobalMemoryDeclaration 
+			"global" = "global"
+			SYMBOL = "@str"
+			"=" = "="
+			GlobalMemoryDeclaration : "alloc" Type "," InitializerBlock 
+				"alloc" = "alloc"
+				Type : ArrayType 
+					ArrayType : "[" Type "," INT "]" 
+						"[" = "["
+						Type : "i32" 
+							"i32" = "i32"
+						"," = ","
+						INT = "15"
+						"]" = "]"
+				"," = ","
+				InitializerBlock : "{" Initializer "}" 
+					"{" = "{"
+					Initializer : Aggregate 
+						Aggregate : "{" Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "}" 
+							"{" = "{"
+							Initializer : INT 
+								INT = "72"
+							"," = ","
+							Initializer : INT 
+								INT = "101"
+							"," = ","
+							Initializer : INT 
+								INT = "108"
+							"," = ","
+							Initializer : INT 
+								INT = "108"
+							"," = ","
+							Initializer : INT 
+								INT = "111"
+							"," = ","
+							Initializer : INT 
+								INT = "44"
+							"," = ","
+							Initializer : INT 
+								INT = "32"
+							"," = ","
+							Initializer : INT 
+								INT = "119"
+							"," = ","
+							Initializer : INT 
+								INT = "111"
+							"," = ","
+							Initializer : INT 
+								INT = "114"
+							"," = ","
+							Initializer : INT 
+								INT = "108"
+							"," = ","
+							Initializer : INT 
+								INT = "100"
+							"," = ","
+							Initializer : INT 
+								INT = "33"
+							"," = ","
+							Initializer : INT 
+								INT = "10"
+							"," = ","
+							Initializer : INT 
+								INT = "0"
+							"}" = "}"
+					"}" = "}"
+	CompUnit : FunDef 
+		FunDef : "fun" SYMBOL "(" ")" ":" Type "{" Block "}" 
+			"fun" = "fun"
+			SYMBOL = "@main"
+			"(" = "("
+			")" = ")"
+			":" = ":"
+			Type : "i32" 
+				"i32" = "i32"
+			"{" = "{"
+			Block : SYMBOL ":" Statement ";" Statement ";" EndStatement ";" 
+				SYMBOL = "%entry"
+				":" = ":"
+				Statement : SymbolDef 
+					SymbolDef : SYMBOL "=" GetElementPointer 
+						SYMBOL = "%str"
+						"=" = "="
+						GetElementPointer : "getelemptr" SYMBOL "," Value 
+							"getelemptr" = "getelemptr"
+							SYMBOL = "@str"
+							"," = ","
+							Value : INT 
+								INT = "0"
+				";" = ";"
+				Statement : FunCall 
+					FunCall : "call" SYMBOL "(" Value ")" 
+						"call" = "call"
+						SYMBOL = "@putstr"
+						"(" = "("
+						Value : SYMBOL 
+							SYMBOL = "%str"
+						")" = ")"
+				";" = ";"
+				EndStatement : Return 
+					Return : "ret" Value 
+						"ret" = "ret"
+						Value : INT 
+							INT = "0"
+				";" = ";"
+			"}" = "}"

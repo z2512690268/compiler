@@ -25,9 +25,9 @@
 // 打印GRAM First集求解
 // #define DEBUG_GRAM_FIRST if(1)
 // 打印GRAM LR1 Table
-// #define DEBUG_GRAM_LR1TABLE if(1)
+#define DEBUG_GRAM_LR1TABLE if(1)
 // 打印GRAM LR1 Analyze
-// #define DEBUG_GRAM_LR1ANALYZE if(1)
+#define DEBUG_GRAM_LR1ANALYZE if(1)
 
 
 

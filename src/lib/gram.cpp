@@ -9,6 +9,7 @@
 #include "gram.h"
 #include "debug.h"
 #include "table.h"
+#include "transfer.h"
 
 struct Grammer {
     std::string nonterminal;
@@ -76,6 +77,31 @@ struct GrammerTreeNode : BaseNode<GrammerTreeNode>{
             }
         }
     }
+
+    // 去除多余节点
+    void DeleteSurplus() {
+        for(int i = next.size() - 1; i >= 0 ; i--) {
+            next[i]->DeleteSurplus();
+        }
+        if(next.size() != 0) {
+            std::vector<GrammerTreeNode*> new_next;
+            for(auto& child : next) {
+                if(child->token.find('$') != std::string::npos){
+                    for(auto& grandchild : child->next) {
+                        new_next.push_back(grandchild);
+                    }
+                } else {
+                    new_next.push_back(child);
+                }
+            }
+            next = new_next;
+            std::string new_match;
+            for(int i = next.size() - 1; i >= 0 ; i--) {
+                new_match += next[i]->token + " ";
+            }  
+            match = new_match;    
+        }
+    }
 };
 
 void FindFirstSet(const std::string token, const std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams, 
@@ -106,20 +132,26 @@ void FindFirstSet(const std::string token, const std::unordered_map<std::string,
 
 // type: 4: shift, 1: reduce, 2: accept, 3: goto
 std::string StringLR1TableItem(const std::tuple<int, std::string, int>& lr1TableItem, 
-                    std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams) {
+                    std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams,
+                    GramNFA& nfa) {
     std::string ret;
     if(std::get<0>(lr1TableItem) == 4) {
-        ret += "shift " + std::get<2>(lr1TableItem);
+        GramDFANode<GramNFANode>* shiftto = nfa.DFA.id2node[std::get<2>(lr1TableItem)];
+        ret += "shift\n";
+        ret += shiftto->PrintSelf(grams, nfa) + "\n";
     } else if(std::get<0>(lr1TableItem) == 1) {
         ret += "reduce " + std::get<1>(lr1TableItem) + " -> ";
         std::vector<std::string>& gram = grams[std::get<1>(lr1TableItem)][std::get<2>(lr1TableItem)];
         for(auto& token : gram) {
             ret += token + " ";
         }
+        ret += "\n";
     } else if(std::get<0>(lr1TableItem) == 2) {
         ret += "accept";
     } else if(std::get<0>(lr1TableItem) == 3) {
-        ret += "goto " + std::get<2>(lr1TableItem);
+        GramDFANode<GramNFANode>* shiftto = nfa.DFA.id2node[std::get<2>(lr1TableItem)];
+        ret += "goto\n";
+        ret += shiftto->PrintSelf(grams, nfa) + "\n";
     }
     return ret;
 }
@@ -284,9 +316,9 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
     // 计算first集, follow集
     std::unordered_map<std::string, std::vector<std::string>> firsts;
     std::unordered_map<std::string, std::vector<std::string>> follows;
-
     firsts["$"].push_back("$");
     for(auto& gram : grams) {
+        std::cout << gram.first << std::endl;
         FindFirstSet(gram.first, grams, firsts);
     }
 
@@ -455,21 +487,21 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
                 if(cur_item.cur_token == "$START" && cur_item.next_token == "$") {
                     // accept
                     if(LR1_table[state_id].find("$") != LR1_table[state_id].end()){
-                        std::cerr << "LR1_table[" << state_id << "][\"$\"] has been set" << std::endl;
-                        std::cerr << "Old value: " << std::get<0>(LR1_table[state_id]["$"]) << " " 
-                                                << std::get<1>(LR1_table[state_id]["$"]) << " " 
-                                                << std::get<2>(LR1_table[state_id]["$"]) << std::endl;
+                        std::cerr << "LR1_table[" << state_id << "][\"$\"] meet error" << std::endl;
+                        std::cerr << "state " << state_id << " is:" << std::endl;
+                        std::cerr << cur_node->PrintSelf(grams, gramNFA) << std::endl;
+                        std::cerr << "Old value: " << StringLR1TableItem(LR1_table[state_id]["$"], grams, gramNFA) << std::endl;
                         std::cerr << "New value: " << "accept" << std::endl;
                         return 1;
                     }
                     LR1_table[state_id]["$"] = std::make_tuple(2, "", -1);
                 } else {
                     if(LR1_table[state_id].find(cur_item.next_token) != LR1_table[state_id].end()){
-                        std::cerr << "LR1_table[" << state_id << "][\"" << cur_item.next_token << "\"] has been set" << std::endl;
-                        std::cerr << "Old value: " << std::get<0>(LR1_table[state_id][cur_item.next_token]) << " " 
-                                                << std::get<1>(LR1_table[state_id][cur_item.next_token]) << " " 
-                                                << std::get<2>(LR1_table[state_id][cur_item.next_token]) << std::endl;
-                        std::cerr << "New value: " << "reduce" << " " << cur_item.cur_token << " " << cur_item.gram_id << std::endl;
+                        std::cerr << "LR1_table[" << state_id << "][\"" << cur_item.next_token << "\"] meet error" << std::endl;
+                        std::cerr << "state " << state_id << " is:" << std::endl;
+                        std::cerr << cur_node->PrintSelf(grams, gramNFA) << std::endl;
+                        std::cerr << "Old value: " << StringLR1TableItem(LR1_table[state_id][cur_item.next_token], grams, gramNFA) << std::endl;
+                        std::cerr << "New value: " << StringLR1TableItem(std::make_tuple(1, cur_item.cur_token, cur_item.gram_id), grams, gramNFA) << std::endl;
                         return 1;
                     }
                     LR1_table[state_id][cur_item.next_token] = std::make_tuple(1, cur_item.cur_token, cur_item.gram_id);
@@ -482,22 +514,22 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             if(terminal_map[next_node->str] != 0) {
                 // shift
                 if(LR1_table[state_id].find(next_node->str) != LR1_table[state_id].end()){
-                    std::cerr << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] has been set" << std::endl;
-                    std::cerr << "Old value: " << std::get<0>(LR1_table[state_id][next_node->str]) << " " 
-                                            << std::get<1>(LR1_table[state_id][next_node->str]) << " " 
-                                            << std::get<2>(LR1_table[state_id][next_node->str]) << std::endl;
-                    std::cerr << "New value: " << "shift" << " " << next_node->id << std::endl;
+                    std::cerr << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] meet error" << std::endl;
+                    std::cerr << "state " << state_id << " is:" << std::endl;
+                    std::cerr << cur_node->PrintSelf(grams, gramNFA) << std::endl;
+                    std::cerr << "Old value: " << StringLR1TableItem(LR1_table[state_id][next_node->str], grams, gramNFA) << std::endl;
+                    std::cerr << "New value: " << StringLR1TableItem(std::make_tuple(4, "", next_node->id), grams, gramNFA) << std::endl;
                     return 1;
                 }
                 LR1_table[state_id][next_node->str] = std::make_tuple(4, "", next_node->id);
             } else {
                 // goto
                 if(LR1_table[state_id].find(next_node->str) != LR1_table[state_id].end()){
-                    std::cerr << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] has been set" << std::endl;
-                    std::cerr << "Old value: " << std::get<0>(LR1_table[state_id][next_node->str]) << " " 
-                                            << std::get<1>(LR1_table[state_id][next_node->str]) << " " 
-                                            << std::get<2>(LR1_table[state_id][next_node->str]) << std::endl;
-                    std::cerr << "New value: " << "goto" << " " << next_node->id << std::endl;
+                    std::cerr << "LR1_table[" << state_id << "][\"" << next_node->str << "\"] meet error" << std::endl;
+                    std::cerr << "state " << state_id << " is:" << std::endl;
+                    std::cerr << cur_node->PrintSelf(grams, gramNFA) << std::endl;
+                    std::cerr << "Old value: " << StringLR1TableItem(LR1_table[state_id][next_node->str], grams, gramNFA) << std::endl;
+                    std::cerr << "New value: " << StringLR1TableItem(std::make_tuple(3, "", next_node->id), grams, gramNFA) << std::endl;
                     return 1;
                 }
                 LR1_table[state_id][next_node->str] = std::make_tuple(3, "", next_node->id);
@@ -696,29 +728,8 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
         }
     }
     // // 去除额外语法树节点
-    // GrammerTreeNode* node = grammer_tree.head;
-    // std::queue<GrammerTreeNode*> delete_q;
-    // delete_q.push(node);
-    // while(!delete_q.empty()) {
-    //     GrammerTreeNode* node = delete_q.front();
-    //     delete_q.pop();
-    //     std::vector<GrammerTreeNode*> new_next;
-    //     for(auto& child : node->next) {
-    //         if(child->token.find('$') != std::string::npos){
-    //             for(auto& grandchild : child->next) {
-    //                 new_next.push_back(grandchild);
-    //             }
-    //         } else {
-    //             new_next.push_back(child);
-    //         }
-    //     }
-    //     node->next = new_next;
-        
-    //     for(auto& child : node->next) {
-    //         delete_q.push(child);
-    //     }
-    // }
-
+    GrammerTreeNode* node = grammer_tree.head;
+    node->DeleteSurplus();
     // 语法树
     grammer_tree.head->Print(0, terminal_map, gram_out);
     return 0;
