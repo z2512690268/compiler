@@ -1,138 +1,133 @@
-CompUnit : FuncDef 
-	FuncDef : FuncType IDENT "(" ")" Block 
-		FuncType : "int" 
-			"int" = "int"
-		IDENT = "main"
-		"(" = "("
-		")" = ")"
-		Block : "{" Block$1 "}" 
-			"{" = "{"
-			Block$1 : Block$1 BlockItem 
-				Block$1 : Block$1 BlockItem 
-					Block$1 : BlockItem 
-						BlockItem : Decl 
-							Decl : VarDecl 
-								VarDecl : BType VarDef VarDecl$1 ";" 
-									BType : "int" 
-										"int" = "int"
-									VarDef : IDENT "=" InitVal 
-										IDENT = "i"
-										"=" = "="
-										InitVal : Exp 
-											Exp : LOrExp 
-												LOrExp : LAndExp 
-													LAndExp : EqExp 
-														EqExp : RelExp 
-															RelExp : AddExp 
-																AddExp : MulExp 
-																	MulExp : UnaryExp 
-																		UnaryExp : PrimaryExp 
-																			PrimaryExp : Number 
-																				Number : Integer 
-																					Integer : OCT_INTEGER 
-																						OCT_INTEGER = "0"
-									VarDecl$1 : "," VarDef 
-										"," = ","
-										VarDef : IDENT "=" InitVal 
-											IDENT = "pow"
-											"=" = "="
-											InitVal : Exp 
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : FuncType IDENT "(" ")" Block 
+			FuncType : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" BlockItem BlockItem BlockItem "}" 
+				"{" = "{"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : BType VarDef "," VarDef ";" 
+							BType : "int" 
+								"int" = "int"
+							VarDef : IDENT "=" InitVal 
+								IDENT = "i"
+								"=" = "="
+								InitVal : Exp 
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : OCT_INTEGER 
+																				OCT_INTEGER = "0"
+							"," = ","
+							VarDef : IDENT "=" InitVal 
+								IDENT = "pow"
+								"=" = "="
+								InitVal : Exp 
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : DEC_INTEGER 
+																				DEC_INTEGER = "1"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : "while" "(" Exp ")" Stmt 
+						"while" = "while"
+						"(" = "("
+						Exp : LOrExp 
+							LOrExp : LAndExp 
+								LAndExp : EqExp 
+									EqExp : RelExp 
+										RelExp : RelExp "<" AddExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "i"
+											"<" = "<"
+											AddExp : MulExp 
+												MulExp : UnaryExp 
+													UnaryExp : PrimaryExp 
+														PrimaryExp : Number 
+															Number : Integer 
+																Integer : DEC_INTEGER 
+																	DEC_INTEGER = "7"
+						")" = ")"
+						Stmt : NoIfStmt 
+							NoIfStmt : Block 
+								Block : "{" BlockItem BlockItem "}" 
+									"{" = "{"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : LVal "=" Exp ";" 
+												LVal : IDENT 
+													IDENT = "pow"
+												"=" = "="
 												Exp : LOrExp 
 													LOrExp : LAndExp 
 														LAndExp : EqExp 
 															EqExp : RelExp 
 																RelExp : AddExp 
 																	AddExp : MulExp 
+																		MulExp : MulExp "*" UnaryExp 
+																			MulExp : UnaryExp 
+																				UnaryExp : PrimaryExp 
+																					PrimaryExp : LVal 
+																						LVal : IDENT 
+																							IDENT = "pow"
+																			"*" = "*"
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : Number 
+																					Number : Integer 
+																						Integer : DEC_INTEGER 
+																							DEC_INTEGER = "2"
+												";" = ";"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : LVal "=" Exp ";" 
+												LVal : IDENT 
+													IDENT = "i"
+												"=" = "="
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : AddExp "+" MulExp 
+																		AddExp : MulExp 
+																			MulExp : UnaryExp 
+																				UnaryExp : PrimaryExp 
+																					PrimaryExp : LVal 
+																						LVal : IDENT 
+																							IDENT = "i"
+																		"+" = "+"
 																		MulExp : UnaryExp 
 																			UnaryExp : PrimaryExp 
 																				PrimaryExp : Number 
 																					Number : Integer 
 																						Integer : DEC_INTEGER 
 																							DEC_INTEGER = "1"
-									";" = ";"
-					BlockItem : Stmt 
-						Stmt : "while" "(" Exp ")" Stmt 
-							"while" = "while"
-							"(" = "("
-							Exp : LOrExp 
-								LOrExp : LAndExp 
-									LAndExp : EqExp 
-										EqExp : RelExp 
-											RelExp : RelExp "<" AddExp 
-												RelExp : AddExp 
-													AddExp : MulExp 
-														MulExp : UnaryExp 
-															UnaryExp : PrimaryExp 
-																PrimaryExp : LVal 
-																	LVal : IDENT 
-																		IDENT = "i"
-												"<" = "<"
-												AddExp : MulExp 
-													MulExp : UnaryExp 
-														UnaryExp : PrimaryExp 
-															PrimaryExp : Number 
-																Number : Integer 
-																	Integer : DEC_INTEGER 
-																		DEC_INTEGER = "7"
-							")" = ")"
-							Stmt : NoIfStmt 
-								NoIfStmt : Block 
-									Block : "{" Block$1 "}" 
-										"{" = "{"
-										Block$1 : Block$1 BlockItem 
-											Block$1 : BlockItem 
-												BlockItem : Stmt 
-													Stmt : NoIfStmt 
-														NoIfStmt : LVal "=" Exp ";" 
-															LVal : IDENT 
-																IDENT = "pow"
-															"=" = "="
-															Exp : LOrExp 
-																LOrExp : LAndExp 
-																	LAndExp : EqExp 
-																		EqExp : RelExp 
-																			RelExp : AddExp 
-																				AddExp : MulExp 
-																					MulExp : MulExp "*" UnaryExp 
-																						MulExp : UnaryExp 
-																							UnaryExp : PrimaryExp 
-																								PrimaryExp : LVal 
-																									LVal : IDENT 
-																										IDENT = "pow"
-																						"*" = "*"
-																						UnaryExp : PrimaryExp 
-																							PrimaryExp : Number 
-																								Number : Integer 
-																									Integer : DEC_INTEGER 
-																										DEC_INTEGER = "2"
-															";" = ";"
-											BlockItem : Stmt 
-												Stmt : NoIfStmt 
-													NoIfStmt : LVal "=" Exp ";" 
-														LVal : IDENT 
-															IDENT = "i"
-														"=" = "="
-														Exp : LOrExp 
-															LOrExp : LAndExp 
-																LAndExp : EqExp 
-																	EqExp : RelExp 
-																		RelExp : AddExp 
-																			AddExp : AddExp "+" MulExp 
-																				AddExp : MulExp 
-																					MulExp : UnaryExp 
-																						UnaryExp : PrimaryExp 
-																							PrimaryExp : LVal 
-																								LVal : IDENT 
-																									IDENT = "i"
-																				"+" = "+"
-																				MulExp : UnaryExp 
-																					UnaryExp : PrimaryExp 
-																						PrimaryExp : Number 
-																							Number : Integer 
-																								Integer : DEC_INTEGER 
-																									DEC_INTEGER = "1"
-														";" = ";"
-										"}" = "}"
+												";" = ";"
+									"}" = "}"
 				BlockItem : Stmt 
 					Stmt : NoIfStmt 
 						NoIfStmt : "return" Exp ";" 
@@ -149,4 +144,4 @@ CompUnit : FuncDef
 																LVal : IDENT 
 																	IDENT = "pow"
 							";" = ";"
-			"}" = "}"
+				"}" = "}"

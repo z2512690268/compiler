@@ -1,214 +1,42 @@
-CompUnit : FuncDef 
-	FuncDef : Type IDENT "(" ")" Block 
-		Type : "int" 
-			"int" = "int"
-		IDENT = "main"
-		"(" = "("
-		")" = ")"
-		Block : "{" Block$1 "}" 
-			"{" = "{"
-			Block$1 : Block$1 BlockItem 
-				Block$1 : Block$1 BlockItem 
-					Block$1 : Block$1 BlockItem 
-						Block$1 : Block$1 BlockItem 
-							Block$1 : Block$1 BlockItem 
-								Block$1 : BlockItem 
-									BlockItem : Decl 
-										Decl : VarDecl 
-											VarDecl : Type VarDef VarDecl$1 ";" 
-												Type : "int" 
-													"int" = "int"
-												VarDef : VarDefLeft 
-													VarDefLeft : IDENT VarDefLeft$1 
-														IDENT = "arr"
-														VarDefLeft$1 : "[" ConstExp "]" 
-															"[" = "["
-															ConstExp : Exp 
-																Exp : LOrExp 
-																	LOrExp : LAndExp 
-																		LAndExp : EqExp 
-																			EqExp : RelExp 
-																				RelExp : AddExp 
-																					AddExp : MulExp 
-																						MulExp : UnaryExp 
-																							UnaryExp : PrimaryExp 
-																								PrimaryExp : Number 
-																									Number : Integer 
-																										Integer : DEC_INTEGER 
-																											DEC_INTEGER = "10"
-															"]" = "]"
-												VarDecl$1 : "," VarDef 
-													"," = ","
-													VarDef : VarDefLeft "=" InitVal 
-														VarDefLeft : IDENT 
-															IDENT = "n"
-														"=" = "="
-														InitVal : Exp 
-															Exp : LOrExp 
-																LOrExp : LAndExp 
-																	LAndExp : EqExp 
-																		EqExp : RelExp 
-																			RelExp : AddExp 
-																				AddExp : MulExp 
-																					MulExp : UnaryExp 
-																						UnaryExp : IDENT "(" FuncRParams ")" 
-																							IDENT = "getarray"
-																							"(" = "("
-																							FuncRParams : Exp 
-																								Exp : LOrExp 
-																									LOrExp : LAndExp 
-																										LAndExp : EqExp 
-																											EqExp : RelExp 
-																												RelExp : AddExp 
-																													AddExp : MulExp 
-																														MulExp : UnaryExp 
-																															UnaryExp : PrimaryExp 
-																																PrimaryExp : LVal 
-																																	LVal : IDENT 
-																																		IDENT = "arr"
-																							")" = ")"
-												";" = ";"
-								BlockItem : Decl 
-									Decl : VarDecl 
-										VarDecl : Type VarDef VarDecl$1 ";" 
-											Type : "int" 
-												"int" = "int"
-											VarDef : VarDefLeft "=" InitVal 
-												VarDefLeft : IDENT 
-													IDENT = "i"
-												"=" = "="
-												InitVal : Exp 
-													Exp : LOrExp 
-														LOrExp : LAndExp 
-															LAndExp : EqExp 
-																EqExp : RelExp 
-																	RelExp : AddExp 
-																		AddExp : MulExp 
-																			MulExp : UnaryExp 
-																				UnaryExp : PrimaryExp 
-																					PrimaryExp : Number 
-																						Number : Integer 
-																							Integer : OCT_INTEGER 
-																								OCT_INTEGER = "0"
-											VarDecl$1 : "," VarDef 
-												"," = ","
-												VarDef : VarDefLeft "=" InitVal 
-													VarDefLeft : IDENT 
-														IDENT = "sum"
-													"=" = "="
-													InitVal : Exp 
-														Exp : LOrExp 
-															LOrExp : LAndExp 
-																LAndExp : EqExp 
-																	EqExp : RelExp 
-																		RelExp : AddExp 
-																			AddExp : MulExp 
-																				MulExp : UnaryExp 
-																					UnaryExp : PrimaryExp 
-																						PrimaryExp : Number 
-																							Number : Integer 
-																								Integer : OCT_INTEGER 
-																									OCT_INTEGER = "0"
-											";" = ";"
-							BlockItem : Stmt 
-								Stmt : "while" "(" Exp ")" Stmt 
-									"while" = "while"
-									"(" = "("
-									Exp : LOrExp 
-										LOrExp : LAndExp 
-											LAndExp : EqExp 
-												EqExp : RelExp 
-													RelExp : RelExp "<" AddExp 
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" BlockItem BlockItem BlockItem BlockItem BlockItem BlockItem "}" 
+				"{" = "{"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef "," VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft 
+								VarDefLeft : IDENT "[" ConstExp "]" 
+									IDENT = "arr"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
 														RelExp : AddExp 
 															AddExp : MulExp 
 																MulExp : UnaryExp 
 																	UnaryExp : PrimaryExp 
-																		PrimaryExp : LVal 
-																			LVal : IDENT 
-																				IDENT = "i"
-														"<" = "<"
-														AddExp : MulExp 
-															MulExp : UnaryExp 
-																UnaryExp : PrimaryExp 
-																	PrimaryExp : LVal 
-																		LVal : IDENT 
-																			IDENT = "n"
-									")" = ")"
-									Stmt : NoIfStmt 
-										NoIfStmt : Block 
-											Block : "{" Block$1 "}" 
-												"{" = "{"
-												Block$1 : Block$1 BlockItem 
-													Block$1 : BlockItem 
-														BlockItem : Stmt 
-															Stmt : NoIfStmt 
-																NoIfStmt : LVal "=" Exp ";" 
-																	LVal : IDENT 
-																		IDENT = "sum"
-																	"=" = "="
-																	Exp : LOrExp 
-																		LOrExp : LAndExp 
-																			LAndExp : EqExp 
-																				EqExp : RelExp 
-																					RelExp : AddExp 
-																						AddExp : AddExp "+" MulExp 
-																							AddExp : MulExp 
-																								MulExp : UnaryExp 
-																									UnaryExp : PrimaryExp 
-																										PrimaryExp : LVal 
-																											LVal : IDENT 
-																												IDENT = "sum"
-																							"+" = "+"
-																							MulExp : UnaryExp 
-																								UnaryExp : PrimaryExp 
-																									PrimaryExp : LVal 
-																										LVal : IDENT LVal$1 
-																											IDENT = "arr"
-																											LVal$1 : "[" Exp "]" 
-																												"[" = "["
-																												Exp : LOrExp 
-																													LOrExp : LAndExp 
-																														LAndExp : EqExp 
-																															EqExp : RelExp 
-																																RelExp : AddExp 
-																																	AddExp : MulExp 
-																																		MulExp : UnaryExp 
-																																			UnaryExp : PrimaryExp 
-																																				PrimaryExp : LVal 
-																																					LVal : IDENT 
-																																						IDENT = "i"
-																												"]" = "]"
-																	";" = ";"
-													BlockItem : Stmt 
-														Stmt : NoIfStmt 
-															NoIfStmt : LVal "=" Exp ";" 
-																LVal : IDENT 
-																	IDENT = "i"
-																"=" = "="
-																Exp : LOrExp 
-																	LOrExp : LAndExp 
-																		LAndExp : EqExp 
-																			EqExp : RelExp 
-																				RelExp : AddExp 
-																					AddExp : AddExp "+" MulExp 
-																						AddExp : MulExp 
-																							MulExp : UnaryExp 
-																								UnaryExp : PrimaryExp 
-																									PrimaryExp : LVal 
-																										LVal : IDENT 
-																											IDENT = "i"
-																						"+" = "+"
-																						MulExp : UnaryExp 
-																							UnaryExp : PrimaryExp 
-																								PrimaryExp : Number 
-																									Number : Integer 
-																										Integer : DEC_INTEGER 
-																											DEC_INTEGER = "1"
-																";" = ";"
-												"}" = "}"
-						BlockItem : Stmt 
-							Stmt : NoIfStmt 
-								NoIfStmt : Exp ";" 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "10"
+									"]" = "]"
+							"," = ","
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "n"
+								"=" = "="
+								InitVal : Exp 
 									Exp : LOrExp 
 										LOrExp : LAndExp 
 											LAndExp : EqExp 
@@ -217,7 +45,7 @@ CompUnit : FuncDef
 														AddExp : MulExp 
 															MulExp : UnaryExp 
 																UnaryExp : IDENT "(" FuncRParams ")" 
-																	IDENT = "putint"
+																	IDENT = "getarray"
 																	"(" = "("
 																	FuncRParams : Exp 
 																		Exp : LOrExp 
@@ -230,37 +58,198 @@ CompUnit : FuncDef
 																									UnaryExp : PrimaryExp 
 																										PrimaryExp : LVal 
 																											LVal : IDENT 
-																												IDENT = "sum"
+																												IDENT = "arr"
 																	")" = ")"
-									";" = ";"
-					BlockItem : Stmt 
+							";" = ";"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef "," VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "i"
+								"=" = "="
+								InitVal : Exp 
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : OCT_INTEGER 
+																				OCT_INTEGER = "0"
+							"," = ","
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "sum"
+								"=" = "="
+								InitVal : Exp 
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : OCT_INTEGER 
+																				OCT_INTEGER = "0"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : "while" "(" Exp ")" Stmt 
+						"while" = "while"
+						"(" = "("
+						Exp : LOrExp 
+							LOrExp : LAndExp 
+								LAndExp : EqExp 
+									EqExp : RelExp 
+										RelExp : RelExp "<" AddExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "i"
+											"<" = "<"
+											AddExp : MulExp 
+												MulExp : UnaryExp 
+													UnaryExp : PrimaryExp 
+														PrimaryExp : LVal 
+															LVal : IDENT 
+																IDENT = "n"
+						")" = ")"
 						Stmt : NoIfStmt 
-							NoIfStmt : Exp ";" 
-								Exp : LOrExp 
-									LOrExp : LAndExp 
-										LAndExp : EqExp 
-											EqExp : RelExp 
-												RelExp : AddExp 
-													AddExp : MulExp 
-														MulExp : UnaryExp 
-															UnaryExp : IDENT "(" FuncRParams ")" 
-																IDENT = "putch"
-																"(" = "("
-																FuncRParams : Exp 
-																	Exp : LOrExp 
-																		LOrExp : LAndExp 
-																			LAndExp : EqExp 
-																				EqExp : RelExp 
-																					RelExp : AddExp 
-																						AddExp : MulExp 
-																							MulExp : UnaryExp 
-																								UnaryExp : PrimaryExp 
-																									PrimaryExp : Number 
-																										Number : Integer 
-																											Integer : DEC_INTEGER 
-																												DEC_INTEGER = "10"
-																")" = ")"
-								";" = ";"
+							NoIfStmt : Block 
+								Block : "{" BlockItem BlockItem "}" 
+									"{" = "{"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : LVal "=" Exp ";" 
+												LVal : IDENT 
+													IDENT = "sum"
+												"=" = "="
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : AddExp "+" MulExp 
+																		AddExp : MulExp 
+																			MulExp : UnaryExp 
+																				UnaryExp : PrimaryExp 
+																					PrimaryExp : LVal 
+																						LVal : IDENT 
+																							IDENT = "sum"
+																		"+" = "+"
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : LVal 
+																					LVal : IDENT "[" Exp "]" 
+																						IDENT = "arr"
+																						"[" = "["
+																						Exp : LOrExp 
+																							LOrExp : LAndExp 
+																								LAndExp : EqExp 
+																									EqExp : RelExp 
+																										RelExp : AddExp 
+																											AddExp : MulExp 
+																												MulExp : UnaryExp 
+																													UnaryExp : PrimaryExp 
+																														PrimaryExp : LVal 
+																															LVal : IDENT 
+																																IDENT = "i"
+																						"]" = "]"
+												";" = ";"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : LVal "=" Exp ";" 
+												LVal : IDENT 
+													IDENT = "i"
+												"=" = "="
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : AddExp "+" MulExp 
+																		AddExp : MulExp 
+																			MulExp : UnaryExp 
+																				UnaryExp : PrimaryExp 
+																					PrimaryExp : LVal 
+																						LVal : IDENT 
+																							IDENT = "i"
+																		"+" = "+"
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : Number 
+																					Number : Integer 
+																						Integer : DEC_INTEGER 
+																							DEC_INTEGER = "1"
+												";" = ";"
+									"}" = "}"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : Exp ";" 
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "putint"
+															"(" = "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : PrimaryExp 
+																								PrimaryExp : LVal 
+																									LVal : IDENT 
+																										IDENT = "sum"
+															")" = ")"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : Exp ";" 
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "putch"
+															"(" = "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : PrimaryExp 
+																								PrimaryExp : Number 
+																									Number : Integer 
+																										Integer : DEC_INTEGER 
+																											DEC_INTEGER = "10"
+															")" = ")"
+							";" = ";"
 				BlockItem : Stmt 
 					Stmt : NoIfStmt 
 						NoIfStmt : "return" Exp ";" 
@@ -278,4 +267,4 @@ CompUnit : FuncDef
 																	Integer : OCT_INTEGER 
 																		OCT_INTEGER = "0"
 							";" = ";"
-			"}" = "}"
+				"}" = "}"

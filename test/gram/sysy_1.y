@@ -1,4 +1,5 @@
-CompUnit  ::= FuncDef;
+CompUnits      ::= CompUnit {CompUnit};
+CompUnit       ::= FuncDef;
 
 FuncDef   ::= FuncType IDENT "(" ")" Block;
 FuncType  ::= "int";

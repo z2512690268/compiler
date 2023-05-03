@@ -1,13 +1,13 @@
-CompUnit : CompUnit FuncDef 
-	CompUnit : CompUnit FuncDef 
-		CompUnit : Decl 
-			Decl : VarDecl 
-				VarDecl : Type VarDef ";" 
-					Type : "int" 
-						"int" = "int"
-					VarDef : IDENT 
-						IDENT = "var"
-					";" = ";"
+CompUnits : CompUnit CompUnit CompUnit 
+	CompUnit : Decl 
+		Decl : VarDecl 
+			VarDecl : Type VarDef ";" 
+				Type : "int" 
+					"int" = "int"
+				VarDef : IDENT 
+					IDENT = "var"
+				";" = ";"
+	CompUnit : FuncDef 
 		FuncDef : Type IDENT "(" FuncFParams ")" Block 
 			Type : "int" 
 				"int" = "int"
@@ -19,198 +19,33 @@ CompUnit : CompUnit FuncDef
 						"int" = "int"
 					IDENT = "x"
 			")" = ")"
-			Block : "{" Block$1 "}" 
+			Block : "{" BlockItem BlockItem "}" 
 				"{" = "{"
-				Block$1 : Block$1 BlockItem 
-					Block$1 : BlockItem 
-						BlockItem : Stmt 
-							Stmt : NoIfStmt 
-								NoIfStmt : LVal "=" Exp ";" 
-									LVal : IDENT 
-										IDENT = "var"
-									"=" = "="
-									Exp : LOrExp 
-										LOrExp : LAndExp 
-											LAndExp : EqExp 
-												EqExp : RelExp 
-													RelExp : AddExp 
-														AddExp : AddExp "+" MulExp 
-															AddExp : MulExp 
-																MulExp : UnaryExp 
-																	UnaryExp : PrimaryExp 
-																		PrimaryExp : LVal 
-																			LVal : IDENT 
-																				IDENT = "var"
-															"+" = "+"
-															MulExp : UnaryExp 
-																UnaryExp : PrimaryExp 
-																	PrimaryExp : LVal 
-																		LVal : IDENT 
-																			IDENT = "x"
-									";" = ";"
-					BlockItem : Stmt 
-						Stmt : NoIfStmt 
-							NoIfStmt : "return" Exp ";" 
-								"return" = "return"
-								Exp : LOrExp 
-									LOrExp : LAndExp 
-										LAndExp : EqExp 
-											EqExp : RelExp 
-												RelExp : AddExp 
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : LVal "=" Exp ";" 
+							LVal : IDENT 
+								IDENT = "var"
+							"=" = "="
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : AddExp "+" MulExp 
 													AddExp : MulExp 
 														MulExp : UnaryExp 
 															UnaryExp : PrimaryExp 
 																PrimaryExp : LVal 
 																	LVal : IDENT 
 																		IDENT = "var"
-								";" = ";"
-				"}" = "}"
-	FuncDef : Type IDENT "(" ")" Block 
-		Type : "int" 
-			"int" = "int"
-		IDENT = "main"
-		"(" = "("
-		")" = ")"
-		Block : "{" Block$1 "}" 
-			"{" = "{"
-			Block$1 : Block$1 BlockItem 
-				Block$1 : Block$1 BlockItem 
-					Block$1 : Block$1 BlockItem 
-						Block$1 : Block$1 BlockItem 
-							Block$1 : BlockItem 
-								BlockItem : Stmt 
-									Stmt : NoIfStmt 
-										NoIfStmt : Exp ";" 
-											Exp : LOrExp 
-												LOrExp : LAndExp 
-													LAndExp : EqExp 
-														EqExp : RelExp 
-															RelExp : AddExp 
-																AddExp : MulExp 
-																	MulExp : UnaryExp 
-																		UnaryExp : IDENT "(" FuncRParams ")" 
-																			IDENT = "putint"
-																			"(" = "("
-																			FuncRParams : Exp 
-																				Exp : LOrExp 
-																					LOrExp : LAndExp 
-																						LAndExp : EqExp 
-																							EqExp : RelExp 
-																								RelExp : AddExp 
-																									AddExp : MulExp 
-																										MulExp : UnaryExp 
-																											UnaryExp : IDENT "(" FuncRParams ")" 
-																												IDENT = "func"
-																												"(" = "("
-																												FuncRParams : Exp 
-																													Exp : LOrExp 
-																														LOrExp : LAndExp 
-																															LAndExp : EqExp 
-																																EqExp : RelExp 
-																																	RelExp : AddExp 
-																																		AddExp : MulExp 
-																																			MulExp : UnaryExp 
-																																				UnaryExp : PrimaryExp 
-																																					PrimaryExp : Number 
-																																						Number : Integer 
-																																							Integer : DEC_INTEGER 
-																																								DEC_INTEGER = "1"
-																												")" = ")"
-																			")" = ")"
-											";" = ";"
-							BlockItem : Stmt 
-								Stmt : NoIfStmt 
-									NoIfStmt : LVal "=" Exp ";" 
-										LVal : IDENT 
-											IDENT = "var"
-										"=" = "="
-										Exp : LOrExp 
-											LOrExp : LAndExp 
-												LAndExp : EqExp 
-													EqExp : RelExp 
-														RelExp : AddExp 
-															AddExp : MulExp 
-																MulExp : MulExp "*" UnaryExp 
-																	MulExp : UnaryExp 
-																		UnaryExp : PrimaryExp 
-																			PrimaryExp : LVal 
-																				LVal : IDENT 
-																					IDENT = "var"
-																	"*" = "*"
-																	UnaryExp : PrimaryExp 
-																		PrimaryExp : Number 
-																			Number : Integer 
-																				Integer : DEC_INTEGER 
-																					DEC_INTEGER = "10"
-										";" = ";"
-						BlockItem : Stmt 
-							Stmt : NoIfStmt 
-								NoIfStmt : Exp ";" 
-									Exp : LOrExp 
-										LOrExp : LAndExp 
-											LAndExp : EqExp 
-												EqExp : RelExp 
-													RelExp : AddExp 
-														AddExp : MulExp 
-															MulExp : UnaryExp 
-																UnaryExp : IDENT "(" FuncRParams ")" 
-																	IDENT = "putint"
-																	"(" = "("
-																	FuncRParams : Exp 
-																		Exp : LOrExp 
-																			LOrExp : LAndExp 
-																				LAndExp : EqExp 
-																					EqExp : RelExp 
-																						RelExp : AddExp 
-																							AddExp : MulExp 
-																								MulExp : UnaryExp 
-																									UnaryExp : IDENT "(" FuncRParams ")" 
-																										IDENT = "func"
-																										"(" = "("
-																										FuncRParams : Exp 
-																											Exp : LOrExp 
-																												LOrExp : LAndExp 
-																													LAndExp : EqExp 
-																														EqExp : RelExp 
-																															RelExp : AddExp 
-																																AddExp : MulExp 
-																																	MulExp : UnaryExp 
-																																		UnaryExp : PrimaryExp 
-																																			PrimaryExp : Number 
-																																				Number : Integer 
-																																					Integer : DEC_INTEGER 
-																																						DEC_INTEGER = "2"
-																										")" = ")"
-																	")" = ")"
-									";" = ";"
-					BlockItem : Stmt 
-						Stmt : NoIfStmt 
-							NoIfStmt : Exp ";" 
-								Exp : LOrExp 
-									LOrExp : LAndExp 
-										LAndExp : EqExp 
-											EqExp : RelExp 
-												RelExp : AddExp 
-													AddExp : MulExp 
-														MulExp : UnaryExp 
-															UnaryExp : IDENT "(" FuncRParams ")" 
-																IDENT = "putch"
-																"(" = "("
-																FuncRParams : Exp 
-																	Exp : LOrExp 
-																		LOrExp : LAndExp 
-																			LAndExp : EqExp 
-																				EqExp : RelExp 
-																					RelExp : AddExp 
-																						AddExp : MulExp 
-																							MulExp : UnaryExp 
-																								UnaryExp : PrimaryExp 
-																									PrimaryExp : Number 
-																										Number : Integer 
-																											Integer : DEC_INTEGER 
-																												DEC_INTEGER = "10"
-																")" = ")"
-								";" = ";"
+													"+" = "+"
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "x"
+							";" = ";"
 				BlockItem : Stmt 
 					Stmt : NoIfStmt 
 						NoIfStmt : "return" Exp ";" 
@@ -227,4 +62,163 @@ CompUnit : CompUnit FuncDef
 																LVal : IDENT 
 																	IDENT = "var"
 							";" = ";"
-			"}" = "}"
+				"}" = "}"
+	CompUnit : FuncDef 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" BlockItem BlockItem BlockItem BlockItem BlockItem "}" 
+				"{" = "{"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : Exp ";" 
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "putint"
+															"(" = "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : IDENT "(" FuncRParams ")" 
+																								IDENT = "func"
+																								"(" = "("
+																								FuncRParams : Exp 
+																									Exp : LOrExp 
+																										LOrExp : LAndExp 
+																											LAndExp : EqExp 
+																												EqExp : RelExp 
+																													RelExp : AddExp 
+																														AddExp : MulExp 
+																															MulExp : UnaryExp 
+																																UnaryExp : PrimaryExp 
+																																	PrimaryExp : Number 
+																																		Number : Integer 
+																																			Integer : DEC_INTEGER 
+																																				DEC_INTEGER = "1"
+																								")" = ")"
+															")" = ")"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : LVal "=" Exp ";" 
+							LVal : IDENT 
+								IDENT = "var"
+							"=" = "="
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : MulExp "*" UnaryExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : LVal 
+																	LVal : IDENT 
+																		IDENT = "var"
+														"*" = "*"
+														UnaryExp : PrimaryExp 
+															PrimaryExp : Number 
+																Number : Integer 
+																	Integer : DEC_INTEGER 
+																		DEC_INTEGER = "10"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : Exp ";" 
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "putint"
+															"(" = "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : IDENT "(" FuncRParams ")" 
+																								IDENT = "func"
+																								"(" = "("
+																								FuncRParams : Exp 
+																									Exp : LOrExp 
+																										LOrExp : LAndExp 
+																											LAndExp : EqExp 
+																												EqExp : RelExp 
+																													RelExp : AddExp 
+																														AddExp : MulExp 
+																															MulExp : UnaryExp 
+																																UnaryExp : PrimaryExp 
+																																	PrimaryExp : Number 
+																																		Number : Integer 
+																																			Integer : DEC_INTEGER 
+																																				DEC_INTEGER = "2"
+																								")" = ")"
+															")" = ")"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : Exp ";" 
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : IDENT "(" FuncRParams ")" 
+															IDENT = "putch"
+															"(" = "("
+															FuncRParams : Exp 
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : PrimaryExp 
+																								PrimaryExp : Number 
+																									Number : Integer 
+																										Integer : DEC_INTEGER 
+																											DEC_INTEGER = "10"
+															")" = ")"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "var"
+							";" = ";"
+				"}" = "}"

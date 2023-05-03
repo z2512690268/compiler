@@ -8,6 +8,7 @@
 #include "stream.h"
 #include "koopa.h"
 
+void CompUnits_func();
 void CompUnit_func();
 void FuncDef_func();
 void FuncType_func();
@@ -18,6 +19,7 @@ void Integer_func();
 
 
 std::unordered_map<std::string, std::function<void()>> func_map = {
+    {"CompUnits", CompUnits_func},
     {"CompUnit", CompUnit_func},
     {"FuncDef", FuncDef_func},
     {"FuncType", FuncType_func},
@@ -32,7 +34,7 @@ KoopaGenerator* generator;
 Scope* curScope;
 
 // CompUnit: FuncDef 
-void CompUnit_func() {
+void CompUnits_func() {
     std::cout << "CompUnit" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
@@ -70,20 +72,15 @@ void FuncDef_func() {
 // $START: CompUnit 
 
 
-
-void ConstructSyntaxTree() {
-    generator = new KoopaGenerator();
-    curScope = &generator->global_scope;
-    CompUnit_func();
-}
-
 int main() {
     std::string project_dir = PROJECT_ROOT_DIR;
     std::string file_name = (project_dir + "test/pipeline/maze.gram");
 
     stream.LoadFile(file_name);
 
-    ConstructSyntaxTree();
+    generator = new KoopaGenerator();
+    curScope = &generator->global_scope;
+    CompUnits_func();
 
     return 0;
 }

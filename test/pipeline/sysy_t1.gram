@@ -1,16 +1,17 @@
-CompUnit : FuncDef 
-	FuncDef : FuncType IDENT "(" ")" Block 
-		FuncType : "int" 
-			"int" = "int"
-		IDENT = "main"
-		"(" = "("
-		")" = ")"
-		Block : "{" Stmt "}" 
-			"{" = "{"
-			Stmt : "return" Number ";" 
-				"return" = "return"
-				Number : Integer 
-					Integer : OCT_INTEGER 
-						OCT_INTEGER = "0"
-				";" = ";"
-			"}" = "}"
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : FuncType IDENT "(" ")" Block 
+			FuncType : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" Stmt "}" 
+				"{" = "{"
+				Stmt : "return" Number ";" 
+					"return" = "return"
+					Number : Integer 
+						Integer : OCT_INTEGER 
+							OCT_INTEGER = "0"
+					";" = ";"
+				"}" = "}"

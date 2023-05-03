@@ -35,6 +35,7 @@ struct GramNFANode : public ATMNode<std::string, LR1Item, GramNFANode> {
     std::string PrintToken() {
         std::string ret;
         ret += token.cur_token + ":" + token.next_token + ":" + std::to_string(token.gram_id) + ":" + std::to_string(token.stack_pos);
+        return ret;
     }
 
     std::string PrintSelf(std::unordered_map<std::string, std::vector<std::vector<std::string>> >& grams) {

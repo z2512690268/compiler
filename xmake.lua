@@ -70,6 +70,11 @@ target("staticlib")
     add_includedirs("include")
     add_files("src/lib/*.cpp")
 
+-- target("sysy")
+--     set_kind("static")
+--     add_includedirs("include")
+--     add_files("src/sysy/sysy.cpp")
+
 target("lex")
     set_kind("binary")
     add_includedirs("include")
@@ -87,7 +92,7 @@ target("syntax")
     add_includedirs("include")
     add_files("src/bin/syntax.cpp")
     add_deps("staticlib")
-    
+
 target("test")
     set_kind("binary")
     add_includedirs("include")

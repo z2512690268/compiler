@@ -1,4 +1,5 @@
-CompUnit      ::= FuncDef;
+CompUnits      ::= CompUnit {CompUnit};
+CompUnit       ::= FuncDef;
 
 Decl          ::= ConstDecl | VarDecl;
 ConstDecl     ::= "const" BType ConstDef {"," ConstDef} ";";
