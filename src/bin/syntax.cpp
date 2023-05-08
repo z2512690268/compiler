@@ -74,6 +74,7 @@ FuncDef_Struct* FuncDef_func() {
     // 创建作用域
     Scope* func_scope = new Scope(curScope);
     curScope = func_scope;
+    generator->func_scopes.push_back(func_scope);
 
     // 创建函数
     FuncDef_Struct* funcDef_ptr = new FuncDef_Struct();
@@ -89,13 +90,14 @@ FuncDef_Struct* FuncDef_func() {
         RESERVED_func();
         RESERVED_func();
 
-        Block_Struct* block_ptr = Block_func();
+        Block_Struct* block_ptr = Block_func(funcDef_ptr->funcName);
         funcDef_ptr->Block = block_ptr;
     }
 
     // 退出作用域
     func_scope->func_name = funcDef_ptr->funcName;
     func_scope->func_ret_type = funcDef_ptr->funcRetType->type;
+    func_scope->basicBlocks.push_back(funcDef_ptr->Block->block);
     curScope = curScope->parent;
     return funcDef_ptr;
 }
@@ -122,8 +124,8 @@ Block_Struct* Block_func(std::string block_name) {
     // 创建基本块
     BasicBlock* block = new BasicBlock();
     block->parent = curBlock;
-    std::string name = block_name == "" ? curScope->GetUniqueName("block") 
-                                    : curScope->GetUniqueName(block_name + "_block");
+    std::string name = "%" + (block_name == "" ? curScope->GetUniqueName("block") 
+                                    : curScope->GetUniqueName(block_name + "_block"));
     block->label = name;
     SymbolItem* block_item = new SymbolItem();
     block_item->InitLabelSymbol(block);
@@ -152,14 +154,20 @@ Stmt_Struct* Stmt_func() {
         stmt_ptr->Number = number_ptr;
         RESERVED_func();    //;
 
-        Statement* statement = new Statement();
-        std::string ret_var_name = curScope->GetUniqueName("ret");
+        std::string ret_var_name = curScope->GetUniqueName("%return");
         SymbolItem* ret_var = new SymbolItem();
         ret_var->InitVarSymbol(KOOPA_INT32);
         // 添加变量
         curScope->AddSymbol(ret_var_name, ret_var);
-        // 添加语句
+        // 赋值语句
+        Statement* assign = new Statement();
+        assign->InitOperationStatement("add", "0", std::to_string(stmt_ptr->Number->value.INT32), ret_var_name);
+        curBlock->statements.push_back(assign);
+
+        // 返回语句
+        Statement* statement = new Statement();
         statement->InitReturnStatement(ret_var_name);
+        curBlock->statements.push_back(statement);
     }
 
     return stmt_ptr;
@@ -209,7 +217,7 @@ IDENT_Struct* IDENT_func() {
     GrammerToken curToken; 
     stream.GetToken(curToken);
     IDENT_Struct* ident_ptr = new IDENT_Struct();
-    ident_ptr->identifer = curToken.rule[0];
+    ident_ptr->identifer = curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
 
     return ident_ptr;
 }
@@ -235,6 +243,9 @@ int main() {
 
     CompUnits_func();
 
+    std::cout << std::endl << std::endl;
+
+    std::cout << generator->GenerateCode() << std::endl;
 
     return 0;
 }
