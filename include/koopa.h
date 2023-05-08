@@ -1,57 +1,91 @@
-
-#include <unordered_map>
+#pragma once
+#include <memory>
 #include <vector>
 #include <string>
+#include "ir.h"
 
-struct SymbolItem  {
-    std::string origin_name;
-    std::string name;
-    std::string type;
+// 非终结符
+struct CompUnits_Struct;
+struct CompUnit_Struct;
+struct FuncDef_Struct;
+struct FuncType_Struct;
+struct Block_Struct;
+struct Stmt_Struct;
+struct Number_Struct;
+struct Integer_Struct;
+
+// 终结符
+struct OCT_INTEGER_Struct;
+struct IDENT_Struct;
+
+// 各个类型的结构体
+struct KoopaGramStruct {
+    CompUnits_Struct* CompUnits;
+    // ATTRIBUTES
 };
 
-struct SymbolTable {
-    std::unordered_map<std::string, SymbolItem> map;
-    SymbolTable* parent;
-    SymbolTable(SymbolTable* parent = nullptr) : parent(parent) {}
+struct CompUnits_Struct {
+    std::vector<CompUnit_Struct*> CompUnit;
+    // ATTRIBUTES
 };
 
-struct Statement {
-    std::string var_ret;
-    std::string op_type;
-    std::string var_input1;
-    std::string var_input2;
+struct CompUnit_Struct {
+    // FUNCDEF
+    FuncDef_Struct* FuncDef;
+    // ATTRIBUTES
 };
 
-struct Scope {
-    SymbolTable* table;
-    int TempVarNum = 0;
-    std::vector<Statement> statements;
+struct FuncDef_Struct {
+    Block_Struct* Block;
 
-    std::string func_name;
-    std::vector<std::string> func_params;
-    std::string func_ret_type;
-    
-    Scope* parent;
-    Scope(Scope* parent = nullptr) : parent(parent) {
-        table = new SymbolTable(parent ? parent->table : nullptr);
-    }
-    int GetNewTempVarNum() {
-        return TempVarNum++;
-    }
-    bool FindSymbol(std::string name, SymbolItem& item) {
-        SymbolTable* table = this->table;
-        while(table) {
-            auto it = table->map.find(name);
-            if(it != table->map.end()) {
-                item = it->second;
-                return true;
-            }
-            table = table->parent;
-        }
-        return false;
-    }
+    // ATTRIBUTES
+    KoopaVarType type;
+    std::string funcName;
+    FuncType_Struct* funcRetType;
 };
 
-struct KoopaGenerator {
-    Scope global_scope;
+struct FuncType_Struct {
+    KoopaVarType type;
+};
+
+struct Block_Struct {
+    std::vector<Stmt_Struct*> Stmt;
+
+    // ATTRIBUTES
+    BasicBlock* block;
+};
+
+struct Stmt_Struct {
+    // RETURN
+    Number_Struct* Number;
+
+    // ATTRIBUTES
+};
+
+struct Number_Struct {
+    // INTEGER
+    Integer_Struct* Integer;
+    // ATTRIBUTES
+    KoopaVarValue value;
+};
+
+struct Integer_Struct {
+    OCT_INTEGER_Struct* OCT_INTEGER;
+    // ATTRIBUTES
+    int value;
+};
+
+struct IDENT_Struct {
+    // ATTRIBUTES
+    std::string identifer;
+};
+
+struct OCT_INTEGER_Struct {
+    // ATTRIBUTES
+    int value;
+};
+
+struct RESERVED_Struct {
+    // ATTRIBUTES
+    std::string reserved;
 };

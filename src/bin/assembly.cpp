@@ -8,15 +8,25 @@
 #include "stream.h"
 #include "koopa.h"
 #include "riscv.h"
+#include "ir.h"
 
 TokenStream<GrammerToken> stream;
 KoopaGenerator* generator;
 Scope* curScope;
 
+// CompUnits ::= CompUnit {CompUnit};
 
-void ConstructSyntaxTree() {
+// CompUnit  ::= FunDef;
 
-}
+// FunDef ::= "fun" SYMBOL "(" ")" [":" Type] "{" {Block} "}";
+
+// Type ::= "i32";
+
+// Block ::= SYMBOL ":" EndStatement ";";
+
+// EndStatement ::= Return;
+
+// Return ::= "ret" [Value];
 
 int main() {
     std::string project_dir = PROJECT_ROOT_DIR;
