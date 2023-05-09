@@ -370,14 +370,47 @@ namespace RISCV {
         }
     };
 
-    struct RiscvInstructionBlock {
-        std::vector<std::string> fake_codes;
-        std::vector<RiscvInstruction*> codes;
-    };
+};
 
-    struct RiscvAssembly
-    {
-        std::vector<RiscvInstructionBlock*> blocks;
-    };
+struct RiscvAssemblyInst {
+    std::string inst;   //.开头为伪指令，:结尾为标签，其他为指令
+    std::vector<std::string> args;
+};
 
+struct RiscvAssemblyBlock {
+    std::vector<RiscvAssemblyInst*> insts;
+};
+
+struct RiscvAssemblyGenerator {
+    std::vector<RiscvAssemblyBlock*> blocks;
+
+    std::string GenerateCode() {
+        std::string code;
+        for(auto& block : blocks) {
+            for(auto& inst : block->insts) {
+                if(inst->inst[0] == '.') {
+                    code += inst->inst + " ";
+                    for(int i = 0; i < inst->args.size(); i++) {
+                        code += inst->args[i];
+                        if(i != inst->args.size() - 1) {
+                            code += " ";
+                        }
+                    }
+                    code += "\n";
+                } else if(inst->inst[inst->inst.size() - 1] == ':') {
+                    code += inst->inst + "\n";
+                } else {
+                    code += "\t" + inst->inst + " ";
+                    for(int i = 0; i < inst->args.size(); i++) {
+                        code += inst->args[i];
+                        if(i != inst->args.size() - 1) {
+                            code += ", ";
+                        }
+                    }
+                    code += "\n";
+                }
+            }
+        }
+        return code;
+    };
 };

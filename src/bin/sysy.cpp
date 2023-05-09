@@ -5,7 +5,6 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
-#include <any>
 #include "defs.h"
 #include "stream.h"
 #include "koopa.h"
@@ -67,7 +66,7 @@ RESERVED_Struct* RESERVED_func();
 //******************************************************************************
 // 带属性语法树节点
 // 各个类型的结构体
-struct KoopaGramStruct {
+struct SysyGramStruct {
     CompUnits_Struct* CompUnits;
     // ATTRIBUTES
 };
@@ -146,10 +145,10 @@ struct RESERVED_Struct {
 // 建树与解析函数
 // CompUnits      ::= CompUnit {CompUnit};
 CompUnits_Struct* CompUnits_func() {
+    CompUnits_Struct* compUnits_ptr = new CompUnits_Struct();
     std::cout << "CompUnits_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    CompUnits_Struct* compUnits_ptr = new CompUnits_Struct();
     for(auto rule : curToken.rule) {
         if(rule == "CompUnit") {
             CompUnit_Struct* compUnit_ptr = CompUnit_func();
@@ -161,10 +160,10 @@ CompUnits_Struct* CompUnits_func() {
 
 // CompUnit       ::= FuncDef;
 CompUnit_Struct* CompUnit_func() {
+    CompUnit_Struct* compUnit_ptr = new CompUnit_Struct();
     std::cout << "CompUnit_func" << std::endl;
     GrammerToken curToken;
     stream.GetToken(curToken);
-    CompUnit_Struct* compUnit_ptr = new CompUnit_Struct();
     if(curToken.rule[0] == "FuncDef") {
         FuncDef_Struct* funcDef_ptr = FuncDef_func();
         compUnit_ptr->FuncDef = funcDef_ptr;
@@ -177,6 +176,7 @@ CompUnit_Struct* CompUnit_func() {
 
 // FuncDef   ::= FuncType IDENT "(" ")" Block;
 FuncDef_Struct* FuncDef_func() {
+    FuncDef_Struct* funcDef_ptr = new FuncDef_Struct();
     std::cout << "FuncDef_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
@@ -186,7 +186,6 @@ FuncDef_Struct* FuncDef_func() {
     generator->func_scopes.push_back(func_scope);
 
     // 创建函数
-    FuncDef_Struct* funcDef_ptr = new FuncDef_Struct();
     // FuncDef   ::= FuncType IDENT "(" ")" Block;
     if(curToken.rule[0] == "FuncType") {
         FuncType_Struct* funcType_ptr = FuncType_func();
@@ -213,10 +212,10 @@ FuncDef_Struct* FuncDef_func() {
 
 // FuncType  ::= "int";
 FuncType_Struct* FuncType_func() {
+    FuncType_Struct* funcType_ptr = new FuncType_Struct();
     std::cout << "FuncType_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    FuncType_Struct* funcType_ptr = new FuncType_Struct();
     funcType_ptr->type = KOOPA_INT32;
     // "int"
     RESERVED_func();
@@ -226,6 +225,7 @@ FuncType_Struct* FuncType_func() {
 
 // Block     ::= "{" Stmt "}";
 Block_Struct* Block_func(std::string block_name) {
+    Block_Struct* block_ptr = new Block_Struct();
     std::cout << "Block_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
@@ -241,21 +241,21 @@ Block_Struct* Block_func(std::string block_name) {
     curBlock = block;
 
     // 创建语句
-    Block_Struct* block_ptr = new Block_Struct();
     // 只有一句语句
     RESERVED_func();    //{
     Stmt_Struct* stmt_ptr = Stmt_func();
     RESERVED_func();    //}
     block_ptr->block = block;
+    curBlock = curBlock->parent;
     return block_ptr;
 }
 
 // Stmt      ::= "return" Number ";";
 Stmt_Struct* Stmt_func() {
+    Stmt_Struct* stmt_ptr = new Stmt_Struct();
     std::cout << "Stmt_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    Stmt_Struct* stmt_ptr = new Stmt_Struct();
     if(curToken.rule[0] == "\"return\"") {
         RESERVED_func();    //return
         Number_Struct* number_ptr = Number_func();
@@ -283,10 +283,10 @@ Stmt_Struct* Stmt_func() {
 
 // Number    ::= Integer;
 Number_Struct* Number_func() {
+    Number_Struct* number_ptr = new Number_Struct();
     std::cout << "Number_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    Number_Struct* number_ptr = new Number_Struct();
     if(curToken.rule[0] == "Integer") {
         Integer_Struct* integer_ptr = Integer_func();
         number_ptr->Integer = integer_ptr;
@@ -297,10 +297,10 @@ Number_Struct* Number_func() {
 
 // Integer   ::= OCT_INTEGER;
 Integer_Struct* Integer_func() {
+    Integer_Struct* integer_ptr = new Integer_Struct();
     std::cout << "Integer_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    Integer_Struct* integer_ptr = new Integer_Struct();
     if(curToken.rule[0] == "OCT_INTEGER") {
         OCT_INTEGER_Struct* octInteger_ptr = OCT_INTEGER_func();
         integer_ptr->OCT_INTEGER = octInteger_ptr;
@@ -310,10 +310,10 @@ Integer_Struct* Integer_func() {
 }
 
 OCT_INTEGER_Struct* OCT_INTEGER_func() {
+    OCT_INTEGER_Struct* octInteger_ptr = new OCT_INTEGER_Struct();
     std::cout << "OCT_INTEGER_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    OCT_INTEGER_Struct* octInteger_ptr = new OCT_INTEGER_Struct();
     if(curToken.rule[0] == "OCT_INTEGER") {
         octInteger_ptr->value = std::stoi(curToken.token, nullptr, 8);
     }
@@ -321,20 +321,20 @@ OCT_INTEGER_Struct* OCT_INTEGER_func() {
 }
 
 IDENT_Struct* IDENT_func() {
+    IDENT_Struct* ident_ptr = new IDENT_Struct();
     std::cout << "IDENT_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    IDENT_Struct* ident_ptr = new IDENT_Struct();
-    ident_ptr->identifer = curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
+    ident_ptr->identifer = "@" + curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
 
     return ident_ptr;
 }
 
 RESERVED_Struct* RESERVED_func() {
+    RESERVED_Struct* reserved_ptr = new RESERVED_Struct();
     std::cout << "RESERVED_func" << std::endl;
     GrammerToken curToken; 
     stream.GetToken(curToken);
-    RESERVED_Struct* reserved_ptr = new RESERVED_Struct();
     reserved_ptr->reserved = curToken.rule[0];
 
     return reserved_ptr;
@@ -346,9 +346,15 @@ RESERVED_Struct* RESERVED_func() {
 
 //******************************************************************************
 // 主函数
-int main() {
+int main(int argc, char* argv[]) {
     std::string project_dir = PROJECT_ROOT_DIR;
-    std::string file_name = (project_dir + "test/pipeline/sysy_t1.gram");
+    if(argc < 3) {
+        std::cout << "Usage: " << argv[0] << " <input-file>" << " " << "<output-file>" << std::endl;
+        return 1;
+    }
+
+    std::string file_name = (project_dir + "test/pipeline/" + argv[1] + ".gram");
+    std::ofstream fout(project_dir + "test/pipeline/" + argv[2] + ".koopa");
     stream.LoadFile(file_name);
 
     generator = new KoopaGenerator();
@@ -359,7 +365,9 @@ int main() {
 
     std::cout << std::endl << std::endl;
 
-    std::cout << generator->GenerateCode() << std::endl;
+    std::string output = generator->GenerateCode();
+    std::cout << output << std::endl;
+    fout << output << std::endl;
 
     return 0;
 }

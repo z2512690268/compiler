@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include <bits/unique_ptr.h>
+#include <iostream>
 
 enum KoopaVarType {
     KOOPA_INT32
@@ -174,7 +174,7 @@ struct KoopaGenerator {
     KoopaGenerator() {
     }
 
-    std::string GenerateCode() {
+    virtual std::string GenerateCode() {
         std::string code;
         for(auto& func : func_scopes) {
             code += "fun " + func->func_name + "(";
@@ -186,6 +186,7 @@ struct KoopaGenerator {
             }
             code += "): " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
             for(auto& block : func->basicBlocks) {
+                std::cout << "OK1" << std::endl;
                 code += block->label + ":\n";
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {

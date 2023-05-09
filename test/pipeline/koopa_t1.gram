@@ -1,0 +1,33 @@
+CompUnits : CompUnit 
+	CompUnit : FunDef 
+		FunDef : "fun" SYMBOL "(" ")" ":" Type "{" Block "}" 
+			"fun" = "fun"
+			SYMBOL = "@main"
+			"(" = "("
+			")" = ")"
+			":" = ":"
+			Type : "i32" 
+				"i32" = "i32"
+			"{" = "{"
+			Block : SYMBOL ":" Statement ";" EndStatement ";" 
+				SYMBOL = "%entry"
+				":" = ":"
+				Statement : SymbolDef 
+					SymbolDef : SYMBOL "=" BinaryExpr 
+						SYMBOL = "%return"
+						"=" = "="
+						BinaryExpr : BINARY_OP Value "," Value 
+							BINARY_OP = "add"
+							Value : INT 
+								INT = "0"
+							"," = ","
+							Value : INT 
+								INT = "0"
+				";" = ";"
+				EndStatement : Return 
+					Return : "ret" Value 
+						"ret" = "ret"
+						Value : SYMBOL 
+							SYMBOL = "%return"
+				";" = ";"
+			"}" = "}"

@@ -6,9 +6,22 @@
 #include <functional>
 #include "defs.h"
 #include "stream.h"
-#include "elf.h"
+#include "koopa.h"
 
+//******************************************************************************
+// 文件读入与输出变量区
+// 输入流
 TokenStream<GrammerToken> stream;
+// 生成器
+KoopaGenerator* generator;
+//******************************************************************************
+
+//******************************************************************************
+// 解析过程中的全局变量区
+// 当前作用域/基本块
+Scope* curScope;
+BasicBlock* curBlock;
+//******************************************************************************
 
 // Program ::= Lines;
 // Lines ::= Line NewLines {Line NewLines};
@@ -98,9 +111,51 @@ struct PSEUDO_Struct {
     // ATTRIBUTES
 };
 
-int main() {
+Program_Struct* Program_func() {
+    return nullptr;
+}
+Lines_Struct* Lines_func() {
+
+    return nullptr;
+}
+NewLines_Struct* NewLines_func() {
+
+    return nullptr;
+}
+Line_Struct* Line_func() {
+
+    return nullptr;
+}
+Instruction_Struct* Instruction_func() {
+
+    return nullptr;
+}
+Directive_Struct* Directive_func() {
+
+    return nullptr;
+}
+NEWLINE_Struct* NEWLINE_func() {
+
+    return nullptr;
+}
+LABEL_Struct* LABEL_func() {
+
+    return nullptr;
+}
+OPERATOR_Struct* OPERATOR_func() {
+
+    return nullptr;
+}
+
+int main(int argc, char *argv[]) {
     std::string project_dir = PROJECT_ROOT_DIR;
-    std::string file_name = (project_dir + "test/pipeline/maze.gram");
+    if(argc < 3) {
+        std::cout << "Usage: " << argv[0] << " <input-file>" << " " << "<output-file>" << std::endl;
+        return 1;
+    }
+
+    std::string file_name = (project_dir + "test/pipeline/" + argv[1] + ".riscv");
+    std::ofstream fout(project_dir + "test/pipeline/" + argv[2] + ".exe");
 
     stream.LoadFile(file_name);
 
