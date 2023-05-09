@@ -460,7 +460,7 @@ BINARY_OP_Struct* BINARY_OP_func() {
     GrammerToken curToken;
     stream.GetToken(curToken);
     if(curToken.token == "BINARY_OP") {
-        binary_op_ptr->BINARY_OP = curToken.rule[0];
+        binary_op_ptr->BINARY_OP = curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
         return binary_op_ptr;
     }
 
@@ -497,6 +497,7 @@ int main(int argc, char *argv[]) {
     CompUnits_func();
 
     std::string code = generator->GenerateCode();
+    std::cout << std::endl << std::endl;
     std::cout << code << std::endl;
     fout << code << std::endl;
     return 0;
