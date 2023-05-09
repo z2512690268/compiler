@@ -1,0 +1,181 @@
+Program : Lines 
+	Lines : Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines Line NewLines 
+		Line : Directive 
+			Directive : PSEUDO 
+				PSEUDO = ".text"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Directive 
+			Directive : PSEUDO OPERAND 
+				PSEUDO = ".globl"
+				OPERAND = "main"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : LABEL 
+			LABEL = "main:"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND "," OPERAND 
+				OPERATOR = "addi"
+				OPERAND = "sp"
+				"," = ","
+				OPERAND = "sp"
+				"," = ","
+				OPERAND = "-16"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "sw"
+				OPERAND = "ra"
+				"," = ","
+				OPERAND = "12(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "sw"
+				OPERAND = "s0"
+				"," = ","
+				OPERAND = "8(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "sw"
+				OPERAND = "s1"
+				"," = ","
+				OPERAND = "4(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "la"
+				OPERAND = "s0"
+				"," = ","
+				OPERAND = "hello_str"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "li"
+				OPERAND = "s1"
+				"," = ","
+				OPERAND = "0"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : LABEL 
+			LABEL = "1:"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND "," OPERAND 
+				OPERATOR = "add"
+				OPERAND = "a0"
+				"," = ","
+				OPERAND = "s0"
+				"," = ","
+				OPERAND = "s1"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "lbu"
+				OPERAND = "a0"
+				"," = ","
+				OPERAND = "0(a0)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "beqz"
+				OPERAND = "a0"
+				"," = ","
+				OPERAND = "1f"
+		NewLines : NEWLINE NEWLINE 
+			NEWLINE = "\n"
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND "," OPERAND 
+				OPERATOR = "addi"
+				OPERAND = "s1"
+				"," = ","
+				OPERAND = "s1"
+				"," = ","
+				OPERAND = "1"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND 
+				OPERATOR = "j"
+				OPERAND = "1b"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : LABEL 
+			LABEL = "2:"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "li"
+				OPERAND = "a0"
+				"," = ","
+				OPERAND = "0"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "lw"
+				OPERAND = "s1"
+				"," = ","
+				OPERAND = "4(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "lw"
+				OPERAND = "s0"
+				"," = ","
+				OPERAND = "8(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND 
+				OPERATOR = "lw"
+				OPERAND = "ra"
+				"," = ","
+				OPERAND = "12(sp)"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR OPERAND "," OPERAND "," OPERAND 
+				OPERATOR = "addi"
+				OPERAND = "sp"
+				"," = ","
+				OPERAND = "sp"
+				"," = ","
+				OPERAND = "16"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Instruction 
+			Instruction : OPERATOR 
+				OPERATOR = "ret"
+		NewLines : NEWLINE NEWLINE 
+			NEWLINE = "\n"
+			NEWLINE = "\n"
+		Line : Directive 
+			Directive : PSEUDO 
+				PSEUDO = ".data"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : LABEL 
+			LABEL = "hello_str:"
+		NewLines : NEWLINE 
+			NEWLINE = "\n"
+		Line : Directive 
+			Directive : PSEUDO OPERAND 
+				PSEUDO = ".asciz"
+				OPERAND = ""Hello,\sworld!\n""
+		NewLines : NEWLINE 
+			NEWLINE = "\n"

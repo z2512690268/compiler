@@ -11,30 +11,105 @@
 #include "koopa.h"
 #include "ir.h"
 
+//************************************************************************
+// 文件读入与输出变量区
 // 输入流
 TokenStream<GrammerToken> stream;
 // 生成器
 KoopaGenerator* generator;
+//************************************************************************
+
+
+
+//************************************************************************
+// 解析过程中的全局变量区
 // 当前作用域/基本块
 Scope* curScope;
 BasicBlock* curBlock;
-
-// 语法树函数
-// 非终结符
-CompUnits_Struct* CompUnits_func();
-CompUnit_Struct* CompUnit_func();
-FuncDef_Struct* FuncDef_func();
-FuncType_Struct* FuncType_func();
-Block_Struct* Block_func(std::string block_name = "");
-Stmt_Struct* Stmt_func();
-Number_Struct* Number_func();
-Integer_Struct* Integer_func();
-// 终结符
-OCT_INTEGER_Struct* OCT_INTEGER_func();
-IDENT_Struct* IDENT_func();
-RESERVED_Struct* RESERVED_func();
+//************************************************************************
 
 
+
+//************************************************************************
+// 带属性语法树节点
+// 各个类型的结构体
+struct KoopaGramStruct {
+    CompUnits_Struct* CompUnits;
+    // ATTRIBUTES
+};
+
+struct CompUnits_Struct {
+    std::vector<CompUnit_Struct*> CompUnit;
+    // ATTRIBUTES
+};
+
+struct CompUnit_Struct {
+    // FUNCDEF
+    FuncDef_Struct* FuncDef;
+    // ATTRIBUTES
+};
+
+struct FuncDef_Struct {
+    Block_Struct* Block;
+
+    // ATTRIBUTES
+    KoopaVarType type;
+    std::string funcName;
+    FuncType_Struct* funcRetType;
+};
+
+struct FuncType_Struct {
+    KoopaVarType type;
+};
+
+struct Block_Struct {
+    std::vector<Stmt_Struct*> Stmt;
+
+    // ATTRIBUTES
+    BasicBlock* block;
+};
+
+struct Stmt_Struct {
+    // RETURN
+    Number_Struct* Number;
+
+    // ATTRIBUTES
+};
+
+struct Number_Struct {
+    // INTEGER
+    Integer_Struct* Integer;
+    // ATTRIBUTES
+    KoopaVarValue value;
+};
+
+struct Integer_Struct {
+    OCT_INTEGER_Struct* OCT_INTEGER;
+    // ATTRIBUTES
+    int value;
+};
+
+struct IDENT_Struct {
+    // ATTRIBUTES
+    std::string identifer;
+};
+
+struct OCT_INTEGER_Struct {
+    // ATTRIBUTES
+    int value;
+};
+
+struct RESERVED_Struct {
+    // ATTRIBUTES
+    std::string reserved;
+};
+//************************************************************************
+
+
+
+
+//************************************************************************
+// 建树与解析函数
 // CompUnits      ::= CompUnit {CompUnit};
 CompUnits_Struct* CompUnits_func() {
     std::cout << "CompUnits_func" << std::endl;
@@ -124,8 +199,7 @@ Block_Struct* Block_func(std::string block_name) {
     // 创建基本块
     BasicBlock* block = new BasicBlock();
     block->parent = curBlock;
-    std::string name = "%" + (block_name == "" ? curScope->GetUniqueName("block") 
-                                    : curScope->GetUniqueName(block_name + "_block"));
+    std::string name = curScope->GetUniqueName("%entry");
     block->label = name;
     SymbolItem* block_item = new SymbolItem();
     block_item->InitLabelSymbol(block);
@@ -231,7 +305,13 @@ RESERVED_Struct* RESERVED_func() {
 
     return reserved_ptr;
 }
+//************************************************************************
 
+
+
+
+//************************************************************************
+// 主函数
 int main() {
     std::string project_dir = PROJECT_ROOT_DIR;
     std::string file_name = (project_dir + "test/pipeline/sysy_t1.gram");
@@ -249,3 +329,4 @@ int main() {
 
     return 0;
 }
+//************************************************************************

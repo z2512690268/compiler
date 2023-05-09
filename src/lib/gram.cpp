@@ -318,7 +318,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
     std::unordered_map<std::string, std::vector<std::string>> follows;
     firsts["$"].push_back("$");
     for(auto& gram : grams) {
-        std::cout << gram.first << std::endl;
+        // std::cout << gram.first << std::endl;
         FindFirstSet(gram.first, grams, firsts);
     }
 
@@ -627,6 +627,8 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
     token_stream.push_back(std::make_pair("$", "$"));
 
     int token_stream_pos = 0;
+    int last_token_stream_pos = -1;
+    int line_num = 1;
     while(token_stream_pos < token_stream.size()) {
         std::string& input_token = token_stream[token_stream_pos].first;
         std::string& match_value = token_stream[token_stream_pos].second;
@@ -634,6 +636,17 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
         DEBUG_GRAM_LR1ANALYZE std::cout << "token_stream_pos: " << token_stream_pos << "\t";
         DEBUG_GRAM_LR1ANALYZE std::cout << "input_token: " << input_token << "\t";
         DEBUG_GRAM_LR1ANALYZE std::cout << "match_value: " << match_value << std::endl;
+
+
+        if(last_token_stream_pos != token_stream_pos) {
+            std::string ascii_match = AsciiString(match_value);
+            for(int i = 0; i < ascii_match.size(); ++i) {
+                if(ascii_match[i] == '\n') {
+                    ++line_num;
+                }
+            }
+            last_token_stream_pos = token_stream_pos;
+        }
 
         int state_id = state_stack.back();
         if(input_token == "RESERVED") {
@@ -646,12 +659,21 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
         }
 
         if(terminal_map[input_token] == 0) {
-            std::cerr << "error: " << input_token << " is not a terminal" << std::endl;
+            std::cerr << "error: (" << line_num << ") <" << input_token << ":" << match_value << ">" << " is not a terminal" << std::endl;
             return 1;
         }
 
         if(LR1_table[state_id].find(input_token) == LR1_table[state_id].end()) {
-            std::cerr << "error: " << input_token << " is not in LR1_table" << std::endl;
+            std::cerr << "\033[31m" << std::endl;
+            std::cerr << "error: (" << line_num << ") <" << input_token << ":" << match_value << ">" << " can not match any grammer in current state" << std::endl << std::endl;
+            std::cerr << "current state is:" << std::endl;
+            std::cerr << gramNFA.DFA.id2node[state_id]->PrintSelf(grams, gramNFA) << std::endl;
+            std::cerr << "valid input tokens are:" << std::endl;
+            for(auto& t : LR1_table[state_id]) {
+                std::cerr << t.first << " ";
+            }
+            std::cerr << std::endl;
+            std::cerr << "\033[0m" << std::endl;
             return 1;
         }
 
@@ -686,7 +708,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             symbol_stack.push_back(reduce_token);
             grammer_stack.push_back(node);
             if(LR1_table[state_stack.back()].find(reduce_token) == LR1_table[state_stack.back()].end()) {
-                std::cerr << "error: " << reduce_token << " is not in LR1_table" << std::endl;
+                std::cerr << "error: (" << line_num << ")" << reduce_token << " is not in LR1_table" << std::endl;
                 return 1;
             }
             state_stack.push_back(std::get<2>(LR1_table[state_stack.back()][reduce_token]));
@@ -708,7 +730,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             state_stack.push_back(std::get<2>(t));
             DEBUG_GRAM_LR1ANALYZE std::cout << "goto " << std::get<2>(t) << std::endl;
         } else {
-            std::cerr << "error" << std::endl;
+            std::cerr << "error LR1 Table Type in (" << line_num << ")" << std::endl;
             return 1;
         }
 

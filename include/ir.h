@@ -190,7 +190,7 @@ struct KoopaGenerator {
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {
                         case Statement::OPRATION:
-                            code += "\t" + stmt->OPERATION_ret_var + " = " + stmt->OPERATION_input1_var + " " + stmt->OPERATION_op + " " + stmt->OPERATION_input2_var + ";\n";
+                            code += "\t" + stmt->OPERATION_ret_var + " = " + stmt->OPERATION_op + " " + stmt->OPERATION_input1_var + ", " + stmt->OPERATION_input2_var + ";\n";
                             break;
                         case Statement::RETURN:
                             code += "\tret " + stmt->RETURN_ret_var + ";\n";
