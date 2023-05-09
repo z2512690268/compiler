@@ -6,13 +6,10 @@
 #include <functional>
 #include "defs.h"
 #include "stream.h"
-#include "koopa.h"
 #include "riscv.h"
-#include "ir.h"
-
 TokenStream<GrammerToken> stream;
-KoopaGenerator* generator;
-Scope* curScope;
+// KoopaGenerator* generator;
+// Scope* curScope;
 
 // // CompUnit
 // CompUnits ::= CompUnit {CompUnit};
@@ -77,8 +74,8 @@ int main() {
 
     stream.LoadFile(file_name);
 
-    generator = new KoopaGenerator();
-    curScope = &generator->global_scope;
+    // generator = new KoopaGenerator();
+    // curScope = &generator->global_scope;
     // CompUnits_func();
 
     return 0;

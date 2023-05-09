@@ -240,7 +240,52 @@ CompUnit : FuncDef
 
 ### 汇编语言约定
 
+汇编语言采用riscv汇编，具体规则参考[这里](https://github.com/jameslzhu/riscv-card/blob/master/riscv-card.pdf)
+
+- 完整支持的指令集为RV32I，不支持RV32M和RV32F
+
+- 支持的简化指令包括`la, li, ret, j, beqz`
+
+- 支持的伪指令仅包括.text, .data, .global, .asciz
+
+- 支持的寄存器包括`x0-x31, ra, sp, gp, tp, t0-t6, s0-s11, a0-a7`
+
+- 所有的指令、伪指令和标签均为全小写, 伪指令以`.`开头, 标签以`:`结尾
+
+示例：
+```
+  .text
+  .globl main
+main:
+  addi  sp, sp, -16
+  sw    ra, 12(sp)
+  sw    s0, 8(sp)
+  sw    s1, 4(sp)
+  la    s0, hello_str
+  li    s1, 0
+1:
+  add   a0, s0, s1
+  lbu   a0, 0(a0)
+  beqz  a0, 1f
+  # call  putch
+  addi  s1, s1, 1
+  j     1b
+2:
+  li    a0, 0
+  lw    s1, 4(sp)
+  lw    s0, 8(sp)
+  lw    ra, 12(sp)
+  addi  sp, sp, 16
+  ret
+
+  .data
+hello_str:
+  .asciz "Hello, world!\n"
+```
+
 ### 二进制文件约定
+
+仅支持riscv 32位可执行文件
 
 ## 使用方法
 
