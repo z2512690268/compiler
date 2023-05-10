@@ -350,16 +350,23 @@ RESERVED_Struct* RESERVED_func() {
 int main(int argc, char* argv[]) {
     std::string project_dir = PROJECT_ROOT_DIR;
     if(argc < 3) {
-        std::cout << "Usage: " << argv[0] << " <input-file>" << " " << "<output-file>" << std::endl;
-        return 1;
+        std::cout << "Usage: " << argv[0] << " " << "<koopa/riscv>" << "<input-file>" << " " << "<output-file>" << std::endl;
+        exit(1);
     }
 
-    std::string file_name = (project_dir + "test/pipeline/" + argv[1] + ".gram");
-    std::ofstream fout(project_dir + "test/pipeline/" + argv[2] + ".koopa");
-    stream.LoadFile(file_name);
+    if(std::string(argv[1]) == "koopa"){
+        generator = new KoopaGenerator();
+    } else if(std::string(argv[1]) == "riscv") {
+        generator = new RiscvGenerator();
+    } else {
+        std::cerr << "Unknown target: " << argv[1] << std::endl;
+        exit(1);
+    }
 
-    // generator = new KoopaGenerator();
-    generator = new RiscvGenerator();
+    std::string file_name = (project_dir + "test/pipeline/" + argv[2] + ".gram");
+    std::ofstream fout(project_dir + "test/pipeline/" + argv[3] + "." + std::string(argv[1]));
+
+    stream.LoadFile(file_name);
     curScope = &generator->global_scope;
     curBlock = nullptr;
 
