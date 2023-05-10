@@ -5,7 +5,22 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
+enum KoopaValueType {
+    KOOPA_SYMBOL,
+    KOOPA_IMM,
+    KOOPA_undef
+};
+inline KoopaValueType GetKoopaVarType(std::string type) {
+    if(type[0] == '%' || type[0] == '@') {
+        return KOOPA_SYMBOL;
+    } else if(type == "undef") {
+        return KOOPA_undef;
+    } else {
+        return KOOPA_IMM;
+    }
+}
 enum KoopaVarType {
     KOOPA_INT32
 };
@@ -19,7 +34,13 @@ inline std::string KoopaVarTypeToString(KoopaVarType type) {
     }
     return "";
 }
-
+inline bool KoopaValidBinaryOp(std::string op) {
+    // (ne)|(eq)|(gt)|(lt)|(ge)|(le)|(add)|(sub)|(mul)|(div)|(mod)|(and)|(or)|(xor)|(shl)|(shr)|(sar)
+    static std::vector<std::string> operations = {
+        "ne", "eq", "gt", "lt", "ge", "le", "add", "sub", "mul", "div", "mod", "and", "or", "xor", "shl", "shr", "sar"
+    };
+    return std::find(operations.begin(), operations.end(), op) != operations.end();
+}
 
 struct BasicBlock;
 
@@ -66,9 +87,17 @@ struct Statement {
         BRANCH,
         JUMP
     };
-    // (ne)|(eq)|(gt)|(lt)|(ge)|(le)|(add)|(sub)|(mul)|(div)|(mod)|(and)|(or)|(xor)|(shl)|(shr)|(sar)
+    
     void InitOperationStatement(std::string op, std::string input1, std::string input2, std::string ret) {
         type = OPRATION;
+        if(!KoopaValidBinaryOp(op)) {
+            std::cerr << "Invalid operation: " << op << std::endl;
+            exit(1);
+        }
+        if(GetKoopaVarType(input1) == KOOPA_undef || GetKoopaVarType(input2) == KOOPA_undef) {
+            std::cerr << "Invalid input: " << op << " " << input1 << " " << input2 << std::endl;
+            exit(1);
+        }
         OPERATION_op = op;
         OPERATION_input1_var = input1;
         OPERATION_input2_var = input2;
@@ -76,6 +105,10 @@ struct Statement {
     }
     void InitReturnStatement(std::string ret) {
         type = RETURN;
+        if(GetKoopaVarType(ret) == KOOPA_undef) {
+            std::cerr << "Invalid return: " << ret << std::endl;
+            exit(1);
+        }
         RETURN_ret_var = ret;
     }
     void InitCallStatement(std::string func_name, std::vector<std::string> params, std::string ret) {

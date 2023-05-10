@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "stream.h"
 #include "koopa.h"
+#include "backend/riscv_generator.h"
 //******************************************************************************
 // 文件读入与输出变量区
 // 输入流
@@ -483,16 +484,23 @@ RESERVED_Struct* RESERVED_func() {
 int main(int argc, char *argv[]) {
     std::string project_dir = PROJECT_ROOT_DIR;
     if(argc < 3) {
-        std::cout << "Usage: " << argv[0] << " <input-file>" << " " << "<output-file>" << std::endl;
-        return 1;
+        std::cout << "Usage: " << argv[0] << " " << "<koopa/riscv>" << "<input-file>" << " " << "<output-file>" << std::endl;
+        exit(1);
     }
 
-    std::string file_name = (project_dir + "test/pipeline/" + argv[1] + ".gram");
-    std::ofstream fout(project_dir + "test/pipeline/" + argv[2] + ".koopa");
+    if(std::string(argv[1]) == "koopa"){
+        generator = new KoopaGenerator();
+    } else if(std::string(argv[1]) == "riscv") {
+        generator = new RiscvGenerator();
+    } else {
+        std::cerr << "Unknown target: " << argv[1] << std::endl;
+        exit(1);
+    }
 
+    std::string file_name = (project_dir + "test/pipeline/" + argv[2] + ".gram");
+    std::ofstream fout(project_dir + "test/pipeline/" + argv[3] + "." + std::string(argv[1]));
+    
     stream.LoadFile(file_name);
-
-    generator = new KoopaGenerator();
     curScope = &generator->global_scope;
     CompUnits_func();
 
