@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "stream.h"
 #include "koopa.h"
+#include "backend/riscv_generator.h"
 
 //******************************************************************************
 // 文件读入与输出变量区
@@ -357,7 +358,8 @@ int main(int argc, char* argv[]) {
     std::ofstream fout(project_dir + "test/pipeline/" + argv[2] + ".koopa");
     stream.LoadFile(file_name);
 
-    generator = new KoopaGenerator();
+    // generator = new KoopaGenerator();
+    generator = new RiscvGenerator();
     curScope = &generator->global_scope;
     curBlock = nullptr;
 

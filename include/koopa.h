@@ -66,7 +66,7 @@ struct Statement {
         BRANCH,
         JUMP
     };
-
+    // (ne)|(eq)|(gt)|(lt)|(ge)|(le)|(add)|(sub)|(mul)|(div)|(mod)|(and)|(or)|(xor)|(shl)|(shr)|(sar)
     void InitOperationStatement(std::string op, std::string input1, std::string input2, std::string ret) {
         type = OPRATION;
         OPERATION_op = op;
