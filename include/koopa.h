@@ -43,6 +43,7 @@ inline bool KoopaValidBinaryOp(std::string op) {
 }
 
 struct BasicBlock;
+struct Scope;
 
 struct SymbolItem  {
     enum SymbolType {
@@ -148,13 +149,6 @@ struct Statement {
     std::string JUMP_label;
 };
 
-struct BasicBlock {
-    BasicBlock* parent;
-    std::string label;
-    std::vector<std::string> block_params;
-    std::vector<Statement*> statements;
-};
-
 struct Scope {
     // symbol_table
     std::unordered_map<std::string, SymbolItem*> symbol_table;
@@ -189,6 +183,14 @@ struct Scope {
         }
     }
 
+    std::string AddVarSymbol(std::string origin_name, KoopaVarType type) {
+        std::string name = GetUniqueName(origin_name);
+        SymbolItem* var_item = new SymbolItem();
+        var_item->InitVarSymbol(type);
+        AddSymbol(name, var_item);
+        return name;
+    }
+
     std::string GetUniqueName(std::string name) {
         int i = 0;
         std::string new_name = name;
@@ -198,4 +200,23 @@ struct Scope {
         }
         return new_name;
     }
+};
+
+struct BasicBlock {
+    BasicBlock() {
+        parent = nullptr;
+    }
+    BasicBlock(BasicBlock* parent) : parent(parent) {}
+    BasicBlock(BasicBlock* parent, std::string label) : parent(parent), label(label) {}
+    BasicBlock(BasicBlock* parent, Scope* curScope, std::string origin_name) : parent(parent) {
+        label = curScope->GetUniqueName(origin_name);
+        SymbolItem* block_item = new SymbolItem();
+        block_item->InitLabelSymbol(this);
+        curScope->AddSymbol(label, block_item);
+    }
+
+    BasicBlock* parent;
+    std::string label;
+    std::vector<std::string> block_params;
+    std::vector<Statement*> statements;
 };

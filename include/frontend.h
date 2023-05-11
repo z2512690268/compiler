@@ -82,12 +82,11 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct FuncDef_Struct {
+        FuncType_Struct* funcRetType;
+        IDENT_Struct*   funcnameIDENT;
         Block_Struct* Block;
 
         // ATTRIBUTES
-        KoopaVarType type;
-        std::string funcName;
-        FuncType_Struct* funcRetType;
     };
 
     struct FuncType_Struct {
@@ -144,30 +143,47 @@ struct SysyFrontend : public FrontendBase {
     // 建树与解析函数
     // CompUnits      ::= CompUnit {CompUnit};
     CompUnits_Struct* CompUnits_func() {
+        //-----------------------------------------------------------------
         CompUnits_Struct* compUnits_ptr = new CompUnits_Struct();
         std::cout << "CompUnits_func" << std::endl;
-        GrammerToken curToken; 
+        GrammerToken curToken;
         stream.GetToken(curToken);
-        for(auto rule : curToken.rule) {
-            if(rule == "CompUnit") {
-                CompUnit_Struct* compUnit_ptr = CompUnit_func();
-                compUnits_ptr->CompUnit.push_back(compUnit_ptr);
+        //-----------------------------------------------------------------
+
+        //-----------------------------------------------------------------
+        if(curToken.rule[0] == "CompUnit") {
+            for(auto rule : curToken.rule) {
+                if(rule == "CompUnit") {
+                    compUnits_ptr->CompUnit.push_back(CompUnit_func());
+                }
             }
+            return compUnits_ptr;
+        } else {
+            std::cerr << "CompUnits_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
         return compUnits_ptr;
     }
 
     // CompUnit       ::= FuncDef;
     CompUnit_Struct* CompUnit_func() {
+        //-----------------------------------------------------------------
         CompUnit_Struct* compUnit_ptr = new CompUnit_Struct();
         std::cout << "CompUnit_func" << std::endl;
         GrammerToken curToken;
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
+
+        //-----------------------------------------------------------------
         if(curToken.rule[0] == "FuncDef") {
-            FuncDef_Struct* funcDef_ptr = FuncDef_func();
-            compUnit_ptr->FuncDef = funcDef_ptr;
+            compUnit_ptr->FuncDef = FuncDef_func();
             return compUnit_ptr;
+        } else {
+            std::cerr << "CompUnit_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
 
         return compUnit_ptr; 
     }
@@ -175,97 +191,145 @@ struct SysyFrontend : public FrontendBase {
 
     // FuncDef   ::= FuncType IDENT "(" ")" Block;
     FuncDef_Struct* FuncDef_func() {
+        //-----------------------------------------------------------------
         FuncDef_Struct* funcDef_ptr = new FuncDef_Struct();
         std::cout << "FuncDef_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
-        // 创建作用域
-        Scope* func_scope = new Scope(curScope);
-        curScope = func_scope;
-        generator->func_scopes.push_back(func_scope);
+        //-----------------------------------------------------------------
+        
 
+        //-----------------------------------------------------------------
         // 创建函数
         // FuncDef   ::= FuncType IDENT "(" ")" Block;
         if(curToken.rule[0] == "FuncType") {
-            FuncType_Struct* funcType_ptr = FuncType_func();
-            funcDef_ptr->funcRetType = funcType_ptr;
-
-            IDENT_Struct* ident_ptr = IDENT_func();
-            funcDef_ptr->funcName = ident_ptr->identifer;
-
-            // "(" ")"
-            RESERVED_func();
-            RESERVED_func();
-
-            Block_Struct* block_ptr = Block_func(funcDef_ptr->funcName);
-            funcDef_ptr->Block = block_ptr;
+            //-----------------------------------------------------------------
+            // 创建作用域
+            Scope* func_scope = new Scope(curScope);
+            curScope = func_scope;
+            generator->func_scopes.push_back(func_scope);
+            //-----------------------------------------------------------------
+        
+            //-----------------------------------------------------------------
+            funcDef_ptr->funcRetType = FuncType_func();
+            funcDef_ptr->funcnameIDENT = IDENT_func();
+            RESERVED_func();    //(
+            RESERVED_func();    //)
+            funcDef_ptr->Block = Block_func(funcDef_ptr->funcnameIDENT->identifer);
+            //-----------------------------------------------------------------
+           
+            //-----------------------------------------------------------------
+            // 退出作用域
+            func_scope->func_name = funcDef_ptr->funcnameIDENT->identifer;
+            func_scope->func_ret_type = funcDef_ptr->funcRetType->type;
+            func_scope->basicBlocks.push_back(funcDef_ptr->Block->block);
+            curScope = curScope->parent;
+            //-----------------------------------------------------------------
+            
+            return funcDef_ptr;
+        } else {
+            std::cerr << "FuncDef_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
 
-        // 退出作用域
-        func_scope->func_name = funcDef_ptr->funcName;
-        func_scope->func_ret_type = funcDef_ptr->funcRetType->type;
-        func_scope->basicBlocks.push_back(funcDef_ptr->Block->block);
-        curScope = curScope->parent;
+
         return funcDef_ptr;
     }
 
     // FuncType  ::= "int";
     FuncType_Struct* FuncType_func() {
+        //-----------------------------------------------------------------
         FuncType_Struct* funcType_ptr = new FuncType_Struct();
         std::cout << "FuncType_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
-        funcType_ptr->type = KOOPA_INT32;
-        // "int"
-        RESERVED_func();
+        //-----------------------------------------------------------------
+
+        //-----------------------------------------------------------------
+        // INT32
+        // FuncType  ::= "int";
+        if(curToken.rule[0] == "\"int\"") {
+            funcType_ptr->type = KOOPA_INT32;
+            RESERVED_func();  // "int"
+            return funcType_ptr;
+        } else {
+            std::cerr << "FuncType_func: " << curToken << std::endl;
+            exit(1);
+        }
+        //-----------------------------------------------------------------
+        
         return funcType_ptr;
     }
 
 
     // Block     ::= "{" Stmt "}";
     Block_Struct* Block_func(std::string block_name) {
+        //-----------------------------------------------------------------
         Block_Struct* block_ptr = new Block_Struct();
         std::cout << "Block_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
 
-        // 创建基本块
-        BasicBlock* block = new BasicBlock();
-        block->parent = curBlock;
-        std::string name = curScope->GetUniqueName("%entry");
-        block->label = name;
-        SymbolItem* block_item = new SymbolItem();
-        block_item->InitLabelSymbol(block);
-        curScope->AddSymbol(name, block_item);
-        curBlock = block;
+        //-----------------------------------------------------------------
+        // Block     ::= "{" Stmt "}";
+        if(curToken.rule[0] == "\"{\"") {
+            //-----------------------------------------------------------------
+            // 创建基本块，并加入符号表
+            BasicBlock* block = new BasicBlock(curBlock, curScope, "%entry");
+            //-----------------------------------------------------------------
 
-        // 创建语句
-        // 只有一句语句
-        RESERVED_func();    //{
-        Stmt_Struct* stmt_ptr = Stmt_func();
-        RESERVED_func();    //}
-        block_ptr->block = block;
-        curBlock = curBlock->parent;
+            //-----------------------------------------------------------------
+            // 更新当前块
+            curBlock = block;
+            //-----------------------------------------------------------------
+
+            //-----------------------------------------------------------------
+            // 创建语句
+            // 只有一句语句
+            RESERVED_func();    //{
+            Stmt_Struct* stmt_ptr = Stmt_func();
+            RESERVED_func();    //}
+            //-----------------------------------------------------------------
+            
+            //-----------------------------------------------------------------
+            // 属性赋值
+            block_ptr->block = block;
+            //-----------------------------------------------------------------
+            return block_ptr;
+        } else {
+            std::cerr << "Block_func: " << curToken << std::endl;
+            exit(1);
+        }
+        //-----------------------------------------------------------------
+        
         return block_ptr;
     }
 
     // Stmt      ::= "return" Number ";";
     Stmt_Struct* Stmt_func() {
+        //-----------------------------------------------------------------
         Stmt_Struct* stmt_ptr = new Stmt_Struct();
         std::cout << "Stmt_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
+        
+        //-----------------------------------------------------------------
+        // Stmt      ::= "return" Number ";";
         if(curToken.rule[0] == "\"return\"") {
+            //-----------------------------------------------------------------
             RESERVED_func();    //return
             Number_Struct* number_ptr = Number_func();
             stmt_ptr->Number = number_ptr;
             RESERVED_func();    //;
+            //-----------------------------------------------------------------
 
-            std::string ret_var_name = curScope->GetUniqueName("%return");
-            SymbolItem* ret_var = new SymbolItem();
-            ret_var->InitVarSymbol(KOOPA_INT32);
+            //-----------------------------------------------------------------
             // 添加变量
-            curScope->AddSymbol(ret_var_name, ret_var);
+            std::string ret_var_name = curScope->AddVarSymbol("%return", KOOPA_INT32);
+            
             // 赋值语句
             Statement* assign = new Statement();
             assign->InitOperationStatement("add", "0", std::to_string(stmt_ptr->Number->value.INT32), ret_var_name);
@@ -275,72 +339,130 @@ struct SysyFrontend : public FrontendBase {
             Statement* statement = new Statement();
             statement->InitReturnStatement(ret_var_name);
             curBlock->statements.push_back(statement);
+            //-----------------------------------------------------------------
+            return stmt_ptr;
+        } else {
+            std::cerr << "Stmt_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
 
         return stmt_ptr;
     }
 
     // Number    ::= Integer;
     Number_Struct* Number_func() {
+        //-----------------------------------------------------------------
         Number_Struct* number_ptr = new Number_Struct();
         std::cout << "Number_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
+        
+        //-----------------------------------------------------------------
+        // Number    ::= Integer;
         if(curToken.rule[0] == "Integer") {
+            //-----------------------------------------------------------------
             Integer_Struct* integer_ptr = Integer_func();
+            //-----------------------------------------------------------------
+
+            //-----------------------------------------------------------------
             number_ptr->Integer = integer_ptr;
             number_ptr->value.INT32 = integer_ptr->value;
+            //-----------------------------------------------------------------
+        } else {
+            std::cerr << "Number_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
         return number_ptr;
     }
 
     // Integer   ::= OCT_INTEGER;
     Integer_Struct* Integer_func() {
+        //-----------------------------------------------------------------
         Integer_Struct* integer_ptr = new Integer_Struct();
         std::cout << "Integer_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
+        
+        //-----------------------------------------------------------------
         if(curToken.rule[0] == "OCT_INTEGER") {
+            //-----------------------------------------------------------------
             OCT_INTEGER_Struct* octInteger_ptr = OCT_INTEGER_func();
+            
+            //-----------------------------------------------------------------
             integer_ptr->OCT_INTEGER = octInteger_ptr;
             integer_ptr->value = octInteger_ptr->value;
+            //-----------------------------------------------------------------
+            return integer_ptr;
+        } else {
+            std::cerr << "Integer_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
         return integer_ptr;
     }
 
     OCT_INTEGER_Struct* OCT_INTEGER_func() {
+        //-----------------------------------------------------------------
         OCT_INTEGER_Struct* octInteger_ptr = new OCT_INTEGER_Struct();
         std::cout << "OCT_INTEGER_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
-        if(curToken.rule[0] == "OCT_INTEGER") {
-            octInteger_ptr->value = std::stoi(curToken.token, nullptr, 8);
+        //-----------------------------------------------------------------
+        if(curToken.token == "OCT_INTEGER") {
+            //-----------------------------------------------------------------
+            octInteger_ptr->value = std::stoi(
+                curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 8);
+            //-----------------------------------------------------------------
+            return octInteger_ptr;
+        } else {
+            std::cerr << "OCT_INTEGER_func: " << curToken << std::endl;
+            exit(1);
         }
+        //-----------------------------------------------------------------
         return octInteger_ptr;
     }
 
     IDENT_Struct* IDENT_func() {
+        //-----------------------------------------------------------------
         IDENT_Struct* ident_ptr = new IDENT_Struct();
         std::cout << "IDENT_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
-        ident_ptr->identifer = "@" + curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
+        //-----------------------------------------------------------------
+        
+        //-----------------------------------------------------------------
+        if(curToken.token == "IDENT") {
+            //-----------------------------------------------------------------
+            ident_ptr->identifer = "@" + curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
+            //-----------------------------------------------------------------
+            return ident_ptr;
+        } else {
+            std::cerr << "IDENT_func: " << curToken << std::endl;
+            exit(1);
+        }
+        //-----------------------------------------------------------------
 
         return ident_ptr;
     }
 
     RESERVED_Struct* RESERVED_func() {
+        //-----------------------------------------------------------------
         RESERVED_Struct* reserved_ptr = new RESERVED_Struct();
         std::cout << "RESERVED_func" << std::endl;
         GrammerToken curToken; 
         stream.GetToken(curToken);
+        //-----------------------------------------------------------------
+        
+        //-----------------------------------------------------------------
         reserved_ptr->reserved = curToken.rule[0];
-
+        //-----------------------------------------------------------------
         return reserved_ptr;
     }
     //******************************************************************************
-
-
 };
 
 struct KoopaFrontend : public FrontendBase {
@@ -644,10 +766,6 @@ struct KoopaFrontend : public FrontendBase {
             std::string op = symbolDef_ptr->BinaryExpr->BINARY_OP->BINARY_OP;
             std::string value1 = std::to_string(symbolDef_ptr->BinaryExpr->Value1->INT->INT);
             std::string value2 = std::to_string(symbolDef_ptr->BinaryExpr->Value2->INT->INT);
-            // std::cout << symbolDef_ptr->BinaryExpr->BINARY_OP->BINARY_OP << std::endl;
-            // std::cout << symbolDef_ptr->BinaryExpr->Value1->SYMBOL->SYMBOL << std::endl;
-            // std::cout << symbolDef_ptr->BinaryExpr->Value2->SYMBOL->SYMBOL << std::endl;
-            // std::cout << symbolDef_ptr->SymbolName << std::endl;
             statement->InitOperationStatement(op,
                                     value1, 
                                     value2,
