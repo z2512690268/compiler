@@ -333,6 +333,27 @@ xmake run gram sysy maze maze
 xmake run gram sysy1 sysy_t1 sysy_t1
 ```
 
+### 语义分析与代码生成器
+
+syntax 程序的执行方式如下：
+
+```
+xmake run syntax <frontend-lang> <backend-lang> <filename-base>
+```
+
+其中frontend-lang为前端语言，backend-lang为后端语言，filename-base为文件名前缀
+
+输入文件路径为`test/pipeline/<filename-base>.gram`, 输出文件路径为`test/pipeline/<filename-base>.<backend-lang>`
+
+目前支持的前端语言包括`sysy, koopa`, 支持的后端语言包括`koopa, riscv`
+
+example:
+```
+xmake run syntax sysy koopa sysy_t1
+xmake run syntax sysy riscv sysy_t1
+xmake run syntax koopa koopa koopa_t1
+xmake run syntax koopa riscv koopa_t1
+```
 
 ## 单元测试
 
