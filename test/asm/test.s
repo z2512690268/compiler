@@ -340,3 +340,34 @@ hello_str:
 #     andi a0, a0, 255
 #     sw  a0, 0(a5)
 #     ret
+
+# .macro PRINT str
+#     la a0, \str
+#     mv a1, x0
+#     mv a2, x0
+#     mv a3, x0
+#     mv a4, x0
+#     mv a5, x0
+#     li a6, 0
+#     li a7, 1
+#     ecall
+# .endm
+
+# .globl _start
+# _start:
+#     la sp, boot_stack_top
+
+#  # ------------------
+#     PRINT 'B'
+
+#     ret
+
+
+#     .section .bss.stack
+#     .globl boot_stack
+
+# boot_stack:
+#     .space 0x1000 # <-- change to your stack size
+
+#     .globl boot_stack_top
+# boot_stack_top:

@@ -21,8 +21,10 @@ wget https://xmake.io/shget.text -O - | bash
 在.bashrc里允许xmake在root下使用
 
 ```
-export XMAKE_ROOT=y >> ~/.bashrc
+echo "export XMAKE_ROOT=y" >> ~/.bashrc
 ```
+
+如需要编译生成的riscv汇编, 请执行prepare.sh下载riscv工具链, 该脚本将自动下载riscv工具链到tools/riscv-gcc并添加到环境变量中
 
 ## 目前进度
 
