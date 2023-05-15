@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
+#include <string>
 
 struct KoopaGenerator {
     Scope global_scope;
@@ -94,9 +95,95 @@ struct RiscvGenerator : public KoopaGenerator {
     int label_count = 0;
     std::unordered_map<std::string, std::string> reg_map;
 
-    bool IsArithmeticOperations(std::string op) {
-        return op == "add" || op == "sub" || op == "and" || op == "or" || op == "xor" || op == "sll" || op == "srl" || op == "sra";
+    bool OpLikeADD(std::string op) {
+        return op == "add" || op == "sub" || op == "and" || op == "or" || op == "xor" || op == "shl" || op == "shr" || op == "sar";
     }
+
+    std::string EmitOpLikeADD(Statement* stmt) {
+        std::string code;
+        std::string op = stmt->binaryOpStmt.op.op;
+        if(op == "shl") {
+            op = "sll";
+        } else if(op == "shr") {
+            op = "srl";
+        } else if(op == "sar") {
+            op = "sra";
+        }
+        if( BinStmtWith2Symbol(stmt)) {
+            code += "\t" + op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
+        } else if( BinStmtWith1Symbol(stmt)) {
+            code += "\t" + op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+        } else if( BinStmtWith2Imm(stmt)) {
+            code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
+            code += "\t" + op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+        }
+        return code;
+    }
+    
+    bool OpLikeEQ(std::string op) {
+        return op == "eq" || op == "ne" || op == "lt" || op == "gt" || op == "le" || op == "ge";
+    }
+
+    std::string EmitOpLikeEQ(Statement* stmt) {
+        std::string code;
+        std::string op = stmt->binaryOpStmt.op.op;
+        if(op == "le")  {
+            op = "gt";
+        } else if(op == "ge") {
+            op = "lt";
+        }
+        if( BinStmtWith2Symbol(stmt)) {
+            code += "\tsub t0, " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
+            code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0\n";
+        } else if( BinStmtWith1Symbol(stmt)) {
+            code += "\tsubi t0, " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+            code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0\n";
+        } else if( BinStmtWith2Imm(stmt)) {
+            code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
+            code += "\tsubi t1, t0, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+            code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t1\n";
+        }
+        if(stmt->binaryOpStmt.op.op == "le" || stmt->binaryOpStmt.op.op == "ge") {
+            code += "\txori " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", 1\n";
+        }
+        return code;
+    }
+
+    bool OpLikeMUL(std::string op) {
+        return op == "mul" || op == "div" || op == "rem";
+    }
+
+    std::string EmitOpLikeMUL(Statement* stmt) {
+        std::string code;
+        if( BinStmtWith2Symbol(stmt)) {
+            code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
+        } else if( BinStmtWith1Symbol(stmt)) {
+            code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
+            code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", t0\n";
+        } else if( BinStmtWith2Imm(stmt)) {
+            code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
+            code += "\tli t1, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+            code += "\t" + stmt->binaryOpStmt.op.op + " t0, t1\n";
+        }
+        return code;
+    }
+
+    bool BinStmtWith2Symbol(Statement* stmt) {
+        return stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsSymbol();
+    }
+    bool BinStmtWith1Symbol(Statement* stmt) {
+        if(stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsImm()) {
+            return true;
+        } else if(stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsSymbol()) {
+            std::swap(stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
+            return true;
+        }
+        return false;
+    }
+    bool BinStmtWith2Imm(Statement* stmt) {
+        return stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsImm();
+    }
+
 
     virtual std::string GenerateCode(KoopaIR* ir) {
         global_scope = ir->global_scope;
@@ -122,20 +209,12 @@ struct RiscvGenerator : public KoopaGenerator {
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {
                         case Statement::OPERATION:
-                            if(IsArithmeticOperations(stmt->binaryOpStmt.op.op)) {
-                                if( stmt->binaryOpStmt.input1.IsSymbol() &&
-                                    stmt->binaryOpStmt.input2.IsSymbol()) {
-                                    code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
-                                } else 
-                                if( stmt->binaryOpStmt.input1.IsSymbol() &&
-                                    stmt->binaryOpStmt.input2.IsImm()) {
-                                    code += "\t" + stmt->binaryOpStmt.op.op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-                                } else
-                                if( stmt->binaryOpStmt.input1.IsImm() &&
-                                    stmt->binaryOpStmt.input2.IsImm()) {
-                                    code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
-                                    code += "\t" + stmt->binaryOpStmt.op.op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-                                }
+                            if(OpLikeADD(stmt->binaryOpStmt.op.op)) {
+                                code += EmitOpLikeADD(stmt);
+                            } else if(OpLikeEQ(stmt->binaryOpStmt.op.op)) {
+                                code += EmitOpLikeEQ(stmt);
+                            } else if(OpLikeMUL(stmt->binaryOpStmt.op.op)) {
+                                code += EmitOpLikeMUL(stmt);
                             }
                             break;
                         case Statement::RETURN:
