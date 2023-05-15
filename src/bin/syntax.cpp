@@ -19,8 +19,18 @@ int main(int argc, char* argv[]) {
     }
 
     KoopaGenerator* generator;
+    KoopaIR* ir;
     FrontendBase*   frontend;
     std::string file_name = (project_dir + "test/pipeline/" + argv[3] + ".gram");
+    
+    if(std::string(argv[1]) == "sysy") {
+        frontend = new SysyFrontend(file_name);
+    } else if(std::string(argv[1]) == "koopa") {
+        // frontend = new KoopaFrontend(file_name, generator);
+    } else {
+        std::cerr << "Unknown source: " << argv[2] << std::endl;
+        exit(1);
+    }
 
     if(std::string(argv[2]) == "koopa"){
         generator = new KoopaGenerator();
@@ -31,22 +41,14 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    if(std::string(argv[1]) == "sysy") {
-        frontend = new SysyFrontend(file_name, generator);
-    } else if(std::string(argv[1]) == "koopa") {
-        frontend = new KoopaFrontend(file_name, generator);
-    } else {
-        std::cerr << "Unknown source: " << argv[2] << std::endl;
-        exit(1);
-    }
 
-    frontend->Process();
+    ir = frontend->Process();
 
     std::ofstream fout(project_dir + "test/pipeline/" + argv[3] + "." + std::string(argv[2]));
 
     std::cout << std::endl << std::endl;
 
-    std::string output = generator->GenerateCode();
+    std::string output = generator->GenerateCode(ir);
     std::cout << output << std::endl;
     fout << output << std::endl;
 

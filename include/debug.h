@@ -30,6 +30,10 @@
 // #define DEBUG_GRAM_LR1ANALYZE if(1)
 
 
+// syntax frontend
+// 打印语法树节点入口提示
+#define DEBUG_FRONTEND_ENTRY if(1)
+
 
 
 // 归零条件
@@ -71,4 +75,9 @@
 #endif
 #ifndef DEBUG_GRAM_LR1ANALYZE
 #define DEBUG_GRAM_LR1ANALYZE if(0)
+#endif
+
+// frontend
+#ifndef DEBUG_FRONTEND_ENTRY
+#define DEDEBUG_FRONTEND_ENTRY if(0)
 #endif

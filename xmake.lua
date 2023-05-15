@@ -69,6 +69,7 @@ target("staticlib")
     set_kind("static")
     add_includedirs("include")
     add_files("src/lib/*.cpp")
+    add_files("src/lib/frontend/*.cpp")
 
 target("lex")
     set_kind("binary")
