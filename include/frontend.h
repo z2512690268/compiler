@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "backend.h"
 #include "koopa.h"
@@ -43,6 +44,7 @@ struct FrontendBase {
 
 struct SysyFrontend : public FrontendBase {
     int line_num;
+    std::unordered_map<std::string, std::string> name_map;
     //******************************************************************************
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }
@@ -52,6 +54,22 @@ struct SysyFrontend : public FrontendBase {
         Prepare();
         CompUnits_func();
         return koopaIR;
+    }
+
+    void AddNameMap(const std::string& name, const std::string& value) {
+        name_map[name] = value;
+    }
+
+    std::string GetNameMap(const std::string& name) {
+        if(name_map.find(name) == name_map.end()) {
+            return name;
+        }
+        return name_map[name];
+    }
+
+    void Error(const std::string& error_info) {
+        std::cerr << "Error: " << error_info << " at line " << line_num << std::endl;
+        exit(1);
     }
     //******************************************************************************
     

@@ -352,42 +352,42 @@ struct Statement {
     } binaryOpStmt;
 
     // RETURN
-    struct {
+    struct Return_Statement{
         KoopaSymbol ret;
     } returnStmt;
     
     // CALL
-    struct {
+    struct Call_Statement{
         KoopaSymbol func_name;
         std::vector<KoopaSymbol> params;
         KoopaVar ret_var;
     } callStmt;
     
     // BRANCH
-    struct {
+    struct Branch_Statement{
         KoopaSymbol cond;
         std::string true_label;
         std::string false_label;
     } branchStmt;
     
     // JUMP
-    struct {
+    struct Jump_Statement{
         std::string label;
     } jumpStmt;
     
     // ALLOC
-    struct {
+    struct Alloc_Statement{
         KoopaVar var;
     } allocStmt;
 
     // LOAD
-    struct {
+    struct Load_Statement{
         KoopaSymbol addr;
         KoopaVar var;
     } loadStmt;
 
     // STORE
-    struct {
+    struct Store_Statement{
         enum StoreType {
             STORE_SYMBOL,
             STORE_INIT
@@ -405,14 +405,14 @@ struct Statement {
     } storeStmt;
 
     // GETPTR
-    struct {
+    struct Getptr_Statement{
         KoopaVar varptr;
         KoopaSymbol offset;
         KoopaVar ret_var;
     } getptrStmt;
 
     // GETELEMENTPTR
-    struct {
+    struct GetElementptr_Statement{
         KoopaVar arrayptr;
         KoopaSymbol index;
         KoopaVar ret_var;
@@ -436,55 +436,25 @@ struct SymbolTable {
         return var_table.find(name) != var_table.end() || label_table.find(name) != label_table.end();
     }
 
-    std::string GetUniqueName(std::string name) {
-        int i = 0;
-        std::string new_name = name;
-        while(CheckSymbol(new_name)) {
-            new_name = name + "_" + std::to_string(i);
-            i++;
-        }
-        return new_name;
-    }
-
-    std::string GetUniqueTempName() {
-        int i = 0;
-        std::string new_name;
-        while(CheckSymbol(new_name)) {
-            new_name = "%" + std::to_string(i);
-            i++;
-        }
-        return new_name;
-    }
-
-    std::string GetKoopaMappedName(std::string origin_name) {
-        return origin2KoopaName[origin_name];
-    }
-
-    bool AddNewLabelSymbol(std::string origin_label, std::string final_label, BasicBlock* block) {
-        origin2KoopaName[origin_label] = final_label;
-        label_table[final_label] = block;
+    bool AddNewLabelSymbol(std::string label, BasicBlock* block) {
+        label_table[label] = block;
         return true;
     }
 
-    bool AddNewVarSymbol(std::string origin_name, std::string final_name, KoopaVar var) {
-        origin2KoopaName[origin_name] = final_name;
+    bool AddNewVarSymbol(std::string name, KoopaVar var) {
         VarSymbolItem item;
-        item.origin_name = origin_name;
-        item.name = final_name;
+        item.name = name;
         item.var = var;
-        var_table[final_name] = item;
+        var_table[name] = item;
         return true;
     }
 
-    std::unordered_map<std::string, std::string> origin2KoopaName;
     std::unordered_map<std::string, VarSymbolItem> var_table;
     std::unordered_map<std::string, BasicBlock*> label_table;
 };
 
 struct Scope {
     Scope(Scope* parent = nullptr) : parent(parent) { }
-
-
 
     Scope* parent;
 
@@ -542,12 +512,52 @@ struct KoopaIR {
         curScope->basicBlocks.push_back(block);
     }
 
+    std::string GetUniqueName(std::string name) {
+        int i = -1;
+        std::string new_name = name;
+        while(1) {
+            Scope* scope = curScope;
+            if(i != -1) {
+                new_name = name + "_" + std::to_string(i);
+            }
+            while(scope != nullptr) {
+                if(scope->symbolTable.CheckSymbol(new_name)) {
+                    i++;
+                    break;
+                }
+                scope = scope->parent;
+            }
+            if(scope == nullptr) {
+                break;
+            }
+        }
+        return new_name;
+    }
 
-    BasicBlock* NewBasicBlockAndSetCur(std::string origin_name) {
-        std::string name = curScope->symbolTable.GetUniqueName(origin_name);
+    std::string GetUniqueTempName() {
+        int i = 0;
+        std::string new_name;
+        while(1) {
+            Scope* scope = curScope;
+            new_name = "%" + std::to_string(i);
+            while(scope != nullptr) {
+                if(scope->symbolTable.CheckSymbol(new_name)) {
+                    i++;
+                    break;
+                }
+                scope = scope->parent;
+            }
+            if(scope == nullptr) {
+                break;
+            }
+        }
+        return new_name;
+    }
+
+    BasicBlock* NewBasicBlockAndSetCur(std::string name) {
         BasicBlock* block = new BasicBlock();
         block->label = name;
-        curScope->symbolTable.AddNewLabelSymbol(origin_name, name, block);
+        curScope->symbolTable.AddNewLabelSymbol(name, block);
         curBlock = block;
         return block;
     }
@@ -607,80 +617,73 @@ struct KoopaIR {
         return stmt;
     }
 
-    KoopaVar NewVar(KoopaVarType type, std::string origin_name) {
+    Statement* AddLoadStatement(KoopaSymbol addr, KoopaVar var) {
+        Statement* stmt = new Statement();
+        stmt->type = Statement::LOAD;
+        stmt->loadStmt.addr = addr;
+        stmt->loadStmt.var = var;
+        curBlock->statements.push_back(stmt);
+        return stmt;
+    }
+
+    Statement* AddStoreStatement(KoopaSymbol addr, KoopaSymbol symbol) {
+        Statement* stmt = new Statement();
+        stmt->type = Statement::STORE;
+        stmt->storeStmt.storeType = Statement::Store_Statement::STORE_SYMBOL;
+        stmt->storeStmt.addr = addr;
+        stmt->storeStmt.symbol = symbol;
+        curBlock->statements.push_back(stmt);
+        return stmt;
+    }
+
+    Statement* AddStoreStatement(KoopaSymbol addr, KoopaInitList initList) {
+        Statement* stmt = new Statement();
+        stmt->type = Statement::STORE;
+        stmt->storeStmt.storeType = Statement::Store_Statement::STORE_INIT;
+        stmt->storeStmt.addr = addr;
+        stmt->storeStmt.initList = initList;
+        curBlock->statements.push_back(stmt);
+        return stmt;
+    }
+
+    Statement* AddGetptrStatement(KoopaVar varptr, KoopaSymbol offset, KoopaVar ret_var) {
+        Statement* stmt = new Statement();
+        stmt->type = Statement::GETPTR;
+        stmt->getptrStmt.varptr = varptr;
+        stmt->getptrStmt.offset = offset;
+        stmt->getptrStmt.ret_var = ret_var;
+        curBlock->statements.push_back(stmt);
+        return stmt;
+    }
+
+    Statement* AddGetelementptrStatement(KoopaVar arrayptr, KoopaSymbol index, KoopaVar ret_var) {
+        Statement* stmt = new Statement();
+        stmt->type = Statement::GETELEMENTPTR;
+        stmt->getelementptrStmt.arrayptr = arrayptr;
+        stmt->getelementptrStmt.index = index;
+        stmt->getelementptrStmt.ret_var = ret_var;
+        curBlock->statements.push_back(stmt);
+        return stmt;
+    }
+
+    KoopaVar NewVar(KoopaVarType type, std::string name) {
         KoopaVar var;
         var.type = type;
-        var.varName = curScope->symbolTable.GetUniqueName(origin_name);
-        curScope->symbolTable.AddNewVarSymbol(origin_name, var.varName, var);
+        var.varName = name;
+        curScope->symbolTable.AddNewVarSymbol(var.varName, var);
         return var;
     }
 
     KoopaVar NewTempVar(KoopaVarType type) {
         KoopaVar var;
         var.type = type;
-        var.varName = curScope->symbolTable.GetUniqueTempName();
-        curScope->symbolTable.AddNewVarSymbol("", var.varName, var);
+        var.varName = GetUniqueTempName();
+        curScope->symbolTable.AddNewVarSymbol(var.varName, var);
         return var;
+    }
+
+    KoopaVar GetVar(std::string name) {
+        return curScope->symbolTable.var_table[name].var;
     }
     
 };
-
-
-
-    // void AddSymbol(std::string name, SymbolItem* item) {
-    //     if(symbol_table.find(name) == symbol_table.end()) {
-    //         symbol_table[name] = item;
-    //     }
-    // }
-
-    // std::string AddVarSymbol(std::string origin_name, KoopaVarType type) {
-    //     std::string name = GetUniqueName(origin_name);
-    //     SymbolItem* var_item = new SymbolItem();
-    //     var_item->InitVarSymbol(type);
-    //     AddSymbol(name, var_item);
-    //     return name;
-    // }
-
-
-
-
-
-    // void InitOperationStatement(std::string op, std::string input1, std::string input2, std::string ret) {
-    //     type = OPERATION;
-    //     if(!KoopaValidBinaryOp(op)) {
-    //         std::cerr << "Invalid operation: " << op << std::endl;
-    //         exit(1);
-    //     }
-    //     if(GetKoopaSymbolType(input1) == KOOPA_undef || GetKoopaSymbolType(input2) == KOOPA_undef) {
-    //         std::cerr << "Invalid input: " << op << " " << input1 << " " << input2 << std::endl;
-    //         exit(1);
-    //     }
-    //     OPERATION_op = op;
-    //     OPERATION_input1 = input1;
-    //     OPERATION_input2 = input2;
-    //     OPERATION_ret_var = ret;
-    // }
-    // void InitReturnStatement(std::string ret) {
-    //     type = RETURN;
-    //     if(GetKoopaSymbolType(ret) == KOOPA_undef) {
-    //         std::cerr << "Invalid return: " << ret << std::endl;
-    //         exit(1);
-    //     }
-    //     RETURN_ret_var = ret;
-    // }
-    // void InitCallStatement(std::string func_name, std::vector<std::string> params, std::string ret) {
-    //     type = CALL;
-    //     CALL_func_name = func_name;
-    //     CALL_params = params;
-    //     CALL_ret_var = ret;
-    // }
-    // void InitBranchStatement(std::string cond_var, std::string true_label, std::string false_label) {
-    //     type = BRANCH;
-    //     BRANCH_cond_var = cond_var;
-    //     BRANCH_true_label = true_label;
-    //     BRANCH_false_label = false_label;
-    // }
-    // void InitJumpStatement(std::string label) {
-    //     type = JUMP;
-    //     JUMP_label = label;
-    // }

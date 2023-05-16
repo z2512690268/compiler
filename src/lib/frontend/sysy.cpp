@@ -121,7 +121,8 @@ SysyFrontend::Block_Struct* SysyFrontend::Block_func(std::string block_name) {
     if(curToken.rule[0] == "\"{\"") {
         //-----------------------------------------------------------------
         // 创建基本块，并加入符号表,更新当前块
-        BasicBlock* block = koopaIR->NewBasicBlockAndSetCur("%entry");
+        std::string block_name = koopaIR->GetUniqueName("%entry");
+        BasicBlock* block = koopaIR->NewBasicBlockAndSetCur(block_name);
         //-----------------------------------------------------------------
 
         //-----------------------------------------------------------------
@@ -162,7 +163,8 @@ SysyFrontend::Stmt_Struct* SysyFrontend::Stmt_func() {
 
         //-----------------------------------------------------------------
         // 添加变量
-        KoopaVar ret_var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, "%return");
+        std::string ret_name = koopaIR->GetUniqueName("%return");
+        KoopaVar ret_var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ret_name);
         // 赋值语句
         koopaIR->AddOperationStatement("add", 0, ret_ptr->Number->value, ret_var);
 
