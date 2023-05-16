@@ -42,11 +42,13 @@ struct FrontendBase {
 };
 
 struct SysyFrontend : public FrontendBase {
+    int line_num;
     //******************************************************************************
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }
     virtual KoopaIR* Process() {
         koopaIR = new KoopaIR();
+        line_num = 1;
         Prepare();
         CompUnits_func();
         return koopaIR;

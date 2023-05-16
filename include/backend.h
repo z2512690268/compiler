@@ -39,17 +39,30 @@ struct KoopaGenerator {
         global_scope = ir->global_scope;
         func_scopes = ir->func_scopes;
         std::string code;
+        for(auto& item : global_scope.symbolTable.var_table) {
+            if(item.second.var.type != KoopaVarType(KoopaVarType::KOOPA_func)) {
+                code += "global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + ";\n";
+            } else {
+                code += "decl " + item.second.var.varName + "(";
+                for(int i = 0; i < item.second.var.type.funcType.paramsType.size(); i++) {
+                    code += KoopaVarTypeToString(*item.second.var.type.funcType.paramsType[i]);
+                    if(i != item.second.var.type.funcType.paramsType.size() - 1) {
+                        code += ", ";
+                    }
+                }
+                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + ";\n";
+            }
+        }
         for(auto& func : func_scopes) {
             code += "fun " + func->func_name + "(";
-            // for(int i = 0; i < func->func_params_name.size(); i++) {
-            //     code += KoopaVarTypeToString(func->func_params_type[i]) + " " + func->func_params_name[i];
-            //     if(i != func->func_params_name.size() - 1) {
-            //         code += ", ";
-            //     }
-            // }
+            for(int i = 0; i < func->func_param.size(); i++) {
+                code += KoopaVarTypeToString(func->func_param[i].type) + " " + func->func_param[i].varName;
+                if(i != func->func_param.size() - 1) {
+                    code += ", ";
+                }
+            }
             code += "): " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
-            for(auto& block : func->basicBlocks) {
-                std::cout << "OK1" << std::endl;
+            for(auto& block : func->basicBlocks) {;
                 code += block->label + ":\n";
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {
@@ -60,23 +73,39 @@ struct KoopaGenerator {
                             code += "\tret " + stmt->returnStmt.ret.GetSymbol() + ";\n";
                             break;
                         case Statement::CALL:
-                            // code += "\t" + stmt->CALL_ret_var + " = call " + stmt->CALL_func_name + "(";
-                            // for(int i = 0; i < stmt->CALL_params.size(); i++) {
-                            //     code += stmt->CALL_params[i];
-                            //     if(i != stmt->CALL_params.size() - 1) {
-                            //         code += ", ";
-                            //     }
-                            // }
-                            // code += ");\n";
+                            code += "\t" + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            for(int i = 0; i < stmt->callStmt.params.size(); i++) {
+                                code += stmt->callStmt.params[i].GetSymbol();
+                                if(i != stmt->callStmt.params.size() - 1) {
+                                    code += ", ";
+                                }
+                            }
+                            code += ");\n";
                             break;
                         case Statement::BRANCH:
-                            // code += "\tif " + stmt->BRANCH_cond_var + " goto " + stmt->BRANCH_true_label + " else goto " + stmt->BRANCH_false_label + ";\n";
+                            code += "\tbr " + stmt->branchStmt.cond.GetSymbol() + ", " + stmt->branchStmt.true_label + ", " + stmt->branchStmt.false_label + ";\n";
                             break;
                         case Statement::JUMP:
-                            // code += "\tgoto " + stmt->JUMP_label + ";\n";
+                            code += "\tjump " + stmt->jumpStmt.label + ";\n";
                             break;
                         case Statement::ALLOC:
-                            // code += "\t" + stmt->ALLOC_ret_var + " = alloc " + stmt->ALLOC_size_var + ";\n";
+                            code += "\t" + stmt->allocStmt.var.varName + " = alloc " + KoopaVarTypeToString(stmt->allocStmt.var.type) + ";\n";
+                            break;
+                        case Statement::LOAD:
+                            code += "\t" + stmt->loadStmt.var.varName + " = load " + stmt->loadStmt.addr.GetSymbol() + ";\n";
+                            break;
+                        case Statement::STORE:
+                            if(stmt->storeStmt.IsSymbol()){
+                                code += "\tstore " + stmt->storeStmt.symbol.GetSymbol() + ", " + stmt->storeStmt.addr.GetSymbol() + ";\n";
+                            } else if(stmt->storeStmt.IsInit()) {
+                                code += "\tstore " + stmt->storeStmt.initList.GetInitString() + ", " + stmt->storeStmt.addr.GetSymbol() + ";\n";
+                            }
+                            break;
+                        case Statement::GETPTR:
+                            code += "\tgetptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + ";\n";
+                            break;
+                        case Statement::GETELEMENTPTR:
+                            code += "\tgetelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol() + ";\n";
                             break;
                     }
                 }
@@ -85,8 +114,6 @@ struct KoopaGenerator {
         }
         return code;
     }
-
-    virtual void GenerateBinCode(std::string filename) {};
 };
 
 struct RiscvGenerator : public KoopaGenerator {
@@ -232,6 +259,14 @@ struct RiscvGenerator : public KoopaGenerator {
                         case Statement::JUMP:
                             break;
                         case Statement::ALLOC:
+                            break;
+                        case Statement::LOAD:
+                            break;
+                        case Statement::STORE:
+                            break;
+                        case Statement::GETPTR:
+                            break;
+                        case Statement::GETELEMENTPTR:
                             break;
                     }
                 }

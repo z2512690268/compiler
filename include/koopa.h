@@ -148,16 +148,100 @@ struct KoopaVarType {
         return type;
     }
 };
+
+// 初始化列表
+struct KoopaInitList {
+    enum KoopaInitListType {
+        KOOPA_INIT_INT,
+        KOOPA_INIT_AGGREGATE,
+        KOOPA_INIT_UNDEF,
+        KOOPA_INIT_ZERO
+    };
+    KoopaInitList() {
+        initListType = KOOPA_INIT_UNDEF;
+    }
+    
+    KoopaInitList(int initInt) {
+        initListType = KOOPA_INIT_INT;
+        this->initInt = initInt;
+    }
+
+    KoopaInitList(std::vector<KoopaInitList> initList) {
+        initListType = KOOPA_INIT_AGGREGATE;
+        this->initList = initList;
+    }
+
+    KoopaInitList(std::string type) {
+        if(type == "undef") {
+            initListType = KOOPA_INIT_UNDEF;
+        } else if(type == "zeroinit") {
+            initListType = KOOPA_INIT_ZERO;
+        } else {
+            std::cerr << "Invalid KoopaInitList" << std::endl;
+            exit(1);
+        }
+    }
+
+    std::string GetInitListType() {
+        switch(initListType) {
+            case KOOPA_INIT_INT:
+                return "int";
+            case KOOPA_INIT_AGGREGATE:
+                return "aggregate";
+            case KOOPA_INIT_UNDEF:
+                return "undef";
+            case KOOPA_INIT_ZERO:
+                return "zeroinit";
+        }
+        return "";
+    }
+
+    std::string GetInitString() {
+        std::string ret;
+        ret += "{";
+        switch(initListType) {
+            case KOOPA_INIT_INT:
+                ret = std::to_string(initInt);
+                break;
+            case KOOPA_INIT_AGGREGATE:
+                ret = "{";
+                for(int i = 0; i < initList.size(); i++) {
+                    ret += initList[i].GetInitString();
+                    if(i != initList.size() - 1) {
+                        ret += ", ";
+                    }
+                }
+                ret += "}";
+                break;
+            case KOOPA_INIT_UNDEF:
+                ret = "undef";
+                break;
+            case KOOPA_INIT_ZERO:
+                ret = "zeroinit";
+                break;
+        }
+        ret += "}";
+        return ret;
+    }
+
+    KoopaInitListType initListType;
+    int initInt;
+    std::vector<KoopaInitList> initList;
+};
+
 //变量类型
 struct KoopaVar {
     std::string varName;
     KoopaVarType type;
+    KoopaInitList initList;
 };
+
 
 // 符号类型
 struct  KoopaSymbol {
     enum KoopaSymbolType {
         KOOPA_SYMBOL,   //变量或标签，需要通过符号表进一步分类
+        KOOPA_STRING,   //字符串
         KOOPA_IMM,      //立即数，均为十进制
         KOOPA_undef     //未定义类型
     };
@@ -216,7 +300,9 @@ struct  KoopaSymbol {
             return KOOPA_SYMBOL;
         } else if(symbol == "undef") {
             return KOOPA_undef;
-        } else {
+        } else if(symbol[0] == '"') {
+            return KOOPA_STRING;
+        }  else {
             return KOOPA_IMM;
         }
     }
@@ -249,7 +335,11 @@ struct Statement {
         CALL,
         BRANCH,
         JUMP,
-        ALLOC
+        ALLOC,
+        LOAD,
+        STORE,
+        GETPTR,
+        GETELEMENTPTR
     };
     
     StatementType type;
@@ -289,6 +379,44 @@ struct Statement {
     struct {
         KoopaVar var;
     } allocStmt;
+
+    // LOAD
+    struct {
+        KoopaSymbol addr;
+        KoopaVar var;
+    } loadStmt;
+
+    // STORE
+    struct {
+        enum StoreType {
+            STORE_SYMBOL,
+            STORE_INIT
+        };
+        bool IsSymbol() {
+            return storeType == STORE_SYMBOL;
+        }
+        bool IsInit() {
+            return storeType == STORE_INIT;
+        }
+        StoreType storeType;
+        KoopaSymbol symbol;
+        KoopaInitList initList;
+        KoopaSymbol addr;
+    } storeStmt;
+
+    // GETPTR
+    struct {
+        KoopaVar varptr;
+        KoopaSymbol offset;
+        KoopaVar ret_var;
+    } getptrStmt;
+
+    // GETELEMENTPTR
+    struct {
+        KoopaVar arrayptr;
+        KoopaSymbol index;
+        KoopaVar ret_var;
+    } getelementptrStmt;
 };
 
 struct BasicBlock {
@@ -304,12 +432,25 @@ struct SymbolTable {
         KoopaVar var;
     };
 
+    bool CheckSymbol(std::string name) {
+        return var_table.find(name) != var_table.end() || label_table.find(name) != label_table.end();
+    }
+
     std::string GetUniqueName(std::string name) {
         int i = 0;
         std::string new_name = name;
-        while(var_table.find(new_name) != var_table.end()
-            || label_table.find(new_name) != label_table.end()) {
+        while(CheckSymbol(new_name)) {
             new_name = name + "_" + std::to_string(i);
+            i++;
+        }
+        return new_name;
+    }
+
+    std::string GetUniqueTempName() {
+        int i = 0;
+        std::string new_name;
+        while(CheckSymbol(new_name)) {
+            new_name = "%" + std::to_string(i);
             i++;
         }
         return new_name;
@@ -471,6 +612,14 @@ struct KoopaIR {
         var.type = type;
         var.varName = curScope->symbolTable.GetUniqueName(origin_name);
         curScope->symbolTable.AddNewVarSymbol(origin_name, var.varName, var);
+        return var;
+    }
+
+    KoopaVar NewTempVar(KoopaVarType type) {
+        KoopaVar var;
+        var.type = type;
+        var.varName = curScope->symbolTable.GetUniqueTempName();
+        curScope->symbolTable.AddNewVarSymbol("", var.varName, var);
         return var;
     }
     

@@ -1,5 +1,6 @@
 #include "frontend.h"
 #include "koopa.h"
+#include "transfer.h"
 
 // 建树与解析函数
 // CompUnits      ::= CompUnit {CompUnit};
@@ -237,6 +238,12 @@ SysyFrontend::OCT_INTEGER_Struct* SysyFrontend::OCT_INTEGER_func() {
         ret_ptr->value_int = std::stoi(
             curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 8);
         //-----------------------------------------------------------------
+        for(auto& ch : curToken.rule[0]) {
+            if(ch == '\n') {
+                line_num++;
+            }
+        }
+        //-----------------------------------------------------------------
         return ret_ptr;
     } else {
         std::cerr << "OCT_INTEGER_func: " << curToken << std::endl;
@@ -256,6 +263,12 @@ SysyFrontend::IDENT_Struct* SysyFrontend::IDENT_func() {
         //-----------------------------------------------------------------
         ret_ptr->identifer = "@" + curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
         //-----------------------------------------------------------------
+        for(auto& ch : curToken.rule[0]) {
+            if(ch == '\n') {
+                line_num++;
+            }
+        }
+        //-----------------------------------------------------------------
         return ret_ptr;
     } else {
         std::cerr << "IDENT_func: " << curToken << std::endl;
@@ -270,7 +283,11 @@ SysyFrontend::RESERVED_Struct* SysyFrontend::RESERVED_func() {
     //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::RESERVED_Struct);
     //-----------------------------------------------------------------
-    
+    for(auto& ch : curToken.rule[0]) {
+        if(ch == '\n') {
+            line_num++;
+        }
+    }
     //-----------------------------------------------------------------
     ret_ptr->reserved = curToken.rule[0];
     //-----------------------------------------------------------------
