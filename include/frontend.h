@@ -82,11 +82,17 @@ struct SysyFrontend : public FrontendBase {
     struct FuncType_Struct;
     struct Block_Struct;
     struct Stmt_Struct;
+    struct Exp_Struct;
+    struct PrimaryExp_Struct;
+    struct UnaryExp_Struct;
+    struct UnaryOp_Struct;
     struct Number_Struct;
     struct Integer_Struct;
 
     // 终结符
+    struct DEC_INTEGER_Struct;
     struct OCT_INTEGER_Struct;
+    struct HEX_INTEGER_Struct;
     struct IDENT_Struct;
     struct RESERVED_Struct;
     // //******************************************************************************
@@ -123,17 +129,76 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct Stmt_Struct {
-        Number_Struct* Number;
+        Exp_Struct* Exp;
+    };
+
+    struct Exp_Struct {
+        UnaryExp_Struct* UnaryExp;
+
+        KoopaVar value;
+    };
+
+    struct UnaryExp_Struct {
+        enum UnaryExpType {
+            UnaryExpType_PrimaryExp,
+            UnaryExpType_UnaryExpWithOp,
+        } type;
+
+        struct UnaryExpWithOp_Struct
+        {
+            UnaryOp_Struct* UnaryOp;
+            UnaryExp_Struct* UnaryExp;
+        };
+        
+
+        union SubStructPointer {
+            PrimaryExp_Struct* PrimaryExp;
+            UnaryExpWithOp_Struct UnaryExpWithOp;
+        } subStructPointer;
+
+        KoopaVar value;
+    };
+
+    struct PrimaryExp_Struct {
+        enum PrimaryExpType {
+            PrimaryExpType_Exp,
+            PrimaryExpType_Number,
+        } type;
+
+        union SubStructPointer {
+            Exp_Struct* Exp;
+            Number_Struct* Number;
+        } subStructPointer;
+
+        KoopaVar value;
+    };
+    
+    struct UnaryOp_Struct {
+        enum UnaryOpType {
+            UnaryOpType_Plus,
+            UnaryOpType_Minus,
+            UnaryOpType_Not,
+        } type;
     };
 
     struct Number_Struct {
         Integer_Struct* Integer;
 
-        KoopaSymbol value;
+        int value;
     };
 
     struct Integer_Struct {
-        OCT_INTEGER_Struct* OCT_INTEGER;
+        enum IntegerType {
+            IntegerType_DEC_INTEGER,
+            IntegerType_OCT_INTEGER,
+            IntegerType_HEX_INTEGER,
+        } type;
+
+        union subStructPointer {
+            DEC_INTEGER_Struct* DEC_INTEGER;
+            OCT_INTEGER_Struct* OCT_INTEGER;
+            HEX_INTEGER_Struct* HEX_INTEGER;
+        } subStructPointer;
 
         int value;
     };
@@ -143,6 +208,18 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct OCT_INTEGER_Struct {
+        std::string value;
+
+        int value_int;
+    };
+
+    struct DEC_INTEGER_Struct {
+        std::string value;
+
+        int value_int;
+    };
+
+    struct HEX_INTEGER_Struct {
         std::string value;
 
         int value_int;
@@ -161,8 +238,14 @@ struct SysyFrontend : public FrontendBase {
     FuncType_Struct* FuncType_func();
     Block_Struct* Block_func(std::string block_name);
     Stmt_Struct* Stmt_func();
+    Exp_Struct* Exp_func();
+    UnaryExp_Struct* UnaryExp_func();
+    PrimaryExp_Struct* PrimaryExp_func();
+    UnaryOp_Struct* UnaryOp_func();
     Number_Struct* Number_func();
     Integer_Struct* Integer_func();
+    DEC_INTEGER_Struct* DEC_INTEGER_func();
+    HEX_INTEGER_Struct* HEX_INTEGER_func();
     OCT_INTEGER_Struct* OCT_INTEGER_func();
     IDENT_Struct* IDENT_func();
     RESERVED_Struct* RESERVED_func();

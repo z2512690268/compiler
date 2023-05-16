@@ -146,34 +146,162 @@ SysyFrontend::Block_Struct* SysyFrontend::Block_func(std::string block_name) {
     return ret_ptr;
 }
 
-// Stmt      ::= "return" Number ";";
+// Stmt      ::= "return" Exp ";";
 SysyFrontend::Stmt_Struct* SysyFrontend::Stmt_func() {
     //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Stmt_Struct);
     //-----------------------------------------------------------------
     
     //-----------------------------------------------------------------
-    // Stmt      ::= "return" Number ";";
+    // Stmt      ::= "return" Exp ";";
     if(curToken.rule[0] == "\"return\"") {
         //-----------------------------------------------------------------
         RESERVED_func();    //return
-        ret_ptr->Number = Number_func();
+        ret_ptr->Exp = Exp_func();
         RESERVED_func();    //;
         //-----------------------------------------------------------------
 
         //-----------------------------------------------------------------
-        // 添加变量
-        std::string ret_name = koopaIR->GetUniqueName("%return");
-        KoopaVar ret_var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ret_name);
-        // 赋值语句
-        koopaIR->AddOperationStatement("add", 0, ret_ptr->Number->value, ret_var);
-
         // 返回语句
-        koopaIR->AddReturnStatement(ret_var);
+        koopaIR->AddReturnStatement(ret_ptr->Exp->value);
         //-----------------------------------------------------------------
         return ret_ptr;
     } else {
         std::cerr << "Stmt_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+
+    return ret_ptr;
+}
+
+// Exp         ::= UnaryExp;
+SysyFrontend::Exp_Struct* SysyFrontend::Exp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::Exp_Struct);
+    //-----------------------------------------------------------------
+    
+    //-----------------------------------------------------------------
+    // Exp         ::= UnaryExp;
+    if(curToken.rule[0] == "UnaryExp") {
+        ret_ptr->UnaryExp = UnaryExp_func();
+        ret_ptr->value = ret_ptr->UnaryExp->value;
+        return ret_ptr;
+    } else {
+        std::cerr << "Exp_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+
+    return ret_ptr;
+}
+
+// UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
+SysyFrontend::UnaryExp_Struct* SysyFrontend::UnaryExp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::UnaryExp_Struct);
+    //-----------------------------------------------------------------
+    
+    //-----------------------------------------------------------------
+    // UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
+    if(curToken.rule[0] == "PrimaryExp") {
+        ret_ptr->type = UnaryExp_Struct::UnaryExpType::UnaryExpType_PrimaryExp;
+        ret_ptr->subStructPointer.PrimaryExp = PrimaryExp_func();
+        ret_ptr->value = ret_ptr->subStructPointer.PrimaryExp->value;
+        return ret_ptr;
+    } else if(curToken.rule[0] == "UnaryOp") {
+        ret_ptr->type = UnaryExp_Struct::UnaryExpType::UnaryExpType_UnaryExpWithOp;
+        SysyFrontend::UnaryOp_Struct* op = UnaryOp_func();
+        SysyFrontend::UnaryExp_Struct* exp = UnaryExp_func();
+        std::cout << "Here\n";
+        std::cout << "op type: " << op->type << std::endl;
+        ret_ptr->subStructPointer.UnaryExpWithOp.UnaryOp = op;
+        ret_ptr->subStructPointer.UnaryExpWithOp.UnaryExp = exp;
+        std::cout << "op type: " << op->type << std::endl;
+        switch (op->type) {
+        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Plus:
+            ret_ptr->value = exp->value;
+            break;
+        
+        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Minus:
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("sub", 0, exp->value, ret_ptr->value);
+            break;
+
+        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Not:
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("eq", 0, exp->value, ret_ptr->value);
+            break;
+        
+        default:
+            break;
+        }
+        std::cout << "ret_var: " << ret_ptr->value.varName << std::endl;
+        return ret_ptr;
+    } else {
+        std::cerr << "UnaryExp_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+
+    return ret_ptr;
+}
+
+// UnaryOp     ::= "+" | "-" | "!";
+SysyFrontend::UnaryOp_Struct* SysyFrontend::UnaryOp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::UnaryOp_Struct);
+    //-----------------------------------------------------------------
+    
+    //-----------------------------------------------------------------
+    // UnaryOp     ::= "+" | "-" | "!";
+    if(curToken.rule[0] == "\"+\"") {
+        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Plus;
+        RESERVED_func();    //+
+        return ret_ptr;
+    } else if(curToken.rule[0] == "\"-\"") {
+        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Minus;
+        RESERVED_func();    //-
+        return ret_ptr;
+    } else if(curToken.rule[0] == "\"!\"") {
+        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Not;
+        RESERVED_func();    //!
+        return ret_ptr;
+    } else {
+        std::cerr << "UnaryOp_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+
+    return ret_ptr;
+}
+
+// PrimaryExp  ::= "(" Exp ")" | Number;
+SysyFrontend::PrimaryExp_Struct* SysyFrontend::PrimaryExp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::PrimaryExp_Struct);
+    //-----------------------------------------------------------------
+    
+    //-----------------------------------------------------------------
+    // PrimaryExp  ::= "(" Exp ")" | Number;
+    if(curToken.rule[0] == "\"(\"") {
+        //-----------------------------------------------------------------
+        RESERVED_func();    //(
+        ret_ptr->type = PrimaryExp_Struct::PrimaryExpType::PrimaryExpType_Exp;
+        ret_ptr->subStructPointer.Exp = Exp_func();
+        ret_ptr->value = ret_ptr->subStructPointer.Exp->value;
+        RESERVED_func();    //)
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else if(curToken.rule[0] == "Number") {
+        ret_ptr->type = PrimaryExp_Struct::PrimaryExpType::PrimaryExpType_Number;
+        ret_ptr->subStructPointer.Number = Number_func();
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+        koopaIR->AddOperationStatement("add", 0, ret_ptr->subStructPointer.Number->value, ret_var);
+        ret_ptr->value = ret_var;
+        return ret_ptr;
+    } else {
+        std::cerr << "PrimaryExp_func: " << curToken << std::endl;
         exit(1);
     }
     //-----------------------------------------------------------------
@@ -192,12 +320,14 @@ SysyFrontend::Number_Struct* SysyFrontend::Number_func() {
     if(curToken.rule[0] == "Integer") {
         //-----------------------------------------------------------------
         Integer_Struct* integer_ptr = Integer_func();
+
         //-----------------------------------------------------------------
 
         //-----------------------------------------------------------------
         ret_ptr->Integer = integer_ptr;
-        ret_ptr->value.SetImm(integer_ptr->value);
+        ret_ptr->value = integer_ptr->value;
         //-----------------------------------------------------------------
+        return ret_ptr;
     } else {
         std::cerr << "Number_func: " << curToken << std::endl;
         exit(1);
@@ -206,7 +336,7 @@ SysyFrontend::Number_Struct* SysyFrontend::Number_func() {
     return ret_ptr;
 }
 
-// Integer   ::= OCT_INTEGER;
+// Integer     ::= DEC_INTEGER | HEX_INTEGER | OCT_INTEGER;
 SysyFrontend::Integer_Struct* SysyFrontend::Integer_func() {
     //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Integer_Struct);
@@ -218,8 +348,29 @@ SysyFrontend::Integer_Struct* SysyFrontend::Integer_func() {
         OCT_INTEGER_Struct* octInteger_ptr = OCT_INTEGER_func();
         
         //-----------------------------------------------------------------
-        ret_ptr->OCT_INTEGER = octInteger_ptr;
+        ret_ptr->type = Integer_Struct::IntegerType::IntegerType_OCT_INTEGER;
+        ret_ptr->subStructPointer.OCT_INTEGER = octInteger_ptr;
         ret_ptr->value = octInteger_ptr->value_int;
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else if (curToken.rule[0] == "HEX_INTEGER") {
+        //-----------------------------------------------------------------
+        HEX_INTEGER_Struct* hexInteger_ptr = HEX_INTEGER_func();
+        
+        //-----------------------------------------------------------------
+        ret_ptr->type = Integer_Struct::IntegerType::IntegerType_HEX_INTEGER;
+        ret_ptr->subStructPointer.HEX_INTEGER = hexInteger_ptr;
+        ret_ptr->value = hexInteger_ptr->value_int;
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else if (curToken.rule[0] == "DEC_INTEGER") {
+        //-----------------------------------------------------------------
+        DEC_INTEGER_Struct* decInteger_ptr = DEC_INTEGER_func();
+        
+        //-----------------------------------------------------------------
+        ret_ptr->type = Integer_Struct::IntegerType::IntegerType_DEC_INTEGER;
+        ret_ptr->subStructPointer.DEC_INTEGER = decInteger_ptr;
+        ret_ptr->value = decInteger_ptr->value_int;
         //-----------------------------------------------------------------
         return ret_ptr;
     } else {
@@ -249,6 +400,56 @@ SysyFrontend::OCT_INTEGER_Struct* SysyFrontend::OCT_INTEGER_func() {
         return ret_ptr;
     } else {
         std::cerr << "OCT_INTEGER_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+    return ret_ptr;
+}
+
+SysyFrontend::HEX_INTEGER_Struct* SysyFrontend::HEX_INTEGER_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::HEX_INTEGER_Struct)
+    //-----------------------------------------------------------------
+    if(curToken.token == "HEX_INTEGER") {
+        //-----------------------------------------------------------------
+        ret_ptr->value = curToken.rule[0];
+        ret_ptr->value_int = std::stoi(
+            curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 16);
+        //-----------------------------------------------------------------
+        for(auto& ch : curToken.rule[0]) {
+            if(ch == '\n') {
+                line_num++;
+            }
+        }
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else {
+        std::cerr << "HEX_INTEGER_func: " << curToken << std::endl;
+        exit(1);
+    }
+    //-----------------------------------------------------------------
+    return ret_ptr;
+}
+
+SysyFrontend::DEC_INTEGER_Struct* SysyFrontend::DEC_INTEGER_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::DEC_INTEGER_Struct)
+    //-----------------------------------------------------------------
+    if(curToken.token == "DEC_INTEGER") {
+        //-----------------------------------------------------------------
+        ret_ptr->value = curToken.rule[0];
+        ret_ptr->value_int = std::stoi(
+            curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 10);
+        //-----------------------------------------------------------------
+        for(auto& ch : curToken.rule[0]) {
+            if(ch == '\n') {
+                line_num++;
+            }
+        }
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else {
+        std::cerr << "DEC_INTEGER_func: " << curToken << std::endl;
         exit(1);
     }
     //-----------------------------------------------------------------
