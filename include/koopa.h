@@ -683,7 +683,26 @@ struct KoopaIR {
     }
 
     KoopaVar GetVar(std::string name) {
-        return curScope->symbolTable.var_table[name].var;
+        Scope* scope = curScope;
+        while(scope != nullptr) {
+            if(scope->symbolTable.var_table.find(name) != scope->symbolTable.var_table.end()) {
+                return scope->symbolTable.var_table[name].var;
+            }
+            scope = scope->parent;
+        }
+        std::cerr << "GetVar: " << name << " not found" << std::endl;
+        exit(1);
     }
-    
+
+    BasicBlock* GetBlock(std::string name) {
+        Scope* scope = curScope;
+        while(scope != nullptr) {
+            if(scope->symbolTable.label_table.find(name) != scope->symbolTable.label_table.end()) {
+                return scope->symbolTable.label_table[name];
+            }
+            scope = scope->parent;
+        }
+        std::cerr << "GetBlock: " << name << " not found" << std::endl;
+        exit(1);
+    }
 };
