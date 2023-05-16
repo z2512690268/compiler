@@ -86,6 +86,8 @@ struct SysyFrontend : public FrontendBase {
     struct PrimaryExp_Struct;
     struct UnaryExp_Struct;
     struct UnaryOp_Struct;
+    struct MulExp_Struct;
+    struct AddExp_Struct;
     struct Number_Struct;
     struct Integer_Struct;
 
@@ -133,7 +135,7 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct Exp_Struct {
-        UnaryExp_Struct* UnaryExp;
+        AddExp_Struct* AddExp;
 
         KoopaVar value;
     };
@@ -158,6 +160,14 @@ struct SysyFrontend : public FrontendBase {
 
         KoopaVar value;
     };
+    
+    struct UnaryOp_Struct {
+        enum UnaryOpType {
+            UnaryOpType_Add,
+            UnaryOpType_Sub,
+            UnaryOpType_Not,
+        } type;
+    };
 
     struct PrimaryExp_Struct {
         enum PrimaryExpType {
@@ -172,13 +182,58 @@ struct SysyFrontend : public FrontendBase {
 
         KoopaVar value;
     };
-    
-    struct UnaryOp_Struct {
-        enum UnaryOpType {
-            UnaryOpType_Plus,
-            UnaryOpType_Minus,
-            UnaryOpType_Not,
+
+    struct MulExp_Struct {
+        enum MulExpType {
+            MulExpType_UnaryExp,
+            MulExpType_MulAndUnary,
         } type;
+
+        enum OpType {
+            OpType_Mul,
+            OpType_Div,
+            OpType_Mod,
+        };
+
+        struct MulAndUnary_Struct
+        {
+            MulExp_Struct* MulExp;
+            OpType op;
+            UnaryExp_Struct* UnaryExp;
+        };
+
+        union SubStructPointer {
+            UnaryExp_Struct* UnaryExp;
+            MulAndUnary_Struct MulExpWithOp;
+        } subStructPointer;
+
+        KoopaVar value;
+    };
+
+    struct AddExp_Struct {
+        enum AddExpType {
+            AddExpType_MulExp,
+            AddExpType_AddAndMul,
+        } type;
+
+        enum OpType {
+            OpType_Add,
+            OpType_Sub,
+        };
+
+        struct AddAndMul_Struct
+        {
+            AddExp_Struct* AddExp;
+            OpType op;
+            MulExp_Struct* MulExp;
+        };
+
+        union SubStructPointer {
+            MulExp_Struct* MulExp;
+            AddAndMul_Struct AddExpWithOp;
+        } subStructPointer;
+
+        KoopaVar value;
     };
 
     struct Number_Struct {
@@ -240,8 +295,10 @@ struct SysyFrontend : public FrontendBase {
     Stmt_Struct* Stmt_func();
     Exp_Struct* Exp_func();
     UnaryExp_Struct* UnaryExp_func();
-    PrimaryExp_Struct* PrimaryExp_func();
     UnaryOp_Struct* UnaryOp_func();
+    PrimaryExp_Struct* PrimaryExp_func();
+    MulExp_Struct* MulExp_func();
+    AddExp_Struct* AddExp_func();
     Number_Struct* Number_func();
     Integer_Struct* Integer_func();
     DEC_INTEGER_Struct* DEC_INTEGER_func();
