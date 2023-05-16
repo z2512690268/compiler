@@ -175,17 +175,17 @@ SysyFrontend::Stmt_Struct* SysyFrontend::Stmt_func() {
     return ret_ptr;
 }
 
-// Exp         ::= UnaryExp;
+// Exp         ::= AddExp;
 SysyFrontend::Exp_Struct* SysyFrontend::Exp_func() {
     //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Exp_Struct);
     //-----------------------------------------------------------------
     
     //-----------------------------------------------------------------
-    // Exp         ::= UnaryExp;
-    if(curToken.rule[0] == "UnaryExp") {
-        ret_ptr->UnaryExp = UnaryExp_func();
-        ret_ptr->value = ret_ptr->UnaryExp->value;
+    // Exp         ::= AddExp;
+    if(curToken.rule[0] == "AddExp") {
+        ret_ptr->AddExp = AddExp_func();
+        ret_ptr->value = ret_ptr->AddExp->value;
         return ret_ptr;
     } else {
         std::cerr << "Exp_func: " << curToken << std::endl;
@@ -219,11 +219,11 @@ SysyFrontend::UnaryExp_Struct* SysyFrontend::UnaryExp_func() {
         ret_ptr->subStructPointer.UnaryExpWithOp.UnaryExp = exp;
         std::cout << "op type: " << op->type << std::endl;
         switch (op->type) {
-        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Plus:
+        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Add:
             ret_ptr->value = exp->value;
             break;
         
-        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Minus:
+        case SysyFrontend::UnaryOp_Struct::UnaryOpType::UnaryOpType_Sub:
             ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
             koopaIR->AddOperationStatement("sub", 0, exp->value, ret_ptr->value);
             break;
@@ -256,11 +256,11 @@ SysyFrontend::UnaryOp_Struct* SysyFrontend::UnaryOp_func() {
     //-----------------------------------------------------------------
     // UnaryOp     ::= "+" | "-" | "!";
     if(curToken.rule[0] == "\"+\"") {
-        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Plus;
+        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Add;
         RESERVED_func();    //+
         return ret_ptr;
     } else if(curToken.rule[0] == "\"-\"") {
-        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Minus;
+        ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Sub;
         RESERVED_func();    //-
         return ret_ptr;
     } else if(curToken.rule[0] == "\"!\"") {
@@ -307,6 +307,108 @@ SysyFrontend::PrimaryExp_Struct* SysyFrontend::PrimaryExp_func() {
     //-----------------------------------------------------------------
 
     return ret_ptr;
+}
+
+// MulExp      ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
+SysyFrontend::MulExp_Struct* SysyFrontend::MulExp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::MulExp_Struct)
+    //-----------------------------------------------------------------
+    
+    //-----------------------------------------------------------------
+    // MulExp      ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
+    if(curToken.rule[0] == "UnaryExp") {
+        //-----------------------------------------------------------------
+        UnaryExp_Struct* unaryExp_ptr = UnaryExp_func();
+
+        //-----------------------------------------------------------------
+        ret_ptr->type = MulExp_Struct::MulExpType::MulExpType_UnaryExp;
+        ret_ptr->subStructPointer.UnaryExp = unaryExp_ptr;
+        ret_ptr->value = unaryExp_ptr->value;
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else if(curToken.rule[0] == "MulExp") {
+        //-----------------------------------------------------------------
+        MulExp_Struct* mulExp_ptr = MulExp_func();
+        RESERVED_func();    // "*" | "/" | "%"
+        UnaryExp_Struct* unaryExp_ptr = UnaryExp_func();
+
+        //-----------------------------------------------------------------
+        ret_ptr->type = MulExp_Struct::MulExpType::MulExpType_MulAndUnary;
+        ret_ptr->subStructPointer.MulExpWithOp.MulExp = mulExp_ptr;
+        ret_ptr->subStructPointer.MulExpWithOp.UnaryExp = unaryExp_ptr;
+
+        if (curToken.rule[1] == "\"*\"") {
+            ret_ptr->subStructPointer.MulExpWithOp.op = MulExp_Struct::OpType::OpType_Mul;
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("mul", mulExp_ptr->value, unaryExp_ptr->value, ret_ptr->value);
+        } else if (curToken.rule[1] == "\"/\"") {
+            ret_ptr->subStructPointer.MulExpWithOp.op = MulExp_Struct::OpType::OpType_Div;
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("div", mulExp_ptr->value, unaryExp_ptr->value, ret_ptr->value);
+        } else if (curToken.rule[1] == "\"%\"") {
+            ret_ptr->subStructPointer.MulExpWithOp.op = MulExp_Struct::OpType::OpType_Mod;
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("mod", mulExp_ptr->value, unaryExp_ptr->value, ret_ptr->value);
+        } else {
+            std::cerr << "MulExp_func: " << curToken << std::endl;
+            exit(1);
+        }
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else {
+        std::cerr << "MulExp_func: " << curToken << std::endl;
+        exit(1);
+    }
+}
+
+// AddExp      ::= MulExp | AddExp ("+" | "-") MulExp;
+SysyFrontend::AddExp_Struct* SysyFrontend::AddExp_func() {
+    //-----------------------------------------------------------------
+    ENTRY_GRAMMER(SysyFrontend::AddExp_Struct)
+    //-----------------------------------------------------------------
+
+    //-----------------------------------------------------------------
+    // AddExp      ::= MulExp | AddExp ("+" | "-") MulExp;
+    if (curToken.rule[0] == "MulExp") {
+        //-----------------------------------------------------------------
+        MulExp_Struct* mulExp_ptr = MulExp_func();
+
+        //-----------------------------------------------------------------
+        ret_ptr->type = AddExp_Struct::AddExpType::AddExpType_MulExp;
+        ret_ptr->subStructPointer.MulExp = mulExp_ptr;
+        ret_ptr->value = mulExp_ptr->value;
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else if (curToken.rule[0] == "AddExp") {
+        //-----------------------------------------------------------------
+        AddExp_Struct* addExp_ptr = AddExp_func();
+        RESERVED_func();    // "+" | "-"
+        MulExp_Struct* mulExp_ptr = MulExp_func();
+
+        //-----------------------------------------------------------------
+        ret_ptr->type = AddExp_Struct::AddExpType::AddExpType_AddAndMul;
+        ret_ptr->subStructPointer.AddExpWithOp.AddExp = addExp_ptr;
+        ret_ptr->subStructPointer.AddExpWithOp.MulExp = mulExp_ptr;
+
+        if (curToken.rule[1] == "\"+\"") {
+            ret_ptr->subStructPointer.AddExpWithOp.op = AddExp_Struct::OpType::OpType_Add;
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("add", addExp_ptr->value, mulExp_ptr->value, ret_ptr->value);
+        } else if (curToken.rule[1] == "\"-\"") {
+            ret_ptr->subStructPointer.AddExpWithOp.op = AddExp_Struct::OpType::OpType_Sub;
+            ret_ptr->value = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("sub", addExp_ptr->value, mulExp_ptr->value, ret_ptr->value);
+        } else {
+            std::cerr << "AddExp_func: " << curToken << std::endl;
+            exit(1);
+        }
+        //-----------------------------------------------------------------
+        return ret_ptr;
+    } else {
+        std::cerr << "AddExp_func: " << curToken << std::endl;
+        exit(1);
+    }
 }
 
 // Number    ::= Integer;
