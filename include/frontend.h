@@ -88,6 +88,10 @@ struct SysyFrontend : public FrontendBase {
     struct UnaryOp_Struct;
     struct MulExp_Struct;
     struct AddExp_Struct;
+    struct RelExp_Struct;
+    struct EqExp_Struct;
+    struct LAndExp_Struct;
+    struct LOrExp_Struct;
     struct Number_Struct;
     struct Integer_Struct;
 
@@ -135,7 +139,7 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct Exp_Struct {
-        AddExp_Struct* AddExp;
+        LOrExp_Struct* LOrExp;
 
         KoopaSymbol value;
     };
@@ -204,7 +208,7 @@ struct SysyFrontend : public FrontendBase {
 
         union SubStructPointer {
             UnaryExp_Struct* UnaryExp;
-            MulAndUnary_Struct MulExpWithOp;
+            MulAndUnary_Struct MulAndUnary;
         } subStructPointer;
 
         KoopaSymbol value;
@@ -230,11 +234,107 @@ struct SysyFrontend : public FrontendBase {
 
         union SubStructPointer {
             MulExp_Struct* MulExp;
-            AddAndMul_Struct AddExpWithOp;
+            AddAndMul_Struct AddAndMul;
         } subStructPointer;
 
         KoopaSymbol value;
     };
+
+    struct RelExp_Struct {
+        enum RelExpType {
+            RelExpType_AddExp,
+            RelExpType_RelAndAdd,
+        } type;
+
+        enum OpType {
+            OpType_LT,
+            OpType_GT,
+            OpType_LE,
+            OpType_GE,
+        };
+
+        struct RelAndAdd_Struct
+        {
+            RelExp_Struct* RelExp;
+            OpType op;
+            AddExp_Struct* AddExp;
+        };
+
+        union SubStructPointer {
+            AddExp_Struct* AddExp;
+            RelAndAdd_Struct RelAndAdd;
+        } subStructPointer;
+
+        KoopaSymbol value;
+    };
+
+    struct EqExp_Struct {
+        enum EqExpType {
+            EqExpType_RelExp,
+            EqExpType_EqAndRel,
+        } type;
+
+        enum OpType {
+            OpType_EQ,
+            OpType_NE,
+        };
+
+        struct EqAndRel_Struct
+        {
+            EqExp_Struct* EqExp;
+            OpType op;
+            RelExp_Struct* RelExp;
+        };
+
+        union SubStructPointer {
+            RelExp_Struct* RelExp;
+            EqAndRel_Struct EqAndRel;
+        } subStructPointer;
+
+        KoopaSymbol value;
+    };
+
+    struct LAndExp_Struct
+    {
+        enum LAndExpType {
+            LAndExpType_EqExp,
+            LAndExpType_LAndAndEq,
+        } type;
+
+        struct LAndAndEq_Struct
+        {
+            LAndExp_Struct* LAndExp;
+            EqExp_Struct* EqExp;
+        };
+
+        union SubStructPointer {
+            EqExp_Struct* EqExp;
+            LAndAndEq_Struct LAndAndEq;
+        } subStructPointer;
+
+        KoopaSymbol value;
+    };
+
+    struct LOrExp_Struct
+    {
+        enum LOrExpType {
+            LOrExpType_LAndExp,
+            LOrExpType_LOrAndLAnd,
+        } type;
+
+        struct LOrAndLAnd_Struct
+        {
+            LOrExp_Struct* LOrExp;
+            LAndExp_Struct* LAndExp;
+        };
+
+        union SubStructPointer {
+            LAndExp_Struct* LAndExp;
+            LOrAndLAnd_Struct LOrAndLAnd;
+        } subStructPointer;
+
+        KoopaSymbol value;
+    };    
 
     struct Number_Struct {
         Integer_Struct* Integer;
@@ -299,6 +399,10 @@ struct SysyFrontend : public FrontendBase {
     PrimaryExp_Struct* PrimaryExp_func();
     MulExp_Struct* MulExp_func();
     AddExp_Struct* AddExp_func();
+    RelExp_Struct* RelExp_func();
+    EqExp_Struct* EqExp_func();
+    LAndExp_Struct* LAndExp_func();
+    LOrExp_Struct* LOrExp_func();
     Number_Struct* Number_func();
     Integer_Struct* Integer_func();
     DEC_INTEGER_Struct* DEC_INTEGER_func();
