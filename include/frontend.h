@@ -137,7 +137,7 @@ struct SysyFrontend : public FrontendBase {
     struct Exp_Struct {
         AddExp_Struct* AddExp;
 
-        KoopaVar value;
+        KoopaSymbol value;
     };
 
     struct UnaryExp_Struct {
@@ -158,7 +158,7 @@ struct SysyFrontend : public FrontendBase {
             UnaryExpWithOp_Struct UnaryExpWithOp;
         } subStructPointer;
 
-        KoopaVar value;
+        KoopaSymbol value;
     };
     
     struct UnaryOp_Struct {
@@ -180,7 +180,7 @@ struct SysyFrontend : public FrontendBase {
             Number_Struct* Number;
         } subStructPointer;
 
-        KoopaVar value;
+        KoopaSymbol value;
     };
 
     struct MulExp_Struct {
@@ -207,7 +207,7 @@ struct SysyFrontend : public FrontendBase {
             MulAndUnary_Struct MulExpWithOp;
         } subStructPointer;
 
-        KoopaVar value;
+        KoopaSymbol value;
     };
 
     struct AddExp_Struct {
@@ -233,13 +233,13 @@ struct SysyFrontend : public FrontendBase {
             AddAndMul_Struct AddExpWithOp;
         } subStructPointer;
 
-        KoopaVar value;
+        KoopaSymbol value;
     };
 
     struct Number_Struct {
         Integer_Struct* Integer;
 
-        int value;
+        KoopaSymbol value;
     };
 
     struct Integer_Struct {
