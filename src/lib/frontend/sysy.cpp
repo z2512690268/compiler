@@ -6,11 +6,8 @@
 // CompUnits      ::= CompUnit {CompUnit};
 SysyFrontend::CompUnits_Struct *SysyFrontend::CompUnits_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::CompUnits_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     if (curToken.rule[0] == "CompUnit")
     {
         for (auto rule : curToken.rule)
@@ -33,11 +30,8 @@ SysyFrontend::CompUnits_Struct *SysyFrontend::CompUnits_func()
 // CompUnit       ::= FuncDef;
 SysyFrontend::CompUnit_Struct *SysyFrontend::CompUnit_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::CompUnit_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     if (curToken.rule[0] == "FuncDef")
     {
         ret_ptr->FuncDef = FuncDef_func();
@@ -54,29 +48,21 @@ SysyFrontend::CompUnit_Struct *SysyFrontend::CompUnit_func()
 // FuncDef   ::= FuncType IDENT "(" ")" Block;
 SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::FuncDef_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // 创建函数
     // FuncDef   ::= FuncType IDENT "(" ")" Block;
     if (curToken.rule[0] == "FuncType")
     {
-        //-----------------------------------------------------------------
         // 创建作用域
         Scope *scope = koopaIR->AddNewScope();
-        //-----------------------------------------------------------------
 
-        //-----------------------------------------------------------------
         ret_ptr->funcRetType = FuncType_func();
         ret_ptr->funcnameIDENT = IDENT_func();
         RESERVED_func(); //(
         RESERVED_func(); //)
         ret_ptr->Block = Block_func(ret_ptr->funcnameIDENT->identifer);
-        //-----------------------------------------------------------------
 
-        //-----------------------------------------------------------------
         // 退出作用域
         koopaIR->SetScopeFunction(ret_ptr->funcnameIDENT->identifer,
                                   ret_ptr->funcRetType->type);
@@ -95,11 +81,8 @@ SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
 // FuncType  ::= "int";
 SysyFrontend::FuncType_Struct *SysyFrontend::FuncType_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::FuncType_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // INT32
     // FuncType  ::= "int";
     if (curToken.rule[0] == "\"int\"")
@@ -119,31 +102,22 @@ SysyFrontend::FuncType_Struct *SysyFrontend::FuncType_func()
 // Block     ::= "{" Stmt "}";
 SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Block_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // Block     ::= "{" Stmt "}";
     if (curToken.rule[0] == "\"{\"")
     {
-        //-----------------------------------------------------------------
         // 创建基本块，并加入符号表,更新当前块
         std::string block_name = koopaIR->GetUniqueName("%entry");
         BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(block_name);
-        //-----------------------------------------------------------------
 
-        //-----------------------------------------------------------------
         // 创建语句
         RESERVED_func(); //{
         Stmt_Struct *stmt_ptr = Stmt_func();
         RESERVED_func(); //}
-        //-----------------------------------------------------------------
 
-        //-----------------------------------------------------------------
         // 属性赋值
         ret_ptr->block = block;
-        //-----------------------------------------------------------------
     }
     else
     {
@@ -157,21 +131,15 @@ SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
 // Stmt      ::= "return" Exp ";";
 SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Stmt_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // Stmt      ::= "return" Exp ";";
     if (curToken.rule[0] == "\"return\"")
     {
-        //-----------------------------------------------------------------
         RESERVED_func(); // return
         ret_ptr->Exp = Exp_func();
         RESERVED_func(); //;
-        //-----------------------------------------------------------------
 
-        //-----------------------------------------------------------------
         // 返回语句
         koopaIR->AddReturnStatement(ret_ptr->Exp->value);
     }
@@ -187,11 +155,8 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
 // Exp         ::= LOrExp;
 SysyFrontend::Exp_Struct *SysyFrontend::Exp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Exp_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // Exp         ::= LOrExp;
     if (curToken.rule[0] == "LOrExp")
     {
@@ -210,11 +175,8 @@ SysyFrontend::Exp_Struct *SysyFrontend::Exp_func()
 // UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
 SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::UnaryExp_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
     if (curToken.rule[0] == "PrimaryExp")
     {
@@ -263,11 +225,8 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func()
 // UnaryOp     ::= "+" | "-" | "!";
 SysyFrontend::UnaryOp_Struct *SysyFrontend::UnaryOp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::UnaryOp_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // UnaryOp     ::= "+" | "-" | "!";
     if (curToken.rule[0] == "\"+\"")
     {
@@ -277,7 +236,7 @@ SysyFrontend::UnaryOp_Struct *SysyFrontend::UnaryOp_func()
     else if (curToken.rule[0] == "\"-\"")
     {
         ret_ptr->type = UnaryOp_Struct::UnaryOpType::UnaryOpType_Sub;
-        RESERVED_func(); //-
+        RESERVED_func();
     }
     else if (curToken.rule[0] == "\"!\"")
     {
@@ -296,15 +255,11 @@ SysyFrontend::UnaryOp_Struct *SysyFrontend::UnaryOp_func()
 // PrimaryExp  ::= "(" Exp ")" | Number;
 SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::PrimaryExp_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // PrimaryExp  ::= "(" Exp ")" | Number;
     if (curToken.rule[0] == "\"(\"")
     {
-        //-----------------------------------------------------------------
         RESERVED_func(); //(
         ret_ptr->type = PrimaryExp_Struct::PrimaryExpType::PrimaryExpType_Exp;
         ret_ptr->subStructPointer.Exp = Exp_func();
@@ -329,30 +284,23 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func()
 // MulExp      ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
 SysyFrontend::MulExp_Struct *SysyFrontend::MulExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::MulExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // MulExp      ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
     if (curToken.rule[0] == "UnaryExp")
     {
-        //-----------------------------------------------------------------
         UnaryExp_Struct *unaryExp_ptr = UnaryExp_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = MulExp_Struct::MulExpType::MulExpType_UnaryExp;
         ret_ptr->subStructPointer.UnaryExp = unaryExp_ptr;
         ret_ptr->value = unaryExp_ptr->value;
     }
     else if (curToken.rule[0] == "MulExp")
     {
-        //-----------------------------------------------------------------
         MulExp_Struct *mulExp_ptr = MulExp_func();
         RESERVED_func(); // "*" | "/" | "%"
         UnaryExp_Struct *unaryExp_ptr = UnaryExp_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = MulExp_Struct::MulExpType::MulExpType_MulAndUnary;
         ret_ptr->subStructPointer.MulAndUnary.MulExp = mulExp_ptr;
         ret_ptr->subStructPointer.MulAndUnary.UnaryExp = unaryExp_ptr;
@@ -394,30 +342,23 @@ SysyFrontend::MulExp_Struct *SysyFrontend::MulExp_func()
 // AddExp      ::= MulExp | AddExp ("+" | "-") MulExp;
 SysyFrontend::AddExp_Struct *SysyFrontend::AddExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::AddExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // AddExp      ::= MulExp | AddExp ("+" | "-") MulExp;
     if (curToken.rule[0] == "MulExp")
     {
-        //-----------------------------------------------------------------
         MulExp_Struct *mulExp_ptr = MulExp_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = AddExp_Struct::AddExpType::AddExpType_MulExp;
         ret_ptr->subStructPointer.MulExp = mulExp_ptr;
         ret_ptr->value = mulExp_ptr->value;
     }
     else if (curToken.rule[0] == "AddExp")
     {
-        //-----------------------------------------------------------------
         AddExp_Struct *addExp_ptr = AddExp_func();
         RESERVED_func(); // "+" | "-"
         MulExp_Struct *mulExp_ptr = MulExp_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = AddExp_Struct::AddExpType::AddExpType_AddAndMul;
         ret_ptr->subStructPointer.AddAndMul.AddExp = addExp_ptr;
         ret_ptr->subStructPointer.AddAndMul.MulExp = mulExp_ptr;
@@ -453,22 +394,17 @@ SysyFrontend::AddExp_Struct *SysyFrontend::AddExp_func()
 // RelExp      ::= AddExp | RelExp ("<" | ">" | "<=" | ">=") AddExp;
 SysyFrontend::RelExp_Struct *SysyFrontend::RelExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::RelExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // RelExp      ::= AddExp | RelExp ("<" | ">" | "<=" | ">=") AddExp;
     if (curToken.rule[0] == "AddExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = RelExp_Struct::RelExpType::RelExpType_AddExp;
         ret_ptr->subStructPointer.AddExp = AddExp_func();
         ret_ptr->value = ret_ptr->subStructPointer.AddExp->value;
     }
     else if (curToken.rule[0] == "RelExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = RelExp_Struct::RelExpType::RelExpType_RelAndAdd;
         RelExp_Struct *relExp = RelExp_func();
         RESERVED_func(); // "<" | ">" | "<=" | ">="
@@ -517,22 +453,17 @@ SysyFrontend::RelExp_Struct *SysyFrontend::RelExp_func()
 // EqExp       ::= RelExp | EqExp ("==" | "!=") RelExp;
 SysyFrontend::EqExp_Struct *SysyFrontend::EqExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::EqExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // EqExp       ::= RelExp | EqExp ("==" | "!=") RelExp;
     if (curToken.rule[0] == "RelExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = EqExp_Struct::EqExpType::EqExpType_RelExp;
         ret_ptr->subStructPointer.RelExp = RelExp_func();
         ret_ptr->value = ret_ptr->subStructPointer.RelExp->value;
     }
     else if (curToken.rule[0] == "EqExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = EqExp_Struct::EqExpType::EqExpType_EqAndRel;
         EqExp_Struct *eqExp = EqExp_func();
         RESERVED_func(); // "==" | "!="
@@ -569,22 +500,17 @@ SysyFrontend::EqExp_Struct *SysyFrontend::EqExp_func()
 // LAndExp     ::= EqExp | LAndExp "&&" EqExp;
 SysyFrontend::LAndExp_Struct *SysyFrontend::LAndExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::LAndExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // LAndExp     ::= EqExp | LAndExp "&&" EqExp;
     if (curToken.rule[0] == "EqExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = LAndExp_Struct::LAndExpType::LAndExpType_EqExp;
         ret_ptr->subStructPointer.EqExp = EqExp_func();
         ret_ptr->value = ret_ptr->subStructPointer.EqExp->value;
     }
     else if (curToken.rule[0] == "LAndExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = LAndExp_Struct::LAndExpType::LAndExpType_LAndAndEq;
         LAndExp_Struct *lAndExp = LAndExp_func();
         RESERVED_func(); // "&&"
@@ -606,22 +532,17 @@ SysyFrontend::LAndExp_Struct *SysyFrontend::LAndExp_func()
 // LOrExp      ::= LAndExp | LOrExp "||" LAndExp;
 SysyFrontend::LOrExp_Struct *SysyFrontend::LOrExp_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::LOrExp_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // LOrExp      ::= LAndExp | LOrExp "||" LAndExp;
     if (curToken.rule[0] == "LAndExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = LOrExp_Struct::LOrExpType::LOrExpType_LAndExp;
         ret_ptr->subStructPointer.LAndExp = LAndExp_func();
         ret_ptr->value = ret_ptr->subStructPointer.LAndExp->value;
     }
     else if (curToken.rule[0] == "LOrExp")
     {
-        //-----------------------------------------------------------------
         ret_ptr->type = LOrExp_Struct::LOrExpType::LOrExpType_LOrAndLAnd;
         LOrExp_Struct *lOrExp = LOrExp_func();
         RESERVED_func(); // "||"
@@ -643,20 +564,13 @@ SysyFrontend::LOrExp_Struct *SysyFrontend::LOrExp_func()
 // Number    ::= Integer;
 SysyFrontend::Number_Struct *SysyFrontend::Number_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Number_Struct)
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     // Number    ::= Integer;
     if (curToken.rule[0] == "Integer")
     {
-        //-----------------------------------------------------------------
         Integer_Struct *integer_ptr = Integer_func();
 
-        //-----------------------------------------------------------------
-
-        //-----------------------------------------------------------------
         ret_ptr->Integer = integer_ptr;
         ret_ptr->value.SetImm(integer_ptr->value);
     }
@@ -672,37 +586,28 @@ SysyFrontend::Number_Struct *SysyFrontend::Number_func()
 // Integer     ::= DEC_INTEGER | HEX_INTEGER | OCT_INTEGER;
 SysyFrontend::Integer_Struct *SysyFrontend::Integer_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::Integer_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     if (curToken.rule[0] == "OCT_INTEGER")
     {
-        //-----------------------------------------------------------------
         OCT_INTEGER_Struct *octInteger_ptr = OCT_INTEGER_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = Integer_Struct::IntegerType::IntegerType_OCT_INTEGER;
         ret_ptr->subStructPointer.OCT_INTEGER = octInteger_ptr;
         ret_ptr->value = octInteger_ptr->value_int;
     }
     else if (curToken.rule[0] == "HEX_INTEGER")
     {
-        //-----------------------------------------------------------------
         HEX_INTEGER_Struct *hexInteger_ptr = HEX_INTEGER_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = Integer_Struct::IntegerType::IntegerType_HEX_INTEGER;
         ret_ptr->subStructPointer.HEX_INTEGER = hexInteger_ptr;
         ret_ptr->value = hexInteger_ptr->value_int;
     }
     else if (curToken.rule[0] == "DEC_INTEGER")
     {
-        //-----------------------------------------------------------------
         DEC_INTEGER_Struct *decInteger_ptr = DEC_INTEGER_func();
 
-        //-----------------------------------------------------------------
         ret_ptr->type = Integer_Struct::IntegerType::IntegerType_DEC_INTEGER;
         ret_ptr->subStructPointer.DEC_INTEGER = decInteger_ptr;
         ret_ptr->value = decInteger_ptr->value_int;
@@ -718,16 +623,12 @@ SysyFrontend::Integer_Struct *SysyFrontend::Integer_func()
 
 SysyFrontend::OCT_INTEGER_Struct *SysyFrontend::OCT_INTEGER_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::OCT_INTEGER_Struct)
-    //-----------------------------------------------------------------
     if (curToken.token == "OCT_INTEGER")
     {
-        //-----------------------------------------------------------------
         ret_ptr->value = curToken.rule[0];
         ret_ptr->value_int = std::stoi(
             curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 8);
-        //-----------------------------------------------------------------
         for (auto &ch : curToken.rule[0])
         {
             if (ch == '\n')
@@ -747,16 +648,12 @@ SysyFrontend::OCT_INTEGER_Struct *SysyFrontend::OCT_INTEGER_func()
 
 SysyFrontend::HEX_INTEGER_Struct *SysyFrontend::HEX_INTEGER_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::HEX_INTEGER_Struct)
-    //-----------------------------------------------------------------
     if (curToken.token == "HEX_INTEGER")
     {
-        //-----------------------------------------------------------------
         ret_ptr->value = curToken.rule[0];
         ret_ptr->value_int = std::stoi(
             curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 16);
-        //-----------------------------------------------------------------
         for (auto &ch : curToken.rule[0])
         {
             if (ch == '\n')
@@ -776,16 +673,12 @@ SysyFrontend::HEX_INTEGER_Struct *SysyFrontend::HEX_INTEGER_func()
 
 SysyFrontend::DEC_INTEGER_Struct *SysyFrontend::DEC_INTEGER_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::DEC_INTEGER_Struct)
-    //-----------------------------------------------------------------
     if (curToken.token == "DEC_INTEGER")
     {
-        //-----------------------------------------------------------------
         ret_ptr->value = curToken.rule[0];
         ret_ptr->value_int = std::stoi(
             curToken.rule[0].substr(1, curToken.rule[0].size() - 2), nullptr, 10);
-        //-----------------------------------------------------------------
         for (auto &ch : curToken.rule[0])
         {
             if (ch == '\n')
@@ -805,16 +698,11 @@ SysyFrontend::DEC_INTEGER_Struct *SysyFrontend::DEC_INTEGER_func()
 
 SysyFrontend::IDENT_Struct *SysyFrontend::IDENT_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::IDENT_Struct);
-    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
     if (curToken.token == "IDENT")
     {
-        //-----------------------------------------------------------------
         ret_ptr->identifer = "@" + curToken.rule[0].substr(1, curToken.rule[0].size() - 2);
-        //-----------------------------------------------------------------
         for (auto &ch : curToken.rule[0])
         {
             if (ch == '\n')
@@ -834,9 +722,7 @@ SysyFrontend::IDENT_Struct *SysyFrontend::IDENT_func()
 
 SysyFrontend::RESERVED_Struct *SysyFrontend::RESERVED_func()
 {
-    //-----------------------------------------------------------------
     ENTRY_GRAMMER(SysyFrontend::RESERVED_Struct);
-    //-----------------------------------------------------------------
     for (auto &ch : curToken.rule[0])
     {
         if (ch == '\n')
@@ -844,9 +730,7 @@ SysyFrontend::RESERVED_Struct *SysyFrontend::RESERVED_func()
             line_num++;
         }
     }
-    //-----------------------------------------------------------------
     ret_ptr->reserved = curToken.rule[0];
-    //-----------------------------------------------------------------
     std::cout << "Exit -- " << curToken.token << std::endl;
     return ret_ptr;
 }
