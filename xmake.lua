@@ -23,7 +23,6 @@ elseif is_plat("linux") then
     add_syslinks("pthread")
 end
 
-
 -- package gtest
 package("gtest")
     add_deps("cmake")
@@ -63,14 +62,14 @@ package("gflags")
 package_end()
 add_requires("gflags")
 
-set_toolchains("clang")
-set_languages("cxx17")
+-- set_toolchains("clang")
+-- set_languages("cxx17")
 
 target("staticlib")
-set_kind("static")
-add_includedirs("include")
-add_files("src/lib/*.cpp")
-add_files("src/lib/frontend/*.cpp")
+    set_kind("static")
+    add_includedirs("include")
+    add_files("src/lib/*.cpp")
+    add_files("src/lib/frontend/*.cpp")
 
 
 target("lex")
@@ -100,4 +99,3 @@ target("test")
     add_packages("glog")
     add_packages("gflags")
     add_deps("staticlib")
-    add_links("pthread")
