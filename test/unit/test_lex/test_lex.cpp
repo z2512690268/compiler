@@ -6,12 +6,13 @@
 #include "defs.h"
 #include "lex.h"
 #include "transfer.h"
+#include "path.h"
 
 TEST(TestLex, GrammerLexTest) {
-    std::string projdir = PROJECT_ROOT_DIR;
-    std::ifstream rule_in(projdir + "test/lex/gram.l");
-    std::ifstream input_in(projdir + "test/pipeline/gram.input");
-    std::ifstream output_in(projdir + "test/pipeline/gram.lex");
+    Path projdir = PROJECT_ROOT_DIR;
+    std::ifstream rule_in(projdir.append("test").append("lex").append("gram.l"));
+    std::ifstream input_in(projdir.append("test").append("pipeline").append("gram.input"));
+    std::ifstream output_in(projdir.append("test").append("pipeline").append("gram.lex"));
 
     ASSERT_TRUE(rule_in.is_open());
     ASSERT_TRUE(input_in.is_open());
@@ -37,10 +38,10 @@ TEST(TestLex, GrammerLexTest) {
 }
 
 TEST(TestLex, Rule1Test) {
-    std::string projdir = PROJECT_ROOT_DIR;
-    std::ifstream rule_in(projdir + "test/lex/rule1.l");
-    std::ifstream input_in(projdir + "test/pipeline/rule1.input");
-    std::ifstream output_in(projdir + "test/pipeline/rule1.lex");
+    Path projdir = PROJECT_ROOT_DIR;
+    std::ifstream rule_in(projdir.append("test").append("lex").append("rule1.l"));
+    std::ifstream input_in(projdir.append("test").append("pipeline").append("rule1.input"));
+    std::ifstream output_in(projdir.append("test").append("pipeline").append("rule1.lex"));
 
     ASSERT_TRUE(rule_in.is_open());
     ASSERT_TRUE(input_in.is_open());
@@ -66,10 +67,11 @@ TEST(TestLex, Rule1Test) {
 }
 
 TEST(TestLex, SysyTest) {
-    std::string projdir = PROJECT_ROOT_DIR;
-    std::ifstream rule_in(projdir + "test/lex/sysy.l");
-    std::ifstream input_in(projdir + "test/pipeline/sysy_t1.input");
-    std::ifstream output_in(projdir + "test/pipeline/sysy_t1.lex");
+    Path projdir = PROJECT_ROOT_DIR;
+    std::ifstream rule_in(projdir.append("test").append("lex").append("sysy.l"));
+    std::ifstream input_in(projdir.append("test").append("pipeline").append("sysy_t1.input"));
+    std::ifstream output_in(projdir.append("test").append("pipeline").append("sysy_t1.lex"));
+
 
     ASSERT_TRUE(rule_in.is_open());
     ASSERT_TRUE(input_in.is_open());
@@ -95,10 +97,11 @@ TEST(TestLex, SysyTest) {
 }
 
 TEST(TestLex, MazeTest) {
-    std::string projdir = PROJECT_ROOT_DIR;
-    std::ifstream rule_in(projdir + "test/lex/sysy.l");
-    std::ifstream input_in(projdir + "test/pipeline/maze.input");
-    std::ifstream output_in(projdir + "test/pipeline/maze.lex");
+    Path projdir = PROJECT_ROOT_DIR;
+    std::ifstream rule_in(projdir.append("test").append("lex").append("sysy.l"));
+    std::ifstream input_in(projdir.append("test").append("pipeline").append("maze.input"));
+    std::ifstream output_in(projdir.append("test").append("pipeline").append("maze.lex"));
+
 
     ASSERT_TRUE(rule_in.is_open());
     ASSERT_TRUE(input_in.is_open());

@@ -7,13 +7,14 @@
 #include "lex.h"
 #include "gram.h"
 #include "transfer.h"
+#include "path.h"
 
 TEST(TestGram, MazeTest) {
-    std::string projdir = PROJECT_ROOT_DIR;
-    std::ifstream gram_in(projdir + "test/gram/sysy.y");
-    std::ifstream input_in(projdir + "test/pipeline/maze.lex");
-    std::ifstream output_in(projdir + "test/pipeline/maze.gram");
-    std::ifstream lex_gram_in(projdir + "test/lex/gram.l");
+    Path projdir = PROJECT_ROOT_DIR;
+    std::ifstream gram_in(projdir.append("test").append("gram").append("sysy").add(".y"));
+    std::ifstream input_in(projdir.append("test").append("pipeline").append("maze").add(".lex"));
+    std::ifstream output_in(projdir.append("test").append("pipeline").append("maze").add(".gram"));
+    std::ifstream lex_gram_in(projdir.append("src").append("res").append("gram.l"));
 
     ASSERT_TRUE(gram_in.is_open());
     ASSERT_TRUE(input_in.is_open());

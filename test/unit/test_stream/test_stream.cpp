@@ -3,6 +3,7 @@
 #include "stream.h"
 #include "transfer.h"
 #include "defs.h"
+#include "path.h"
 
 // class TokenStream<std::string> {
 struct TestToken {
@@ -37,10 +38,12 @@ TEST(TestStream, TestStream) {
 		
 	stream.AddToken(TestToken("你好", 2, 1));
 
-	stream.ExportFile(std::string(PROJECT_ROOT_DIR) + "log/stream/test.txt");
+	Path tmp = PROJECT_ROOT_DIR;
+
+	stream.ExportFile(tmp.append("log").append("stream").append("test.txt"));
 
 	TokenStream<TestToken> stream2;
-	stream2.LoadFile(std::string(PROJECT_ROOT_DIR) + "log/stream/test.txt");
+	stream2.LoadFile(tmp.append("log").append("stream").append("test.txt"));
 
 	TestToken token;
 

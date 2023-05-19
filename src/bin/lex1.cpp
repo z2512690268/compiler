@@ -10,6 +10,8 @@
 #include "defs.h"
 #include "lex.h"
 #include "transfer.h"
+#include "path.h"
+
 // #include <unistd.h> 
 int main(int argc, char* argv[])
 {
@@ -17,12 +19,10 @@ int main(int argc, char* argv[])
         std::cout << "Usage: " << argv[0] << " <rule-file>" << " " << "<input-file>" << " " << "<output-file>" << std::endl;
         return 1;
     }
-    std::string tmp = PROJECT_ROOT_DIR;
-    // std::cout << tmp + argv[1] << std::endl;
-    // return 0;
-    std::ifstream fin(tmp + "/test/lex/" + argv[1] + ".l");
-    std::ifstream input(tmp + "/test/pipeline/" + argv[2] + ".input");
-    std::ofstream fout(tmp + "/test/pipeline/" + argv[3] + ".lex");
+    Path tmp = PROJECT_ROOT_DIR;
+    std::ifstream fin(tmp.append("test").append("lex").append(argv[1]).add(".l"));
+    std::ifstream input(tmp.append("test").append("pipeline").append(argv[2]).add(".input"));
+    std::ofstream fout(tmp.append("test").append("pipeline").append(argv[3]).add(".lex"));
     if(!fin.is_open()) {
         std::cout << "rule file open failed" << std::endl;
         return 1;

@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
-#include "bits/unique_ptr.h"
+#include "unique_ptr.h"
 
 // 变量类型
 struct KoopaVarType {
@@ -19,15 +19,15 @@ struct KoopaVarType {
         KOOPA_undef
     };
     struct KoopaArrayType {
-        std::unique_ptr<KoopaVarType> type;
+        unique_ptr<KoopaVarType> type;
         int size;
     };
     struct KoopaPtrType {
-        std::unique_ptr<KoopaVarType> type;
+        unique_ptr<KoopaVarType> type;
     };
     struct KoopaFuncType {
-        std::unique_ptr<KoopaVarType> retType;
-        std::vector<std::unique_ptr<KoopaVarType>> paramsType;
+        unique_ptr<KoopaVarType> retType;
+        std::vector<unique_ptr<KoopaVarType>> paramsType;
     };
 
     TopType topType;
@@ -61,19 +61,19 @@ struct KoopaVarType {
             case KOOPA_INT32:
                 break;
             case KOOPA_ARRAY:
-                arrayType.type = std::unique_ptr<KoopaVarType>(
+                arrayType.type = unique_ptr<KoopaVarType>(
                     new KoopaVarType(*other.arrayType.type));
                 arrayType.size = other.arrayType.size;
                 break;
             case KOOPA_PTR:
-                ptrType.type = std::unique_ptr<KoopaVarType>(
+                ptrType.type = unique_ptr<KoopaVarType>(
                     new KoopaVarType(*(other.ptrType.type)));
                 break;
             case KOOPA_func:
-                funcType.retType = std::unique_ptr<KoopaVarType>(
+                funcType.retType = unique_ptr<KoopaVarType>(
                     new KoopaVarType(*(other.funcType.retType)));
                 for(auto& param : other.funcType.paramsType) {
-                    funcType.paramsType.push_back(std::unique_ptr<KoopaVarType>(
+                    funcType.paramsType.push_back(unique_ptr<KoopaVarType>(
                         new KoopaVarType(*param)));
                 }
                 break;
@@ -126,7 +126,7 @@ struct KoopaVarType {
     KoopaVarType ARRAY_Type(KoopaVarType element_type, int size) {
         KoopaVarType type;
         type.topType = KOOPA_ARRAY;
-        type.arrayType.type = std::unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
+        type.arrayType.type = unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
         type.arrayType.size = size;
         return type;
     }
@@ -134,16 +134,16 @@ struct KoopaVarType {
     KoopaVarType PTR_Type(KoopaVarType element_type) {
         KoopaVarType type;
         type.topType = KOOPA_PTR;
-        type.ptrType.type = std::unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
+        type.ptrType.type = unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
         return type;
     }
 
     KoopaVarType FUNC_Type(KoopaVarType ret_type, std::vector<KoopaVarType> params_type) {
         KoopaVarType type;
         type.topType = KOOPA_func;
-        type.funcType.retType = std::unique_ptr<KoopaVarType>(new KoopaVarType(ret_type));
+        type.funcType.retType = unique_ptr<KoopaVarType>(new KoopaVarType(ret_type));
         for(auto& param : params_type) {
-            type.funcType.paramsType.push_back(std::unique_ptr<KoopaVarType>(new KoopaVarType(param)));
+            type.funcType.paramsType.push_back(unique_ptr<KoopaVarType>(new KoopaVarType(param)));
         }
         return type;
     }

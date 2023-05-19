@@ -1,0 +1,11 @@
+	.text
+	.global main
+main:
+1:
+	li t0, 2
+	li t1, 3
+	mul t0, t1
+	addi s0, s0, 1
+	addi a0, s0, 0
+	ret
+

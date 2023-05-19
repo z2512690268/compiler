@@ -1,5 +1,6 @@
 #pragma once
 #include "koopa.h"
+#include "defs.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -211,6 +212,20 @@ struct RiscvGenerator : public KoopaGenerator {
         return stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsImm();
     }
 
+    std::string PreOutput() {
+        std::string tmp = PROJECT_ROOT_DIR;
+        std::string code;
+        std::ifstream fin(tmp + "src/res/lib_riscv.s");
+        if(!fin.is_open()) {
+            std::cout << "lib_riscv.s open failed" << std::endl;
+            return "";
+        }
+        std::string line;
+        while(std::getline(fin, line)) {
+            code += line + "\n";
+        }
+        return code;
+    }
 
     virtual std::string GenerateCode(KoopaIR* ir) {
         global_scope = ir->global_scope;
