@@ -68,10 +68,10 @@ struct KoopaGenerator {
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {
                         case Statement::OPERATION:
-                            code += "\t" + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol() + ";\n";
+                            code += "\t" + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
                             break;
                         case Statement::RETURN:
-                            code += "\tret " + stmt->returnStmt.ret.GetSymbol() + ";\n";
+                            code += "\tret " + stmt->returnStmt.ret.GetSymbol() + "\n";
                             break;
                         case Statement::CALL:
                             code += "\t" + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
@@ -81,32 +81,32 @@ struct KoopaGenerator {
                                     code += ", ";
                                 }
                             }
-                            code += ");\n";
+                            code += ")\n";
                             break;
                         case Statement::BRANCH:
-                            code += "\tbr " + stmt->branchStmt.cond.GetSymbol() + ", " + stmt->branchStmt.true_label + ", " + stmt->branchStmt.false_label + ";\n";
+                            code += "\tbr " + stmt->branchStmt.cond.GetSymbol() + ", " + stmt->branchStmt.true_label + ", " + stmt->branchStmt.false_label + "\n";
                             break;
                         case Statement::JUMP:
-                            code += "\tjump " + stmt->jumpStmt.label + ";\n";
+                            code += "\tjump " + stmt->jumpStmt.label + "\n";
                             break;
                         case Statement::ALLOC:
-                            code += "\t" + stmt->allocStmt.var.varName + " = alloc " + KoopaVarTypeToString(stmt->allocStmt.var.type) + ";\n";
+                            code += "\t" + stmt->allocStmt.var.varName + " = alloc " + KoopaVarTypeToString(stmt->allocStmt.var.type) + "\n";
                             break;
                         case Statement::LOAD:
-                            code += "\t" + stmt->loadStmt.var.varName + " = load " + stmt->loadStmt.addr.GetSymbol() + ";\n";
+                            code += "\t" + stmt->loadStmt.var.varName + " = load " + stmt->loadStmt.addr.GetSymbol() + "\n";
                             break;
                         case Statement::STORE:
                             if(stmt->storeStmt.IsSymbol()){
-                                code += "\tstore " + stmt->storeStmt.symbol.GetSymbol() + ", " + stmt->storeStmt.addr.GetSymbol() + ";\n";
+                                code += "\tstore " + stmt->storeStmt.symbol.GetSymbol() + ", " + stmt->storeStmt.addr.GetSymbol() + "\n";
                             } else if(stmt->storeStmt.IsInit()) {
-                                code += "\tstore " + stmt->storeStmt.initList.GetInitString() + ", " + stmt->storeStmt.addr.GetSymbol() + ";\n";
+                                code += "\tstore " + stmt->storeStmt.initList.GetInitString() + ", " + stmt->storeStmt.addr.GetSymbol() + "\n";
                             }
                             break;
                         case Statement::GETPTR:
-                            code += "\tgetptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + ";\n";
+                            code += "\tgetptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + "\n";
                             break;
                         case Statement::GETELEMENTPTR:
-                            code += "\tgetelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol() + ";\n";
+                            code += "\tgetelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol() + "\n";
                             break;
                     }
                 }

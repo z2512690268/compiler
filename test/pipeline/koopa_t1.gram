@@ -9,7 +9,7 @@ CompUnits : CompUnit
 			Type : "i32" 
 				"i32" = "i32"
 			"{" = "{"
-			Block : SYMBOL ":" Statement ";" EndStatement ";" 
+			Block : SYMBOL ":" Statement EndStatement TAB 
 				SYMBOL = "%entry"
 				":" = ":"
 				Statement : SymbolDef 
@@ -23,11 +23,10 @@ CompUnits : CompUnit
 							"," = ","
 							Value : INT 
 								INT = "0"
-				";" = ";"
 				EndStatement : Return 
 					Return : "ret" Value 
 						"ret" = "ret"
 						Value : SYMBOL 
-							SYMBOL = "%return"
-				";" = ";"
+							SYMBOL = "%Return"
+				TAB = "\t"
 			"}" = "}"

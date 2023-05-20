@@ -222,22 +222,32 @@ CompUnit : FuncDef
 
 ### IR约定
 
-本项目IR基于北大Koopa IR, 原始规定文档链接为[koopa](https://pku-minic.github.io/online-doc/#/misc-app-ref/koopa), 但为了符合LR(1)语法分析的要求，对其进行了一定的修改, 具体修改如下
+本项目IR基于北大Koopa IR, 原始规定文档链接为[koopa](https://pku-minic.github.io/online-doc/#/misc-app-ref/koopa), 但为了符合LR(1)语法分析的要求，对其进行了一定的修改, 为了最小化修改内容，且不影响koopa官方编译器使用，特定空白字符TAB(即'\t')为语法关键字，使其不可随意使用，具体修改如下
 
-- 规则1：每一条IR指令以`;`结尾，对应的语法规则为：`Block ::= SYMBOL [BlockParamList] ":" {Statement ";"} EndStatement ";";`
+- 规则1：每一条空返回值的ret语句中，ret后面必须跟随且仅跟随一个TAB字符
 
-- 规则2：Initializer 语句外部增加一层大括号，对应的语法规则为：`InitializerBlock ::= "{" Initializer "}";`
+- 规则2: 除了规则1规定的情形外，不得在任何其他地方使用TAB字符
+
 
 修改示例：
 ```
 //规则1修改示例
-  %str = getelemptr @str, 0		--> %str = getelemptr @str, 0;
-  call @putstr(%str)			--> call @putstr(%str);
-  ret 0							--> ret 0;
-//规则2修改示例(注:global变量声明不受规则1限制)
-  alloc i32, 1									--> alloc i32, {1};
-  global @arr2 = alloc [[i32, 5], 2], zeroinit  --> global @arr2 = alloc [[i32, 5], 2], {zeroinit}
-  global @arr3 = alloc [i32, 3], {1, 2, 3}		--> global @arr3 = alloc [i32, 3], {{1, 2, 3}}      
+fun @main(): i32 {
+%entry:
+  ret
+}
+-->
+fun @main(): i32 {
+%entry:
+  ret	//这里有一个tab
+}
+```
+
+语法规则修改如下:
+```
+Return ::= "ret" [Value];
+-->
+Return ::= "ret" (Value | TAB);
 ```
 
 ### 汇编语言约定

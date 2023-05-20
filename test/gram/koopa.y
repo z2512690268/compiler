@@ -11,7 +11,6 @@ FunType ::= "(" [Type {"," Type}] ")" [":" Type];
 
 // Value
 Value ::= SYMBOL | INT | "undef";
-InitializerBlock ::= "{" Initializer "}";
 Initializer      ::= INT | "undef" | Aggregate | "zeroinit";
 Aggregate ::= "{" Initializer {"," Initializer} "}";
 
@@ -21,11 +20,11 @@ GlobalSymbolDef ::= "global" SYMBOL "=" GlobalMemoryDeclaration;
 
 // Memory
 MemoryDeclaration ::= "alloc" Type;
-GlobalMemoryDeclaration ::= "alloc" Type "," InitializerBlock;
+GlobalMemoryDeclaration ::= "alloc" Type "," Initializer;
 
 // Load
 Load ::= "load" SYMBOL;
-Store ::= "store" (Value | InitializerBlock) "," SYMBOL;
+Store ::= "store" (SYMBOL | Initializer) "," SYMBOL;
 
 // GetPointer
 GetPointer ::= "getptr" SYMBOL "," Value;
@@ -41,12 +40,12 @@ BlockArgList ::= "(" Value {"," Value} ")";
 
 //Function Call
 FunCall ::= "call" SYMBOL "(" [Value {"," Value}] ")";
-Return ::= "ret" [Value];
+Return ::= "ret" (Value | TAB);
 
 //Function Body
 FunDef ::= "fun" SYMBOL "(" [FunParams] ")" [":" Type] "{" {Block} "}";
 FunParams ::= SYMBOL ":" Type {"," SYMBOL ":" Type};
-Block ::= SYMBOL [BlockParamList] ":" {Statement ";"} EndStatement ";";
+Block ::= SYMBOL [BlockParamList] ":" {Statement} EndStatement;
 BlockParamList ::= "(" SYMBOL ":" Type {"," SYMBOL ":" Type} ")";
 Statement ::= SymbolDef | Store | FunCall;
 EndStatement ::= Branch | Jump | Return;

@@ -17,7 +17,7 @@ fi
 mkdir -p ${buildpath}
 
 
-file=${test}.riscv
+file=${test}.koopa
 obj=${test}.o
 exe=${test}
 
@@ -26,6 +26,6 @@ file=${path}${file}
 obj=${buildpath}${obj}
 exe=${buildpath}${exe}
 
-clang -x assembler-with-cpp ${file} -c -o ${obj} -target riscv32-unknown-linux-elf -march=rv32im -mabi=ilp32
-ld.lld ${obj} -L$CDE_LIBRARY_PATH/riscv32 -lsysy -o ${exe}
-qemu-riscv32-static ${exe}
+koopac ${file} | llc --filetype=obj -o ${obj}
+clang ${obj} -L$CDE_LIBRARY_PATH/native -lsysy -o ${exe}
+${exe}

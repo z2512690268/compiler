@@ -26,7 +26,7 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 							"i32" = "i32"
 			")" = ")"
 			"{" = "{"
-			Block : SYMBOL ":" EndStatement ";" 
+			Block : SYMBOL ":" EndStatement 
 				SYMBOL = "%entry"
 				":" = ":"
 				EndStatement : Jump 
@@ -38,8 +38,7 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 							Value : SYMBOL 
 								SYMBOL = "@arr"
 							")" = ")"
-				";" = ";"
-			Block : SYMBOL BlockParamList ":" Statement ";" EndStatement ";" 
+			Block : SYMBOL BlockParamList ":" Statement EndStatement 
 				SYMBOL = "%loop_entry"
 				BlockParamList : "(" SYMBOL ":" Type ")" 
 					"(" = "("
@@ -59,7 +58,6 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 						Load : "load" SYMBOL 
 							"load" = "load"
 							SYMBOL = "%ptr"
-				";" = ";"
 				EndStatement : Branch 
 					Branch : "br" Value "," SYMBOL "," SYMBOL 
 						"br" = "br"
@@ -69,8 +67,7 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 						SYMBOL = "%loop_body"
 						"," = ","
 						SYMBOL = "%end"
-				";" = ";"
-			Block : SYMBOL ":" Statement ";" Statement ";" EndStatement ";" 
+			Block : SYMBOL ":" Statement Statement EndStatement 
 				SYMBOL = "%loop_body"
 				":" = ":"
 				Statement : FunCall 
@@ -81,7 +78,6 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 						Value : SYMBOL 
 							SYMBOL = "%cur"
 						")" = ")"
-				";" = ";"
 				Statement : SymbolDef 
 					SymbolDef : SYMBOL "=" GetPointer 
 						SYMBOL = "%next"
@@ -92,7 +88,6 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 							"," = ","
 							Value : INT 
 								INT = "1"
-				";" = ";"
 				EndStatement : Jump 
 					Jump : "jump" SYMBOL BlockArgList 
 						"jump" = "jump"
@@ -102,21 +97,20 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 							Value : SYMBOL 
 								SYMBOL = "%next"
 							")" = ")"
-				";" = ";"
-			Block : SYMBOL ":" EndStatement ";" 
+			Block : SYMBOL ":" EndStatement 
 				SYMBOL = "%end"
 				":" = ":"
 				EndStatement : Return 
-					Return : "ret" 
+					Return : "ret" TAB 
 						"ret" = "ret"
-				";" = ";"
+						TAB = "\t"
 			"}" = "}"
 	CompUnit : GlobalSymbolDef 
 		GlobalSymbolDef : "global" SYMBOL "=" GlobalMemoryDeclaration 
 			"global" = "global"
 			SYMBOL = "@str"
 			"=" = "="
-			GlobalMemoryDeclaration : "alloc" Type "," InitializerBlock 
+			GlobalMemoryDeclaration : "alloc" Type "," Initializer 
 				"alloc" = "alloc"
 				Type : ArrayType 
 					ArrayType : "[" Type "," INT "]" 
@@ -127,57 +121,54 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 						INT = "15"
 						"]" = "]"
 				"," = ","
-				InitializerBlock : "{" Initializer "}" 
-					"{" = "{"
-					Initializer : Aggregate 
-						Aggregate : "{" Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "}" 
-							"{" = "{"
-							Initializer : INT 
-								INT = "72"
-							"," = ","
-							Initializer : INT 
-								INT = "101"
-							"," = ","
-							Initializer : INT 
-								INT = "108"
-							"," = ","
-							Initializer : INT 
-								INT = "108"
-							"," = ","
-							Initializer : INT 
-								INT = "111"
-							"," = ","
-							Initializer : INT 
-								INT = "44"
-							"," = ","
-							Initializer : INT 
-								INT = "32"
-							"," = ","
-							Initializer : INT 
-								INT = "119"
-							"," = ","
-							Initializer : INT 
-								INT = "111"
-							"," = ","
-							Initializer : INT 
-								INT = "114"
-							"," = ","
-							Initializer : INT 
-								INT = "108"
-							"," = ","
-							Initializer : INT 
-								INT = "100"
-							"," = ","
-							Initializer : INT 
-								INT = "33"
-							"," = ","
-							Initializer : INT 
-								INT = "10"
-							"," = ","
-							Initializer : INT 
-								INT = "0"
-							"}" = "}"
-					"}" = "}"
+				Initializer : Aggregate 
+					Aggregate : "{" Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "," Initializer "}" 
+						"{" = "{"
+						Initializer : INT 
+							INT = "72"
+						"," = ","
+						Initializer : INT 
+							INT = "101"
+						"," = ","
+						Initializer : INT 
+							INT = "108"
+						"," = ","
+						Initializer : INT 
+							INT = "108"
+						"," = ","
+						Initializer : INT 
+							INT = "111"
+						"," = ","
+						Initializer : INT 
+							INT = "44"
+						"," = ","
+						Initializer : INT 
+							INT = "32"
+						"," = ","
+						Initializer : INT 
+							INT = "119"
+						"," = ","
+						Initializer : INT 
+							INT = "111"
+						"," = ","
+						Initializer : INT 
+							INT = "114"
+						"," = ","
+						Initializer : INT 
+							INT = "108"
+						"," = ","
+						Initializer : INT 
+							INT = "100"
+						"," = ","
+						Initializer : INT 
+							INT = "33"
+						"," = ","
+						Initializer : INT 
+							INT = "10"
+						"," = ","
+						Initializer : INT 
+							INT = "0"
+						"}" = "}"
 	CompUnit : FunDef 
 		FunDef : "fun" SYMBOL "(" ")" ":" Type "{" Block "}" 
 			"fun" = "fun"
@@ -188,7 +179,7 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 			Type : "i32" 
 				"i32" = "i32"
 			"{" = "{"
-			Block : SYMBOL ":" Statement ";" Statement ";" EndStatement ";" 
+			Block : SYMBOL ":" Statement Statement EndStatement 
 				SYMBOL = "%entry"
 				":" = ":"
 				Statement : SymbolDef 
@@ -201,7 +192,6 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 							"," = ","
 							Value : INT 
 								INT = "0"
-				";" = ";"
 				Statement : FunCall 
 					FunCall : "call" SYMBOL "(" Value ")" 
 						"call" = "call"
@@ -210,11 +200,9 @@ CompUnits : CompUnit CompUnit CompUnit CompUnit
 						Value : SYMBOL 
 							SYMBOL = "%str"
 						")" = ")"
-				";" = ";"
 				EndStatement : Return 
 					Return : "ret" Value 
 						"ret" = "ret"
 						Value : INT 
 							INT = "0"
-				";" = ";"
 			"}" = "}"

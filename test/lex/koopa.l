@@ -1,5 +1,7 @@
+#TAB
+TAB:(\t)
 #空白
-WhiteSpace:( |\t|\n|\r)( |\t|\n|\r)*
+WhiteSpace:( |\n|\r)( |\n|\r)*
 #注释
 LineComment://.*
 #标识符

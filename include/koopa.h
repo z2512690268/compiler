@@ -198,7 +198,6 @@ struct KoopaInitList {
 
     std::string GetInitString() {
         std::string ret;
-        ret += "{";
         switch(initListType) {
             case KOOPA_INIT_INT:
                 ret = std::to_string(initInt);
@@ -220,7 +219,6 @@ struct KoopaInitList {
                 ret = "zeroinit";
                 break;
         }
-        ret += "}";
         return ret;
     }
 
