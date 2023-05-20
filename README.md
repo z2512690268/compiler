@@ -4,14 +4,14 @@
 
 ## 环境配置
 
-本项目环境基于北大编译原理docker镜像
+本项目环境基于北大编译原理docker镜像，该环境可确保运行成功，其他环境编译器部分仍可通过编译(目前测试windows/msvc, linux/gcc, linux/clang工具链编译运行成功), 但请自行配置xmake
 
 原教程网站：https://pku-minic.github.io/online-doc/#/
 
 ```
 docker pull maxxing/compiler-dev
 ```
-
+ 
 额外安装xmake进行项目管理
 
 ```
@@ -24,7 +24,9 @@ wget https://xmake.io/shget.text -O - | bash
 echo "export XMAKE_ROOT=y" >> ~/.bashrc
 ```
 
-如需要编译生成的riscv汇编, 请执行prepare.sh下载riscv工具链, 该脚本将自动下载riscv工具链到tools/riscv-gcc并添加到环境变量中
+这些操作已经封装在prepare.sh中，在compiler-dev镜像下可一键配置
+
+运行测试部分目前使用qemu-riscv32-static和koopa, llc的工具链，在镜像中已经配置好，若要在其他环境下运行，请自行配置
 
 ## 目前进度
 
