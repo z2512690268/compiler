@@ -14,17 +14,35 @@ fi
 if [ -n "$3" ]; then
     buildpath=$3
 fi
-mkdir -p ${buildpath}
 
 
 file=${test}.koopa
 obj=${test}.o
 exe=${test}
 
+mkdir -p ${buildpath}
+cp ${path}${file} ${buildpath}${file}
 
-file=${path}${file}
+file=${buildpath}${file}
 obj=${buildpath}${obj}
 exe=${buildpath}${exe}
+
+sed -i 's/main/originmain/g' ${file}
+echo "decl @putint(i32)
+decl @putch(i32)
+decl @starttime()
+decl @stoptime()
+
+fun @main(): i32 {
+%entry:
+  call @starttime()
+	%0 = call @originmain()
+	call @stoptime()
+  call @putint(%0)
+  call @putch(10)
+	ret %0
+}
+" >> ${file}
 
 koopac ${file} | llc --filetype=obj -o ${obj}
 clang ${obj} -L$CDE_LIBRARY_PATH/native -lsysy -o ${exe}

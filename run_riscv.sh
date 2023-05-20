@@ -14,17 +14,41 @@ fi
 if [ -n "$3" ]; then
     buildpath=$3
 fi
-mkdir -p ${buildpath}
 
 
 file=${test}.riscv
 obj=${test}.o
 exe=${test}
 
+mkdir -p ${buildpath}
+cp ${path}${file} ${buildpath}${file}
 
-file=${path}${file}
+file=${buildpath}${file}
 obj=${buildpath}${obj}
 exe=${buildpath}${exe}
+
+sed -i 's/main/originmain/g' ${file}
+echo "
+	.global main
+
+main:
+    addi  sp, sp, -8
+    sw    ra, 4(sp)
+	call starttime
+	call originmain
+	addi s0, a0, 0
+	call stoptime
+	addi a0, s0, 0
+	call putint
+	addi a0, x0, 10
+	call putch
+	addi a0, s0, 0
+    lw    ra, 4(sp)
+    addi  sp, sp, 16
+    ret
+" >> ${file}
+
+
 
 clang -x assembler-with-cpp ${file} -c -o ${obj} -target riscv32-unknown-linux-elf -march=rv32im -mabi=ilp32
 ld.lld ${obj} -L$CDE_LIBRARY_PATH/riscv32 -lsysy -o ${exe}
