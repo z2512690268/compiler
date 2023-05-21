@@ -129,7 +129,13 @@ struct RiscvGenerator : public KoopaGenerator {
 
     std::string EmitOpLikeADD(Statement* stmt) {
         std::string code;
-        std::string op = stmt->binaryOpStmt.op.op;
+        std::string op;
+        std::string value1;
+        std::string value2;
+        std::string ret_var;
+
+        BinStmtVarString(stmt, op, value1, value2, ret_var);
+
         if(op == "shl") {
             op = "sll";
         } else if(op == "shr") {
@@ -137,13 +143,19 @@ struct RiscvGenerator : public KoopaGenerator {
         } else if(op == "sar") {
             op = "sra";
         }
-        if( BinStmtWith2Symbol(stmt)) {
-            code += "\t" + op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
+        if(op == "sub") {
+            if(!BinStmtWith2Symbol(stmt)) {
+                value2 = "-" + value2;
+                op = "add";
+            }
+        }
+        if( BinStmtWith2Imm(stmt)) {
+            code += "\tli t0, " + value1 + "\n";
+            code += "\t" + op + "i " + ret_var + ", t0, " + value2 + "\n";
         } else if( BinStmtWith1Symbol(stmt)) {
-            code += "\t" + op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-        } else if( BinStmtWith2Imm(stmt)) {
-            code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
-            code += "\t" + op + "i " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
+            code += "\t" + op + "i " + ret_var + ", " + value1 + ", " + value2 + "\n";
+        } else if( BinStmtWith2Symbol(stmt)) {
+            code += "\t" + op + " " + ret_var + ", " + value1 + ", " + value2 + "\n";
         }
         return code;
     }
@@ -191,7 +203,7 @@ struct RiscvGenerator : public KoopaGenerator {
         } else if( BinStmtWith2Imm(stmt)) {
             code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
             code += "\tli t1, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-            code += "\t" + stmt->binaryOpStmt.op.op + " t0, t1\n";
+            code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0, t1\n";
         }
         return code;
     }
@@ -210,6 +222,24 @@ struct RiscvGenerator : public KoopaGenerator {
     }
     bool BinStmtWith2Imm(Statement* stmt) {
         return stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsImm();
+    }
+
+    void BinStmtVarString(Statement* stmt, std::string& op, std::string& value1, std::string& value2, std::string& ret_var) {
+        op = stmt->binaryOpStmt.op.op;
+        if(stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsSymbol()) {
+            value1 = reg_map[stmt->binaryOpStmt.input1.GetSymbol()];
+            value2 = reg_map[stmt->binaryOpStmt.input2.GetSymbol()];
+        } else if(stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsImm()) {
+            value1 = reg_map[stmt->binaryOpStmt.input1.GetSymbol()];
+            value2 = stmt->binaryOpStmt.input2.GetSymbol();
+        } else if(stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsSymbol()) {
+            value1 = reg_map[stmt->binaryOpStmt.input2.GetSymbol()];
+            value2 = stmt->binaryOpStmt.input1.GetSymbol();
+        } else if(stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsImm()) {
+            value1 = stmt->binaryOpStmt.input1.GetSymbol();
+            value2 = stmt->binaryOpStmt.input2.GetSymbol();
+        }
+        ret_var = reg_map[stmt->binaryOpStmt.ret_var.varName];
     }
 
     std::string PreOutput() {
@@ -236,6 +266,7 @@ struct RiscvGenerator : public KoopaGenerator {
             code += "\t.global " + func->func_name.substr(1) + "\n";
             code += func->func_name.substr(1) + ":\n";
             // 不多于8个局部变量的函数，使用寄存器存储
+            int a_count = ir->curScope->func_param.size();
             int s_count = 0;
             for(auto& item : func->symbolTable.var_table) {
                 if(item.second.var.type == KoopaVarType(KoopaVarType::KOOPA_INT32)) {

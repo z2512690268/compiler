@@ -311,9 +311,14 @@ struct  KoopaSymbol {
 
 struct KoopaBinaryOperation {
 
-    bool SetOp(std::string op) {
+    void SetOp(std::string op) {
         this->op = op;
-        return IsValidBinaryOp();
+        bool valid = IsValidBinaryOp();
+        if(!valid) {
+            std::cerr << "Invalid KoopaBinaryOperation: " << op << std::endl;
+            std::cerr << "Valid operations: ne eq gt lt ge le add sub mul div mod and or xor shl shr sar" << std::endl;
+            exit(1);
+        }
     }
 
     bool IsValidBinaryOp() {
