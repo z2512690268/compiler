@@ -34,6 +34,10 @@ echo "export XMAKE_ROOT=y" >> ~/.bashrc
 
 - 语法分析(gram) 完成
 
+- 语义分析(syntax/frontend) working (sysy working, koopa working)
+
+- 代码生成(backend) working (koopa基本完成, riscv working)
+
 ## 约定
 
 ### 词法分析规则文件
