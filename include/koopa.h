@@ -311,14 +311,14 @@ struct  KoopaSymbol {
 
 struct KoopaBinaryOperation {
 
-    void SetOp(std::string op) {
+    bool SetOp(std::string op) {
         this->op = op;
         bool valid = IsValidBinaryOp();
         if(!valid) {
             std::cerr << "Invalid KoopaBinaryOperation: " << op << std::endl;
             std::cerr << "Valid operations: ne eq gt lt ge le add sub mul div mod and or xor shl shr sar" << std::endl;
-            exit(1);
         }
+        return valid;
     }
 
     bool IsValidBinaryOp() {
@@ -464,6 +464,8 @@ struct Scope {
     std::string func_name;
     std::vector<KoopaVar> func_param;
     KoopaVarType func_ret_type;
+    int nested_call = 0;
+    int max_nested_call_varnum = 0;
 
     // basicblocks
     std::vector<BasicBlock*> basicBlocks;
@@ -591,6 +593,8 @@ struct KoopaIR {
         stmt->callStmt.params = params;
         stmt->callStmt.ret_var = ret;
         curBlock->statements.push_back(stmt);
+        curScope->nested_call++;
+        curScope->max_nested_call_varnum = std::max(curScope->max_nested_call_varnum, (int)params.size());
         return stmt;
     }
 

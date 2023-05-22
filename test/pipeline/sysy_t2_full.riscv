@@ -2,8 +2,13 @@
 	.global main
 main:
 1:
-	addi s0, s0, -0
-	addi s0, s0, -0
+	li t0, 0
+	subi t1, t0, 6
+	seqz s0, t1
+	sub t0, x0, s0
+	addi s0, 0, t0
+	sub t0, x0, s0
+	addi s0, 0, t0
 	addi a0, s0, 0
 	ret
 
