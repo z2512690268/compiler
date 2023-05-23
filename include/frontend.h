@@ -45,6 +45,7 @@ struct FrontendBase {
 struct SysyFrontend : public FrontendBase {
     int line_num;
     std::unordered_map<std::string, std::string> name_map;
+    std::unordered_map<std::string, KoopaInitList> const_map;
     //******************************************************************************
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }

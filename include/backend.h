@@ -6,6 +6,7 @@
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <unordered_set>
 
 struct KoopaGenerator {
     Scope global_scope;
@@ -34,22 +35,6 @@ struct KoopaGenerator {
                 return "undef";
         }
         return "";
-    }
-
-    inline int KoopaVarTypeSize(KoopaVarType type) {
-        switch(type.topType) {
-            case KoopaVarType::KOOPA_INT32:
-                return 4;
-            case KoopaVarType::KOOPA_ARRAY:
-                return KoopaVarTypeSize(*type.arrayType.type) * type.arrayType.size;
-            case KoopaVarType::KOOPA_PTR:
-                return 4;
-            case KoopaVarType::KOOPA_func:
-                return 0;
-            case KoopaVarType::KOOPA_undef:
-                return 0;
-        }
-        return 0;
     }
 
     virtual std::string GenerateCode(KoopaIR* ir) {
@@ -87,11 +72,7 @@ struct KoopaGenerator {
                             code += "  " + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
                             break;
                         case Statement::RETURN:
-                            if(stmt->returnStmt.ret.GetSymbol() == "") {
-                                code += "  ret\t\n";
-                            } else {
-                                code += "  ret " + stmt->returnStmt.ret.GetSymbol() + "\n";
-                            }
+                            code += "  ret " + stmt->returnStmt.ret.GetSymbol() + "\n";
                             break;
                         case Statement::CALL:
                             code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
@@ -138,168 +119,486 @@ struct KoopaGenerator {
 };
 
 struct RiscvGenerator : public KoopaGenerator {
-    enum RiscvOperandType{
-        RISCV_REG,
-        RISCV_IMM,
-        RISCV_STACK
-    };
-    struct RiscvOperand {
-        RiscvOperandType type;
-        std::string symbol;
 
-        RiscvOperand(std::string str, RiscvOperandType t) : symbol(str), type(t) {}
+    std::unordered_map<std::string, uint32_t> label_map;
+    int label_count = 0;
+    std::unordered_map<std::string, std::string> reg_map;
+    std::string code;
+    int cur_temp_reg = 0;
+    std::unordered_set<std::string> regs_set = {
+        "zero", "ra", "sp", "gp", "tp", "fp",
+        "t0", "t1", "t2", "t3", "t4", "t5", "t6", 
+        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
+        "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+        "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
+        "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17", "x18", "x19",
+        "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", "x29",
+        "x30", "x31"
+    };
+
+    bool CheckNumber(std::string input) {
+        if(input[0] != '-' && !std::isdigit(input[0])) {
+            return false;
+        }
+        for(int i = 1; i < input.size(); i++) {
+            if(!std::isdigit(input[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string GetRegMap(KoopaSymbol input) {
+        if(input.IsSymbol()) {
+            return reg_map[input.GetSymbol()];
+        } else if(input.IsImm()) {
+            return input.GetSymbol();
+        }
+    }
+
+
+    void EmitPush(std::string reg) {
+        code += "\taddi sp, sp, -4\n";
+        code += "\tsw " + reg + ", 0(sp)\n";
+    }
+
+    void EmitPop(std::string reg) {
+        code += "\tlw " + reg + ", 0(sp)\n";
+        code += "\taddi sp, sp, 4\n";
+    }
     
-        std::string GetSymbol() {
-            return symbol;
-        }
+    std::string GetTempReg() {
+        return "t" + std::to_string(cur_temp_reg++);
+    }
 
-        bool IsReg() {
-            return type == RISCV_REG;
-        }
+    int GetTempRegCount() {
+        return cur_temp_reg;
+    }
 
-        bool IsImm() {
-            return type == RISCV_IMM;
-        }
+    void FreeTempReg() {
+        cur_temp_reg--;
+    }
 
-        bool IsStack() {
-            return type == RISCV_STACK;
-        }
+    void ResetTempReg(int count) {
+        cur_temp_reg = count;
+    }
+    
+    bool CheckMapReg_Reg(std::string var) {
+        return regs_set.find(var) != regs_set.end();
+    }
 
-    };
+    bool CheckMapReg_Stack(std::string var) {
+        return var[var.size() - 1] == ')';
+    }
 
-    struct RiscvStack {
-        int ra;
-        std::vector<std::string> local_variable;
+    bool CheckMapReg_Imm(std::string var) {
+        return (std::isdigit(var[0]) || var[0] == '-') && !CheckMapReg_Stack(var);
+    }
 
-    };
-
-    // R-Type : add, sub, and, or, xor, sll, srl, sra
-    std::string EmitRTypeOperation(std::string op, std::string rd, std::string rs1, std::string rs2) {
-        std::string code;
+  // R-Type : add, sub, and, or, xor, sll, srl, sra
+    void EmitRTypeOperation(std::string op, std::string rd, std::string rs1, std::string rs2) {
         code += "\t" + op + " " + rd + ", " + rs1 + ", " + rs2 + "\n";
-        return code;
     }
 
     // I-Type : addi, andi, ori, xori, slli, srli, srai; lb, lh, lw, ld; jalr
-    std::string EmitITypeOperation(std::string op, std::string rd, std::string rs1, std::string imm) {
-        std::string code;
+    void EmitITypeOperation(std::string op, std::string rd, std::string rs1, std::string imm) {
         code += "\t" + op + " " + rd + ", " + rs1 + ", " + imm + "\n";
-        return code;
     }
 
     // S-Type : sw, sh, sb
-    std::string EmitSTypeOperation(std::string op, std::string rs1, std::string rs2, std::string imm) {
-        std::string code;
+    void EmitSTypeOperation(std::string op, std::string rs1, std::string rs2, std::string imm) {
         code += "\t" + op + " " + rs1 + ", " + imm + "(" + rs2 + ")\n";
-        return code;
     }
 
     // SB-Type : beq, bne, blt, bge, bltu, bgeu
-    std::string EmitSBTypeOperation(std::string op, std::string rs1, std::string rs2, std::string imm) {
-        std::string code;
+    void EmitSBTypeOperation(std::string op, std::string rs1, std::string rs2, std::string imm) {
         code += "\t" + op + " " + rs1 + ", " + rs2 + ", " + imm + "\n";
-        return code;
     }
 
     // U-Type
-    std::string EmitUTypeOperation(std::string op, std::string rd, std::string imm) {
-        std::string code;
+    void EmitUTypeOperation(std::string op, std::string rd, std::string imm) {
         code += "\t" + op + " " + rd + ", " + imm + "\n";
-        return code;
     }
 
     // UJ-Type : jal
-    std::string EmitUJTypeOperation(std::string op, std::string rd, std::string imm) {
-        std::string code;
+    void EmitUJTypeOperation(std::string op, std::string rd, std::string imm) {
         code += "\t" + op + " " + rd + ", " + imm + "\n";
-        return code;
     }
 
-    std::string EmitImm(std::string reg, std::string imm) {
-        std::string code;
+    void EmitImm(std::string reg, std::string imm) {
         code += "\tli " + reg + ", " + imm + "\n";
-        return code;
     }
 
-    std::string EmitLoad(std::string reg, std::string stack_sp) {
-        std::string code;
+    void EmitLoad(std::string reg, std::string stack_sp) {
         code += "\tlw " + reg + ", " + stack_sp + "\n";
-        return code;
     }
 
-    std::string PreOutput() {
-        std::string tmp = PROJECT_ROOT_DIR;
-        std::string code;
-        std::ifstream fin(tmp + "src/res/lib_riscv.s");
-        if(!fin.is_open()) {
-            std::cout << "lib_riscv.s open failed" << std::endl;
-            return "";
+    void EmitStore(std::string reg, std::string stack_sp) {
+        code += "\tsw " + reg + ", " + stack_sp + "\n";
+    }
+
+    void EmitLabel(std::string func_name, std::string label) {
+        if(label[0] == '@') {
+            code += label.substr(1) + ":\n";    
+        } else {
+            code += func_name.substr(1) + "_" + label.substr(1) + ":\n";
         }
-        std::string line;
-        while(std::getline(fin, line)) {
-            code += line + "\n";
+    }
+
+    void EmitExplain(std::string explain) {
+        code += "// " + explain + "\n";
+    }
+
+    void Emit2RegInst(std::string op, std::string reg1, std::string reg2) {
+        code += "\t" + op + " " + reg1 + ", " + reg2 + "\n";
+    }
+
+    // add, and, or, xor
+    bool IsSymmetryOp(std::string op) {
+        return op == "add" || op == "and" || op == "or" || op == "xor";
+    }
+    void EmitSymmetryOp(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string ret_map = reg_map[ret_var];
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitSymmetryOp_RetReg(op, ret_map, value1, value2);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitSymmetryOp_RetReg(op, temp_reg, value1, value2);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
         }
-        return code;
+    }
+    void EmitSymmetryOp_RetReg(std::string op, std::string ret_reg, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string value1_map = GetRegMap(value1);
+        std::string value2_map = GetRegMap(value2);
+
+        int temp_reg_count = GetTempRegCount();
+        std::cout << "SDAD" << temp_reg_count << std::endl;
+        if(CheckMapReg_Stack(value1_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value1_map);
+            value1_map = temp_reg;
+        }
+
+        if(CheckMapReg_Stack(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value2_map);
+            value2_map = temp_reg;
+        }
+
+        if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            EmitITypeOperation(op + "i", ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitITypeOperation(op + "i", ret_reg, value2_map, value1_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitITypeOperation(op + "i", ret_reg, temp_reg, value2_map);
+        }
+        
+        ResetTempReg(temp_reg_count);
+    }
+
+    // sub
+    bool IsSubOp(std::string op) {
+        return op == "sub";
+    }
+    void EmitSub(std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string ret_map = reg_map[ret_var];
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitSub_RetReg(ret_map, value1, value2);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitSub_RetReg(temp_reg, value1, value2);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+    void EmitSub_RetReg(std::string ret_reg, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string value1_map = GetRegMap(value1);
+        std::string value2_map = GetRegMap(value2);
+
+        int temp_reg_count = GetTempRegCount();
+        if(CheckMapReg_Stack(value1_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value1_map);
+            value1_map = temp_reg;
+        }
+
+        if(CheckMapReg_Stack(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value2_map);
+            value2_map = temp_reg;
+        }
+
+        if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitRTypeOperation("sub", ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            EmitITypeOperation("addi", ret_reg, value1_map, "-" + value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitRTypeOperation("sub", ret_reg, temp_reg, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitITypeOperation("addi", ret_reg, temp_reg, "-" + value2_map);
+        }
+        ResetTempReg(temp_reg_count);
+    }
+    
+    // shl, shr, sar
+    bool IsShiftOp(std::string op) {
+        return op == "shl" || op == "shr" || op == "sar";
+    }
+    void EmitShift(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string ret_map = reg_map[ret_var];
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitShift_RetReg(op, ret_map, value1, value2);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitShift_RetReg(op, temp_reg, value1, value2);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+    void EmitShift_RetReg(std::string op, std::string ret_reg, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string value1_map = GetRegMap(value1);
+        std::string value2_map = GetRegMap(value2);
+
+        int temp_reg_count = GetTempRegCount();
+        if(CheckMapReg_Stack(value1_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value1_map);
+            value1_map = temp_reg;
+        }
+
+        if(CheckMapReg_Stack(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value2_map);
+            value2_map = temp_reg;
+        }
+
+        if(op == "shl") op = "sll";
+        if(op == "shr") op = "srl";
+        if(op == "sar") op = "sra";
+
+        if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            EmitITypeOperation(op + "i", ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitITypeOperation(op, ret_reg, temp_reg, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitITypeOperation(op + "i", ret_reg, temp_reg, value2_map);
+        }
+        ResetTempReg(temp_reg_count);
+    }
+
+    // eq, ne, lt, gt, le, ge
+    bool IsCmpOp(std::string op) {
+        return op == "eq" || op == "ne" || op == "lt" || op == "gt" || op == "le" || op == "ge";
+    }
+    void EmitCmp(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string ret_map = reg_map[ret_var];
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitCmp_RetReg(op, ret_map, value1, value2);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitCmp_RetReg(op, temp_reg, value1, value2);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+    void EmitCmp_RetReg(std::string op, std::string ret_reg, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string value1_map = GetRegMap(value1);
+        std::string value2_map = GetRegMap(value2);
+
+        if(op == "le" || op == "ge") {
+            std::swap(value1_map, value2_map);
+        }
+
+        int temp_reg_count = GetTempRegCount();
+        if(CheckMapReg_Stack(value1_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value1_map);
+            value1_map = temp_reg;
+        }
+
+        if(CheckMapReg_Stack(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value2_map);
+            value2_map = temp_reg;
+        }
+
+        if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitRTypeOperation("sub", ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            EmitITypeOperation("addi", ret_reg, value1_map, "-" + value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitRTypeOperation("sub", ret_reg, temp_reg, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitITypeOperation("addi", ret_reg, temp_reg, "-" + value2_map);
+        }
+
+        if(op == "eq") {
+            Emit2RegInst("seqz", ret_reg, ret_reg);
+        } else if(op == "ne") {
+            Emit2RegInst("snez", ret_reg, ret_reg);
+        } else if(op == "lt") {
+            EmitRTypeOperation("slt", ret_reg, ret_reg, "x0");
+        } else if(op == "gt") {
+            EmitRTypeOperation("sgt", ret_reg, ret_reg, "x0");
+        } else if(op == "le") {
+            EmitRTypeOperation("sgt", ret_reg, ret_reg, "x0");
+        } else if(op == "ge") {
+            EmitRTypeOperation("slt", ret_reg, ret_reg, "x0");
+        }
+        ResetTempReg(temp_reg_count);
+    }
+
+    // mul, div, rem
+    bool IsMulOp(std::string op) {
+        return op == "mul" || op == "div" || op == "rem";
+    }
+    void EmitMul(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string ret_map = reg_map[ret_var];
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitMul_RetReg(op, ret_map, value1, value2);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitMul_RetReg(op, temp_reg, value1, value2);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+    void EmitMul_RetReg(std::string op, std::string ret_reg, KoopaSymbol value1, KoopaSymbol value2) {
+        std::string value1_map = GetRegMap(value1);
+        std::string value2_map = GetRegMap(value2);
+
+        int temp_reg_count = GetTempRegCount();
+        if(CheckMapReg_Stack(value1_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value1_map);
+            value1_map = temp_reg;
+        }
+
+        if(CheckMapReg_Stack(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value2_map);
+            value2_map = temp_reg;
+        }
+
+        if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
+            EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
+        } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value2_map);
+            EmitRTypeOperation(op, ret_reg, value1_map, temp_reg);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value1_map);
+            EmitRTypeOperation(op, ret_reg, temp_reg, value2_map);
+        } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Imm(value2_map)) {
+            std::string temp_reg1 = GetTempReg();
+            std::string temp_reg2 = GetTempReg();
+            EmitImm(temp_reg1, value1_map);
+            EmitImm(temp_reg2, value2_map);
+            EmitRTypeOperation(op, ret_reg, temp_reg1, temp_reg2);
+        }
+        ResetTempReg(temp_reg_count);
     }
 
     virtual std::string GenerateCode(KoopaIR* ir) {
         global_scope = ir->global_scope;
         func_scopes = ir->func_scopes;
-        std::string code;
         code += "\t.text\n";  // .text
         for(auto& func : func_scopes) {
-
-            // 函数标签
-            std::string func_label_prefix = func->func_name.substr(1) + "_LBB";
             code += "\t.global " + func->func_name.substr(1) + "\n";
             code += func->func_name.substr(1) + ":\n";
-
-            // 寄存器分配
             // 不多于8个局部变量的函数，使用寄存器存储
-            std::string reg;
-            int a_count = ir->curScope->func_param.size();
-            int stack_arg = 0;
-            int stack_local = 0;  
+            int local_count = 0;
+            int local_stack_count = 0;
+            int nested_arg_count = func->max_nested_call_varnum > 8 ? (func->max_nested_call_varnum - 8) : 0;
+
             for(auto& item : func->symbolTable.var_table) {
-                if(!reg_manager.GetLocalReg(reg)) {
-                    stack_local++;
-                } {
-                    reg_map[item.second.var.varName] = RiscvOperand(reg, RISCV_REG);
-                }
+                reg_map[item.second.var.varName] = 
+                                    std::to_string((nested_arg_count + local_stack_count) * 4) + "(sp)";
+                ++local_stack_count;
+                // ++local_count;
             }
-            int stack_size = s_count * 4;
-            // 保存寄存器
-            code += "\taddi sp, sp, -" + std::to_string(s_count * 4) + "\n";
-            for(int i = 0; i < s_count; ++i) {
-                code += "\tsw s" + std::to_string(i) + ", " + std::to_string(i * 4) + "(sp)\n";
+            int ret_stack_count = func->nested_call > 0;
+
+            int stack_size = (local_stack_count + ret_stack_count + nested_arg_count) * 4;
+            // 向上取整16v
+            stack_size = (stack_size + 15) / 16 * 16;
+
+            if(stack_size > 0) {
+                EmitITypeOperation("addi", "sp", "sp", "-" + std::to_string(stack_size));
+            }
+            if(ret_stack_count) {
+                EmitStore("ra", std::to_string(stack_size - 4) + "(sp)");
             }
 
-            label_count = 0;
+
             for(auto& block : func->basicBlocks) {
                 ++label_count;
                 label_map[block->label] = label_count;
-                code += func_label_prefix + std::to_string(label_count) + ":\n";
+                EmitLabel(func->func_name, block->label);
+                // OPERATION
+                std::string op;
+                std::string value1;
+                std::string value2;
+                std::string ret_var;
                 for(auto& stmt : block->statements) {
                     switch(stmt->type) {
                         case Statement::OPERATION:
-                            if(OpLikeADD(stmt->binaryOpStmt.op.op)) {
-                                code += EmitOpLikeADD(stmt);
-                            } else if(OpLikeEQ(stmt->binaryOpStmt.op.op)) {
-                                code += EmitOpLikeEQ(stmt);
-                            } else if(op == "mul" || op == "div" || op == "rem") {
-                                code += EmitOpLikeMUL(stmt);
+                            EmitExplain("  " + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol());
+                            op = stmt->binaryOpStmt.op.op;
+                            if(IsSymmetryOp(op)) {
+                                EmitSymmetryOp(op, stmt->binaryOpStmt.ret_var.varName, stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
+                            } else if(IsSubOp(op)) {
+                                EmitSub(stmt->binaryOpStmt.ret_var.varName, stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
+                            } else if(IsCmpOp(op)) {
+                                EmitCmp(op, stmt->binaryOpStmt.ret_var.varName, stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
+                            } else if(IsShiftOp(op)) {
+                                EmitShift(op, stmt->binaryOpStmt.ret_var.varName, stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
+                            } else if(IsMulOp(op)) {
+                                EmitMul(op, stmt->binaryOpStmt.ret_var.varName, stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
                             }
                             break;
                         case Statement::RETURN:
+                            EmitExplain("  ret " + stmt->returnStmt.ret.GetSymbol());
                             if(stmt->returnStmt.ret.IsSymbol()) {
-                                code += "\taddi a0, " + reg_map[stmt->returnStmt.ret.GetSymbol()] + ", 0" + "\n";
+                                std::string ret_map = GetRegMap(stmt->returnStmt.ret.GetSymbol());
+                                if(CheckMapReg_Reg(ret_map)) {
+                                    EmitITypeOperation("addi", "a0", ret_map, "0");
+                                } else if(CheckMapReg_Stack(ret_map)) {
+                                    std::string temp_reg = GetTempReg();
+                                    EmitLoad(temp_reg, ret_map);
+                                    EmitITypeOperation("addi", "a0", temp_reg, "0");
+                                    FreeTempReg();
+                                }
                             } else if(stmt->returnStmt.ret.IsImm()) {
-                                code += "\tli a0, " + stmt->returnStmt.ret.GetSymbol() + "\n";
+                                EmitImm("a0", stmt->returnStmt.ret.GetSymbol());
                             }
-                            for(int i = 0; i < s_count; ++i) {
-                                code += "\tlw s" + std::to_string(i) + ", " + std::to_string(i * 4) + "(sp)\n";
+
+                            if(ret_stack_count) {
+                                EmitLoad("ra", std::to_string(stack_size - 4) + "(sp)");
                             }
-                            code += "\taddi sp, sp, " + std::to_string(s_count * 4) + "\n";
+                            if(stack_size > 0) {
+                                EmitRTypeOperation("addi", "sp", "sp", std::to_string(stack_size));
+                            }
                             code += "\tret\n";
                             break;
                         case Statement::CALL:
@@ -324,127 +623,4 @@ struct RiscvGenerator : public KoopaGenerator {
         }
         return code;
     }
-
-public:
-    std::unordered_map<std::string, uint32_t> label_map;
-    int label_count = 0;
-    std::unordered_map<std::string, RiscvOperand> reg_map;
-    RegManager reg_manager;
 };
-
-
-    // bool OpLikeADD(std::string op) {
-    //     return op == "add" || op == "sub" || op == "and" || op == "or" || op == "xor" || op == "shl" || op == "shr" || op == "sar";
-    // }
-
-    // std::string EmitOpLikeADD(Statement* stmt) {
-    //     std::string code;
-    //     std::string op;
-    //     std::string value1;
-    //     std::string value2;
-    //     std::string ret_var;
-
-    //     BinStmtVarString(stmt, op, value1, value2, ret_var);
-
-    //     // shl, shr, sar的转换
-    //     if(op == "shl") {
-    //         op = "sll";
-    //     } else if(op == "shr") {
-    //         op = "srl";
-    //     } else if(op == "sar") {
-    //         op = "sra";
-    //     }
-
-    //     // sub不存在subi的情况，所以需要转换为addi
-    //     if(op == "sub") {
-    //         if(BinStmtWith2Imm(stmt)) {
-    //             value2 = "-" + value2;
-    //             op = "add";
-    //         }
-    //     }
-    //     if( BinStmtWith2Imm(stmt)) {
-    //         code += "\tli t0, " + value1 + "\n";
-    //         code += "\t" + op + "i " + ret_var + ", t0, " + value2 + "\n";
-    //     } else if( BinStmtWith1Symbol(stmt)) {
-    //         code += "\t" + op + "i " + ret_var + ", " + value1 + ", " + value2 + "\n";
-    //     } else if( BinStmtWith2Symbol(stmt)) {
-    //         code += "\t" + op + " " + ret_var + ", " + value1 + ", " + value2 + "\n";
-    //     }
-    //     return code;
-    // }
-    
-    // bool OpLikeEQ(std::string op) {
-    //     return op == "eq" || op == "ne" || op == "lt" || op == "gt" || op == "le" || op == "ge";
-    // }
-
-    // std::string EmitOpLikeEQ(Statement* stmt) {
-    //     std::string code;
-    //     std::string op = stmt->binaryOpStmt.op.op;
-    //     if(op == "le")  {
-    //         op = "gt";
-    //     } else if(op == "ge") {
-    //         op = "lt";
-    //     }
-    //     if( BinStmtWith2Symbol(stmt)) {
-    //         code += "\tsub t0, " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
-    //         code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0\n";
-    //     } else if( BinStmtWith1Symbol(stmt)) {
-    //         code += "\tsubi t0, " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-    //         code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0\n";
-    //     } else if( BinStmtWith2Imm(stmt)) {
-    //         code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
-    //         code += "\tsubi t1, t0, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-    //         code += "\ts" + op + "z " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t1\n";
-    //     }
-    //     if(stmt->binaryOpStmt.op.op == "le" || stmt->binaryOpStmt.op.op == "ge") {
-    //         code += "\txori " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", 1\n";
-    //     }
-    //     return code;
-    // }
-
-
-    // std::string EmitOpLikeMUL(Statement* stmt) {
-    //     std::string code;
-    //     if( BinStmtWith2Symbol(stmt)) {
-    //         code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", " + reg_map[stmt->binaryOpStmt.input2.GetSymbol()] + "\n";
-    //     } else if( BinStmtWith1Symbol(stmt)) {
-    //         code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
-    //         code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", " + reg_map[stmt->binaryOpStmt.input1.GetSymbol()] + ", t0\n";
-    //     } else if( BinStmtWith2Imm(stmt)) {
-    //         code += "\tli t0, " + stmt->binaryOpStmt.input1.GetSymbol() + "\n";
-    //         code += "\tli t1, " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
-    //         code += "\t" + stmt->binaryOpStmt.op.op + " " + reg_map[stmt->binaryOpStmt.ret_var.varName] + ", t0, t1\n";
-    //     }
-    //     return code;
-    // }
-
-    // bool BinStmtWith2Symbol(Statement* stmt) {
-    //     return stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsSymbol();
-    // }
-    // bool BinStmtWith1Symbol(Statement* stmt) {
-    //     if(stmt->binaryOpStmt.input1.IsSymbol() && stmt->binaryOpStmt.input2.IsImm()) {
-    //         return true;
-    //     } else if(stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsSymbol()) {
-    //         std::swap(stmt->binaryOpStmt.input1, stmt->binaryOpStmt.input2);
-    //         return true;
-    //     }
-    //     return false;
-    // }
-    // bool BinStmtWith2Imm(Statement* stmt) {
-    //     return stmt->binaryOpStmt.input1.IsImm() && stmt->binaryOpStmt.input2.IsImm();
-    // }
-
-    // void BinStmtVarString(Statement* stmt, std::string& op, std::string& value1, std::string& value2, std::string& ret_var) {
-    //     op = stmt->binaryOpStmt.op.op;
-    //     if(stmt->binaryOpStmt.input1.IsSymbol()) {
-    //         value1 = reg_map[stmt->binaryOpStmt.input1.GetSymbol()];
-    //     } else if(stmt->binaryOpStmt.input1.IsImm()) {
-    //         value1 = stmt->binaryOpStmt.input1.GetSymbol();
-    //     }
-    //     if(stmt->binaryOpStmt.input2.IsSymbol()) {
-    //         value2 = reg_map[stmt->binaryOpStmt.input2.GetSymbol()];
-    //     } else if(stmt->binaryOpStmt.input2.IsImm()) {
-    //         value2 = stmt->binaryOpStmt.input2.GetSymbol();
-    //     }
-    //     ret_var = reg_map[stmt->binaryOpStmt.ret_var.varName];
-    // }

@@ -32,18 +32,20 @@ echo "
 	.global main
 
 main:
-    addi  sp, sp, -8
-    sw    ra, 4(sp)
-	call starttime
-	#call originmain
-	#addi s0, a0, 0
-	call stoptime
-	#addi a0, s0, 0
-	#call putint
-	#addi a0, x0, 10
-	#call putch
-	#addi a0, s0, 0
-    lw    ra, 4(sp)
+    addi  sp, sp, -16
+    sw    ra, 12(sp)
+    sw    s0, 8(sp)
+    call starttime
+    call originmain
+    addi s0, a0, 0
+    call stoptime
+    addi a0, s0, 0
+    call putint
+    addi a0, x0, 10
+    call putch
+    addi a0, s0, 0
+    lw    s0, 8(sp)
+    lw    ra, 12(sp)
     addi  sp, sp, 16
     ret
 " >> ${file}
