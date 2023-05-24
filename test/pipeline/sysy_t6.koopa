@@ -1,0 +1,9 @@
+fun @main(): i32 {
+%entry:
+	@x = mul 233, 4;
+	@y = add 0, 10;
+	%0 = div @x, 2;
+	@y = add @y, %0;
+	ret @y;
+}
+

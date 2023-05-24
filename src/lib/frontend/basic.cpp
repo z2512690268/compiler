@@ -98,25 +98,33 @@ SysyFrontend::FuncType_Struct *SysyFrontend::FuncType_func()
     return ret_ptr;
 }
 
-// Block     ::= "{" Stmt "}";
+// Block         ::= "{" {BlockItem} "}";
 SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
 {
     ENTRY_GRAMMER(SysyFrontend::Block_Struct);
 
-    // Block     ::= "{" Stmt "}";
+    // Block         ::= "{" {BlockItem} "}";
     if (curToken.rule[0] == "\"{\"")
     {
         // 创建基本块，并加入符号表,更新当前块
         std::string block_name = koopaIR->GetUniqueName("%entry");
         BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(block_name);
+        PushNameMap();
 
         // 创建语句
         RESERVED_func(); //{
-        Stmt_Struct *stmt_ptr = Stmt_func();
+        for (int i = 1; i < curToken.rule.size() - 1; i++)
+        {
+            if (curToken.rule[i] == "BlockItem")
+            {
+                ret_ptr->BlockItems.push_back(BlockItem_func());
+            }
+        }
         RESERVED_func(); //}
 
         // 属性赋值
         ret_ptr->block = block;
+        PopNameMap();
     }
     else
     {
@@ -127,20 +135,61 @@ SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
     return ret_ptr;
 }
 
-// Stmt      ::= "return" Exp ";";
+// BlockItem     ::= Decl | Stmt;
+SysyFrontend::BlockItem_Struct *SysyFrontend::BlockItem_func()
+{
+    ENTRY_GRAMMER(SysyFrontend::BlockItem_Struct);
+
+    // BlockItem     ::= Decl | Stmt;
+    if (curToken.rule[0] == "Decl")
+    {
+        ret_ptr->type = BlockItem_Struct::BlockItemType::BlockItemType_Decl;
+        ret_ptr->subStructPointer.Decl = Decl_func();
+    }
+    else if (curToken.rule[0] == "Stmt")
+    {
+        ret_ptr->type = BlockItem_Struct::BlockItemType::BlockItemType_Stmt;
+        ret_ptr->subStructPointer.Stmt = Stmt_func();
+    }
+    else
+    {
+        std::cerr << "BlockItem_func: " << curToken << std::endl;
+        exit(1);
+    }
+
+    std::cout << "Exit -- " << curToken.token << std::endl;
+    return ret_ptr;
+}
+
+// Stmt          ::= LVal "=" Exp ";" | "return" Exp ";";
 SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
 {
     ENTRY_GRAMMER(SysyFrontend::Stmt_Struct);
 
-    // Stmt      ::= "return" Exp ";";
+    // Stmt          ::= LVal "=" Exp ";" | "return" Exp ";";
     if (curToken.rule[0] == "\"return\"")
     {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Return;
         RESERVED_func(); // return
-        ret_ptr->Exp = Exp_func();
+        ret_ptr->subStructPointer.Return = Exp_func();
         RESERVED_func(); //;
 
         // 返回语句
-        koopaIR->AddReturnStatement(ret_ptr->Exp->value);
+        koopaIR->AddReturnStatement(ret_ptr->subStructPointer.Return->value);
+    }
+    else if (curToken.rule[0] == "LVal")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Assign;
+        ret_ptr->subStructPointer.Assign.LVal = LVal_func();
+        if (IsConst(ret_ptr->subStructPointer.Assign.LVal->ident))
+        {
+            std::cerr << "Assign to const variable: " << ret_ptr->subStructPointer.Assign.LVal->ident << std::endl;
+            exit(1);
+        }
+        RESERVED_func(); // =
+        KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+        ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+        RESERVED_func(); //;
     }
     else
     {

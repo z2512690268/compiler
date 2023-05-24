@@ -44,7 +44,6 @@ struct FrontendBase {
 
 struct SysyFrontend : public FrontendBase {
     int line_num;
-    std::unordered_map<std::string, std::string> name_map;
     //******************************************************************************
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }
@@ -56,15 +55,39 @@ struct SysyFrontend : public FrontendBase {
         return koopaIR;
     }
 
-    void AddNameMap(const std::string& name, const std::string& value) {
-        name_map[name] = value;
+    // 前端符号表及其操作
+    struct Name_Map {
+        std::unordered_map<std::string, std::string> map;
+        std::vector<std::string> const_list;
+        Name_Map* parent;
+    } name_map;
+
+    void AddName(const std::string& source_name, const std::string& ir_name, bool is_const = false) {
+        name_map.map[source_name] = ir_name;
+        if (is_const) {
+            name_map.const_list.push_back(source_name);
+        }
     }
 
-    std::string GetNameMap(const std::string& name) {
-        if(name_map.find(name) == name_map.end()) {
-            return name;
+    std::string GetIRName(const std::string& source_name) {
+        if(name_map.map.find(source_name) == name_map.map.end()) {
+            return source_name;
         }
-        return name_map[name];
+        return name_map.map[source_name];
+    }
+
+    bool IsConst(const std::string& source_name) {
+        return std::find(name_map.const_list.begin(), name_map.const_list.end(), source_name) != name_map.const_list.end();
+    }
+
+    void PushNameMap() {
+        Name_Map* new_map = new Name_Map();
+        new_map->parent = &name_map;
+        name_map = *new_map;
+    }
+
+    void PopNameMap() {
+        name_map = *name_map.parent;
     }
 
     void Error(const std::string& error_info) {
@@ -81,8 +104,11 @@ struct SysyFrontend : public FrontendBase {
     struct FuncDef_Struct;
     struct FuncType_Struct;
     struct Block_Struct;
+    struct BlockItem_Struct;
     struct Stmt_Struct;
+
     struct Exp_Struct;
+    struct LVal_Struct;
     struct PrimaryExp_Struct;
     struct UnaryExp_Struct;
     struct UnaryOp_Struct;
@@ -93,7 +119,17 @@ struct SysyFrontend : public FrontendBase {
     struct LAndExp_Struct;
     struct LOrExp_Struct;
     struct Number_Struct;
+
+    struct ConstExp_Struct;
     struct Integer_Struct;
+    struct Decl_Struct;
+    struct ConstDecl_Struct;
+    struct BType_Struct;
+    struct ConstDef_Struct;
+    struct ConstInitVal_Struct;
+    struct VarDecl_Struct;
+    struct VarDef_Struct;
+    struct InitVal_Struct;
 
     // 终结符
     struct DEC_INTEGER_Struct;
@@ -129,17 +165,63 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct Block_Struct {
-        std::vector<Stmt_Struct*> Stmt;
+        std::vector<BlockItem_Struct*> BlockItems;
 
         BasicBlock* block;
     };
 
+    struct BlockItem_Struct {
+        enum BlockItemType {
+            BlockItemType_Decl,
+            BlockItemType_Stmt,
+        } type;
+
+        union SubStructPointer {
+            Decl_Struct* Decl;
+            Stmt_Struct* Stmt;
+        } subStructPointer;
+    };    
+
     struct Stmt_Struct {
-        Exp_Struct* Exp;
+        enum StmtType {
+            StmtType_Assign,
+            StmtType_Return,
+        } type;
+        
+        struct Assign_Struct {
+            LVal_Struct* LVal;
+            Exp_Struct* Exp;
+        };
+
+        union SubStructPointer { 
+            Assign_Struct Assign;
+            Exp_Struct* Return;
+        } subStructPointer;
     };
 
     struct Exp_Struct {
         LOrExp_Struct* LOrExp;
+
+        KoopaSymbol value;
+    };
+
+    struct LVal_Struct
+    {
+        std::string ident;
+    };
+
+    struct PrimaryExp_Struct {
+        enum PrimaryExpType {
+            PrimaryExpType_Exp,
+            PrimaryExpType_LVal,
+            PrimaryExpType_Number,
+        } type;
+
+        union SubStructPointer {
+            Exp_Struct* Exp;
+            LVal_Struct* LVal;
+            Number_Struct* Number;
+        } subStructPointer;
 
         KoopaSymbol value;
     };
@@ -171,20 +253,6 @@ struct SysyFrontend : public FrontendBase {
             UnaryOpType_Sub,
             UnaryOpType_Not,
         } type;
-    };
-
-    struct PrimaryExp_Struct {
-        enum PrimaryExpType {
-            PrimaryExpType_Exp,
-            PrimaryExpType_Number,
-        } type;
-
-        union SubStructPointer {
-            Exp_Struct* Exp;
-            Number_Struct* Number;
-        } subStructPointer;
-
-        KoopaSymbol value;
     };
 
     struct MulExp_Struct {
@@ -342,6 +410,12 @@ struct SysyFrontend : public FrontendBase {
         KoopaSymbol value;
     };
 
+    struct ConstExp_Struct {
+        Exp_Struct* Exp;
+
+        KoopaSymbol value;
+    };
+
     struct Integer_Struct {
         enum IntegerType {
             IntegerType_DEC_INTEGER,
@@ -358,6 +432,63 @@ struct SysyFrontend : public FrontendBase {
         int value;
     };
 
+    struct Decl_Struct {
+        enum DeclType {
+            DeclType_ConstDecl,
+            DeclType_VarDecl,
+        } type;
+        
+        union subStructPointer {
+            ConstDecl_Struct* ConstDecl;
+            VarDecl_Struct* VarDecl;
+        } subStructPointer;
+    };
+
+    struct ConstDecl_Struct {
+        BType_Struct* BType;
+        std::vector<ConstDef_Struct*> ConstDefs;
+    };
+
+    struct BType_Struct {
+        enum BTypeType {
+            BTypeType_INT,
+        } type;
+    };
+
+    struct ConstDef_Struct {
+        std::string ident;
+        ConstInitVal_Struct* ConstInitVal;
+    };
+
+    struct ConstInitVal_Struct {
+        ConstExp_Struct* ConstExp;
+
+        KoopaSymbol value;
+    };
+
+    struct VarDecl_Struct {
+        BType_Struct* BType;
+        std::vector<VarDef_Struct*> VarDefs;
+    };
+
+    struct VarDef_Struct {
+        std::string ident;
+        
+        enum VarDefType {
+            VarDefType_Initialized,
+            VarDefType_Uninitialized,
+        } type;
+
+        InitVal_Struct* InitVal;
+    };
+
+    struct InitVal_Struct {
+        Exp_Struct* Exp;
+
+        KoopaSymbol value;
+    };
+
+    // 终结符
     struct IDENT_Struct {
         std::string identifer;
     };
@@ -387,24 +518,39 @@ struct SysyFrontend : public FrontendBase {
 
     //******************************************************************************
     // 建树与解析函数
+    // basic
     CompUnits_Struct* CompUnits_func();
     CompUnit_Struct* CompUnit_func();
     FuncDef_Struct* FuncDef_func();
     FuncType_Struct* FuncType_func();
     Block_Struct* Block_func(std::string block_name);
+    BlockItem_Struct* BlockItem_func();
     Stmt_Struct* Stmt_func();
-    Exp_Struct* Exp_func();
-    UnaryExp_Struct* UnaryExp_func();
+    // exps
+    Exp_Struct* Exp_func(KoopaVar* receiver = nullptr);
+    LVal_Struct* LVal_func();
+    PrimaryExp_Struct* PrimaryExp_func(KoopaVar* receiver = nullptr);
+    UnaryExp_Struct* UnaryExp_func(KoopaVar* receiver = nullptr);
     UnaryOp_Struct* UnaryOp_func();
-    PrimaryExp_Struct* PrimaryExp_func();
-    MulExp_Struct* MulExp_func();
-    AddExp_Struct* AddExp_func();
-    RelExp_Struct* RelExp_func();
-    EqExp_Struct* EqExp_func();
-    LAndExp_Struct* LAndExp_func();
-    LOrExp_Struct* LOrExp_func();
+    MulExp_Struct* MulExp_func(KoopaVar* receiver = nullptr);
+    AddExp_Struct* AddExp_func(KoopaVar* receiver = nullptr);
+    RelExp_Struct* RelExp_func(KoopaVar* receiver = nullptr);
+    EqExp_Struct* EqExp_func(KoopaVar* receiver = nullptr);
+    LAndExp_Struct* LAndExp_func(KoopaVar* receiver = nullptr);
+    LOrExp_Struct* LOrExp_func(KoopaVar* receiver = nullptr);
     Number_Struct* Number_func();
+    // vars
+    ConstExp_Struct* ConstExp_func(KoopaVar* receiver = nullptr);
     Integer_Struct* Integer_func();
+    Decl_Struct* Decl_func();
+    ConstDecl_Struct* ConstDecl_func();
+    BType_Struct* BType_func();
+    ConstDef_Struct* ConstDef_func(BType_Struct* BType);
+    ConstInitVal_Struct* ConstInitVal_func(KoopaVar* receiver);
+    VarDecl_Struct* VarDecl_func();
+    VarDef_Struct* VarDef_func(BType_Struct* BType);
+    InitVal_Struct* InitVal_func(KoopaVar* receiver);
+    // 终结符
     DEC_INTEGER_Struct* DEC_INTEGER_func();
     HEX_INTEGER_Struct* HEX_INTEGER_func();
     OCT_INTEGER_Struct* OCT_INTEGER_func();
