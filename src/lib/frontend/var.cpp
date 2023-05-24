@@ -107,6 +107,7 @@ SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::BType_S
         std::string ir_name = koopaIR->GetUniqueName(ret_ptr->ident);
         KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
         AddName(ret_ptr->ident, ir_name, true);
+        koopaIR->AddAllocStatement(var);
         ret_ptr->ConstInitVal = ConstInitVal_func(&var);
     }
     else
@@ -178,6 +179,7 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::BType_Struc
         std::string ir_name = koopaIR->GetUniqueName(ret_ptr->ident);
         KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
         AddName(ret_ptr->ident, ir_name);
+        koopaIR->AddAllocStatement(var);
         if (curToken.rule.size() > 1 && curToken.rule[1] == "\"=\"")
         {
             RESERVED_func(); // "="

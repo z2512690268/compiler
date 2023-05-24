@@ -45,7 +45,7 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
         {
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("add", 0, exp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, exp->value);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
@@ -55,29 +55,29 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
         }
         else if (op->type == UnaryOp_Struct::UnaryOpType::UnaryOpType_Sub)
         {
+            KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("sub", 0, exp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("sub", 0, exp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("sub", 0, exp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (op->type == UnaryOp_Struct::UnaryOpType::UnaryOpType_Not)
         {
+            KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddOperationStatement("not", 0, exp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("not", 0, exp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("not", 0, exp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
@@ -158,7 +158,7 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
         ret_ptr->subStructPointer.Exp = Exp_func();
         if (receiver != nullptr)
         {
-            koopaIR->AddOperationStatement("add", 0, ret_ptr->subStructPointer.Exp->value, *receiver);
+            koopaIR->AddStoreStatement(*receiver, ret_ptr->subStructPointer.Exp->value);
             ret_ptr->value.SetSymbol(receiver->varName);
         }
         else
@@ -171,15 +171,16 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
     {
         ret_ptr->type = PrimaryExp_Struct::PrimaryExpType::PrimaryExpType_LVal;
         ret_ptr->subStructPointer.LVal = LVal_func();
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+        koopaIR->AddLoadStatement(GetIRName(ret_ptr->subStructPointer.LVal->ident), ret_var);
         if (receiver != nullptr)
         {
-            std::string target = GetIRName(ret_ptr->subStructPointer.LVal->ident);
-            koopaIR->AddOperationStatement("add", 0, target, *receiver);
+            koopaIR->AddStoreStatement(*receiver, ret_var);
             ret_ptr->value.SetSymbol(receiver->varName);
         }
         else
         {
-            ret_ptr->value.SetSymbol(GetIRName(ret_ptr->subStructPointer.LVal->ident));
+            ret_ptr->value.SetSymbol(ret_var.varName);
         }
     }
     else if (curToken.rule[0] == "Number")
@@ -188,7 +189,7 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
         ret_ptr->subStructPointer.Number = Number_func();
         if (receiver != nullptr)
         {
-            koopaIR->AddOperationStatement("add", 0, ret_ptr->subStructPointer.Number->value, *receiver);
+            koopaIR->AddStoreStatement(*receiver, ret_ptr->subStructPointer.Number->value);
             ret_ptr->value.SetSymbol(receiver->varName);
         }
         else
@@ -229,47 +230,48 @@ SysyFrontend::MulExp_Struct *SysyFrontend::MulExp_func(KoopaVar *receiver)
         ret_ptr->subStructPointer.MulAndUnary.MulExp = mulExp_ptr;
         ret_ptr->subStructPointer.MulAndUnary.UnaryExp = unaryExp_ptr;
 
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+
         if (curToken.rule[1] == "\"*\"")
         {
             ret_ptr->subStructPointer.MulAndUnary.op = MulExp_Struct::OpType::OpType_Mul;
+            koopaIR->AddOperationStatement("mul", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
 
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("mul", mulExp_ptr->value, unaryExp_ptr->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("mul", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\"/\"")
         {
+            ret_ptr->subStructPointer.MulAndUnary.op = MulExp_Struct::OpType::OpType_Div;
+            koopaIR->AddOperationStatement("div", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("div", mulExp_ptr->value, unaryExp_ptr->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("div", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\"%\"")
         {
+            ret_ptr->subStructPointer.MulAndUnary.op = MulExp_Struct::OpType::OpType_Mod;
+            koopaIR->AddOperationStatement("mod", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("rem", mulExp_ptr->value, unaryExp_ptr->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("rem", mulExp_ptr->value, unaryExp_ptr->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
@@ -315,29 +317,29 @@ SysyFrontend::AddExp_Struct *SysyFrontend::AddExp_func(KoopaVar *receiver)
 
         if (curToken.rule[1] == "\"+\"")
         {
+            ret_ptr->subStructPointer.AddAndMul.op = AddExp_Struct::OpType::OpType_Add;
+            koopaIR->AddOperationStatement("add", addExp_ptr->value, mulExp_ptr->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("add", addExp_ptr->value, mulExp_ptr->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                ret_ptr->subStructPointer.AddAndMul.op = AddExp_Struct::OpType::OpType_Add;
-                koopaIR->AddOperationStatement("add", addExp_ptr->value, mulExp_ptr->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\"-\"")
         {
+            ret_ptr->subStructPointer.AddAndMul.op = AddExp_Struct::OpType::OpType_Sub;
+            koopaIR->AddOperationStatement("sub", addExp_ptr->value, mulExp_ptr->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("sub", addExp_ptr->value, mulExp_ptr->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                ret_ptr->subStructPointer.AddAndMul.op = AddExp_Struct::OpType::OpType_Sub;
-                koopaIR->AddOperationStatement("sub", addExp_ptr->value, mulExp_ptr->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
@@ -374,63 +376,60 @@ SysyFrontend::RelExp_Struct *SysyFrontend::RelExp_func(KoopaVar *receiver)
         RelExp_Struct *relExp = RelExp_func();
         RESERVED_func(); // "<" | ">" | "<=" | ">="
         AddExp_Struct *addExp = AddExp_func();
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
         if (curToken.rule[1] == "\"<\"")
         {
             ret_ptr->subStructPointer.RelAndAdd.op = RelExp_Struct::OpType::OpType_LT;
+            koopaIR->AddOperationStatement("lt", relExp->value, addExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("lt", relExp->value, addExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("lt", relExp->value, addExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\">\"")
         {
             ret_ptr->subStructPointer.RelAndAdd.op = RelExp_Struct::OpType::OpType_GT;
+            koopaIR->AddOperationStatement("gt", relExp->value, addExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("gt", relExp->value, addExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("gt", relExp->value, addExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\"<=\"")
         {
             ret_ptr->subStructPointer.RelAndAdd.op = RelExp_Struct::OpType::OpType_LE;
+            koopaIR->AddOperationStatement("le", relExp->value, addExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("le", relExp->value, addExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("le", relExp->value, addExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\">=\"")
         {
             ret_ptr->subStructPointer.RelAndAdd.op = RelExp_Struct::OpType::OpType_GE;
+            koopaIR->AddOperationStatement("ge", relExp->value, addExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("ge", relExp->value, addExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("ge", relExp->value, addExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
@@ -467,33 +466,33 @@ SysyFrontend::EqExp_Struct *SysyFrontend::EqExp_func(KoopaVar *receiver)
         EqExp_Struct *eqExp = EqExp_func();
         RESERVED_func(); // "==" | "!="
         RelExp_Struct *relExp = RelExp_func();
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+
         if (curToken.rule[1] == "\"==\"")
         {
             ret_ptr->subStructPointer.EqAndRel.op = EqExp_Struct::OpType::OpType_EQ;
+            koopaIR->AddOperationStatement("eq", eqExp->value, relExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("eq", eqExp->value, relExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("eq", eqExp->value, relExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
         else if (curToken.rule[1] == "\"!=\"")
         {
             ret_ptr->subStructPointer.EqAndRel.op = EqExp_Struct::OpType::OpType_NE;
+            koopaIR->AddOperationStatement("ne", eqExp->value, relExp->value, ret_var);
             if (receiver != nullptr)
             {
-                koopaIR->AddOperationStatement("ne", eqExp->value, relExp->value, *receiver);
+                koopaIR->AddStoreStatement(*receiver, ret_var);
                 ret_ptr->value.SetSymbol(receiver->varName);
             }
             else
             {
-                KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                koopaIR->AddOperationStatement("ne", eqExp->value, relExp->value, ret_var);
                 ret_ptr->value.SetSymbol(ret_var.varName);
             }
         }
@@ -531,15 +530,15 @@ SysyFrontend::LAndExp_Struct *SysyFrontend::LAndExp_func(KoopaVar *receiver)
         RESERVED_func(); // "&&"
         EqExp_Struct *eqExp = EqExp_func();
 
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+        koopaIR->AddOperationStatement("and", lAndExp->value, eqExp->value, ret_var);
         if (receiver != nullptr)
         {
-            koopaIR->AddOperationStatement("and", lAndExp->value, eqExp->value, *receiver);
+            koopaIR->AddStoreStatement(*receiver, ret_var);
             ret_ptr->value.SetSymbol(receiver->varName);
         }
         else
         {
-            KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-            koopaIR->AddOperationStatement("and", lAndExp->value, eqExp->value, ret_var);
             ret_ptr->value.SetSymbol(ret_var.varName);
         }
     }
@@ -571,15 +570,15 @@ SysyFrontend::LOrExp_Struct *SysyFrontend::LOrExp_func(KoopaVar *receiver)
         RESERVED_func(); // "||"
         LAndExp_Struct *lAndExp = LAndExp_func();
 
+        KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+        koopaIR->AddOperationStatement("or", lOrExp->value, lAndExp->value, ret_var);
         if (receiver != nullptr)
         {
-            koopaIR->AddOperationStatement("or", lOrExp->value, lAndExp->value, *receiver);
+            koopaIR->AddStoreStatement(*receiver, ret_var);
             ret_ptr->value.SetSymbol(receiver->varName);
         }
         else
         {
-            KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-            koopaIR->AddOperationStatement("or", lOrExp->value, lAndExp->value, ret_var);
             ret_ptr->value.SetSymbol(ret_var.varName);
         }
     }
