@@ -1,9 +1,11 @@
+#TAB
+TAB:(\t)
 #空白
-WhiteSpace:( |\t|\n|\r)( |\t|\n|\r)*
+WhiteSpace:( |\n|\r)( |\n|\r)*
 #注释
 LineComment://.*
 #标识符
-SYMBOL:(@|%)((a-z)|(A-Z)|_)(\w)*
+SYMBOL:(@|%)(\w)(\w)*
 #整数
 INT:(0|(1-9)(0-9)*)|(\-(0|(1-9)(0-9)*))
 #二元运算符

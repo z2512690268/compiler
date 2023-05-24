@@ -320,7 +320,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     { 
         std::cout << "step "<< "final" << std::endl;
         std::unordered_map<int, int> flag;
-        NFA.DFA.head->Print(flag);
+        NFA.dfa.head->Print(flag);
         std::cout << std::endl;
         std::cout << std::endl;
         std::cout << std::endl;
@@ -330,7 +330,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
     char ch;
     std::string match;
     std::string token;
-    LexDFANode* cur = NFA.DFA.head;
+    LexDFANode* cur = NFA.dfa.head;
     while(true) {
         int i;
         input.get(ch);
@@ -414,7 +414,7 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             // std::cout << Unprint2Trans(token) << " " << "\"" << Unprint2Trans(match) << "\"" << std::endl;
             output.push_back(std::make_pair(token, match));
             DEBUG_LEX_MATCH std::cout << "Matched!!!, token:" << token << " matched:" << match << std::endl;
-            cur = NFA.DFA.head;
+            cur = NFA.dfa.head;
             match = "";
             token = "";
             // if(!input.eof()) {

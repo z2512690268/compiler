@@ -136,7 +136,7 @@ std::string StringLR1TableItem(const std::tuple<int, std::string, int>& lr1Table
                     GramNFA& nfa) {
     std::string ret;
     if(std::get<0>(lr1TableItem) == 4) {
-        GramDFANode<GramNFANode>* shiftto = nfa.DFA.id2node[std::get<2>(lr1TableItem)];
+        GramDFANode<GramNFANode>* shiftto = nfa.dfa.id2node[std::get<2>(lr1TableItem)];
         ret += "shift\n";
         ret += shiftto->PrintSelf(grams, nfa) + "\n";
     } else if(std::get<0>(lr1TableItem) == 1) {
@@ -149,7 +149,7 @@ std::string StringLR1TableItem(const std::tuple<int, std::string, int>& lr1Table
     } else if(std::get<0>(lr1TableItem) == 2) {
         ret += "accept";
     } else if(std::get<0>(lr1TableItem) == 3) {
-        GramDFANode<GramNFANode>* shiftto = nfa.DFA.id2node[std::get<2>(lr1TableItem)];
+        GramDFANode<GramNFANode>* shiftto = nfa.dfa.id2node[std::get<2>(lr1TableItem)];
         ret += "goto\n";
         ret += shiftto->PrintSelf(grams, nfa) + "\n";
     }
@@ -456,7 +456,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
 
     DEBUG_GRAM_DFA {
         flags.clear();
-        gramNFA.DFA.head->Print(grams, flags, gramNFA);
+        gramNFA.dfa.head->Print(grams, flags, gramNFA);
     }
     // gramNFA.DFA.head->Print(flags);
 
@@ -469,7 +469,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
 
     // // 初始化LR1分析表
 
-    for(auto& id2node : gramNFA.DFA.id2node) {
+    for(auto& id2node : gramNFA.dfa.id2node) {
         int state_id = id2node.first;
         GramDFANode<GramNFANode>* cur_node = id2node.second;
         std::string input_string = cur_node->str;
@@ -541,7 +541,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
     // 打印LR1分析表
     DEBUG_GRAM_LR1TABLE {
         std::cout << std::endl << std::endl << "LR1_table:" << std::endl;
-        Table table(gramNFA.DFA.count + 5, terminal_map.size() + 5);
+        Table table(gramNFA.dfa.count + 5, terminal_map.size() + 5);
         table.Set(0, 0, "state\\input");
         int tablei = 1;
         int tablej = 0;
@@ -614,7 +614,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
     Tree<GrammerTreeNode>                    grammer_tree;
     std::vector<GrammerTreeNode*>            grammer_stack;
     symbol_stack.push_back("$");
-    state_stack.push_back(gramNFA.DFA.head->id);
+    state_stack.push_back(gramNFA.dfa.head->id);
 
     std::vector<std::pair<std::string, std::string> > token_stream;
     while(!token_in.eof()) {
@@ -667,7 +667,7 @@ int grammer(std::istream& gram_in, std::istream& gram_rule, std::istream& token_
             std::cerr << "\033[31m" << std::endl;
             std::cerr << "error: (" << line_num << ") <" << input_token << ":" << match_value << ">" << " can not match any grammer in current state" << std::endl << std::endl;
             std::cerr << "current state is:" << std::endl;
-            std::cerr << gramNFA.DFA.id2node[state_id]->PrintSelf(grams, gramNFA) << std::endl;
+            std::cerr << gramNFA.dfa.id2node[state_id]->PrintSelf(grams, gramNFA) << std::endl;
             std::cerr << "valid input tokens are:" << std::endl;
             for(auto& t : LR1_table[state_id]) {
                 std::cerr << t.first << " ";

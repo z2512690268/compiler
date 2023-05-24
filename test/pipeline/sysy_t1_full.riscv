@@ -1,0 +1,8 @@
+	.text
+	.global main
+main:
+main_entry:
+//   ret 0
+	li a0, 0
+	ret
+

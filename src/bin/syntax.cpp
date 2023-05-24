@@ -9,10 +9,11 @@
 #include "koopa.h"
 #include "frontend.h"
 #include "backend.h"
+#include "path.h"
 
 // 主函数
 int main(int argc, char* argv[]) {
-    std::string project_dir = PROJECT_ROOT_DIR;
+    Path project_dir = PROJECT_ROOT_DIR;
     if(argc < 4) {
         std::cout << "Usage: " << argv[0] << " " << "<frontend-lang> <backend-lang> <filename-base>" << std::endl;
         exit(1);
@@ -21,7 +22,8 @@ int main(int argc, char* argv[]) {
     KoopaGenerator* generator;
     KoopaIR* ir;
     FrontendBase*   frontend;
-    std::string file_name = (project_dir + "test/pipeline/" + argv[3] + ".gram");
+
+    std::string file_name = (project_dir.append("test").append("pipeline").append(argv[3]).add(".gram"));
     
     if(std::string(argv[1]) == "sysy") {
         frontend = new SysyFrontend(file_name);
@@ -44,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     ir = frontend->Process();
 
-    std::ofstream fout(project_dir + "test/pipeline/" + argv[3] + "." + std::string(argv[2]));
+    std::ofstream fout(project_dir.append("test").append("pipeline").append(argv[3]).add(".").add(argv[2]));
 
     std::cout << std::endl << std::endl;
 

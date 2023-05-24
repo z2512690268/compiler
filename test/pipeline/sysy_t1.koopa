@@ -1,6 +1,6 @@
 fun @main(): i32 {
 %entry:
-	%return = add 0, 0;
-	ret %return;
+	%return = add 0, 0
+	ret %return
 }
 

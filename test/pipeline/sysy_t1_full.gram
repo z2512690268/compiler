@@ -1,0 +1,22 @@
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : FuncType IDENT "(" ")" Block 
+			FuncType : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" Stmt "}" 
+				"{" = "{"
+				Stmt : "return" Exp ";" 
+					"return" = "return"
+					Exp : AddExp 
+						AddExp : MulExp 
+							MulExp : UnaryExp 
+								UnaryExp : PrimaryExp 
+									PrimaryExp : Number 
+										Number : Integer 
+											Integer : OCT_INTEGER 
+												OCT_INTEGER = "0"
+					";" = ";"
+				"}" = "}"

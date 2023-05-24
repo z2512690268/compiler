@@ -3,4 +3,5 @@
 .cache/
 build/
 tools/
+test/asm
 log/

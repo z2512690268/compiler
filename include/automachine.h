@@ -96,7 +96,7 @@ struct DFA : public AutoMachine<NodeType> {
 
 template <typename NodeType, typename DFANodeType, typename InputType, typename TokenType>
 struct NFA : public AutoMachine<NodeType> {
-    DFA<DFANodeType> DFA;
+    DFA<DFANodeType> dfa;
 
     void ExpandStates(std::vector<NodeType*>& states) {
         std::unordered_map<int, int> id_map;
@@ -180,14 +180,14 @@ struct NFA : public AutoMachine<NodeType> {
         GetAllNextInputs(cur_state_vec, ch_vec);
         // 压入栈中
         cur_state_string = Vector2State(cur_state_vec);
-        DFANodeType* newNode = DFA.NewNode();
+        DFANodeType* newNode = dfa.NewNode();
         for(int i = 0; i < ch_vec.size(); i++) {
             q.push(std::make_pair(cur_state_string, ch_vec[i]));
         }
         // 为DFA创建头节点
         newNode->token = cur_state_string;
         states2node[cur_state_string] = newNode;
-        DFA.head = newNode;
+        dfa.head = newNode;
         // cur_state_string = Vector2State(cur_state_vec);
         // q.push(std::make_pair(cur_state_string, InputType()));
         int cnt = 0;
@@ -220,7 +220,7 @@ struct NFA : public AutoMachine<NodeType> {
             if(states2node.find(next_state_string) == states2node.end()) {
                 // 新边未处理过, 则先建好新节点，再重新转移
                 DEBUG_ATM_NFA2DFA std::cout << "Set as a new State" << std::endl;
-                DFANodeType* newNode = DFA.NewNode();
+                DFANodeType* newNode = dfa.NewNode();
                 newNode->SetInput(qtop.second);
                 newNode->token = (next_state_string);
                 states2node[next_state_string] = newNode;

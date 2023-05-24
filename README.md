@@ -4,14 +4,14 @@
 
 ## 环境配置
 
-本项目环境基于北大编译原理docker镜像
+本项目环境基于北大编译原理docker镜像，该环境可确保运行成功，其他环境编译器部分仍可通过编译(目前测试windows/msvc, linux/gcc, linux/clang工具链编译运行成功), 但请自行配置xmake
 
 原教程网站：https://pku-minic.github.io/online-doc/#/
 
 ```
 docker pull maxxing/compiler-dev
 ```
-
+ 
 额外安装xmake进行项目管理
 
 ```
@@ -24,13 +24,19 @@ wget https://xmake.io/shget.text -O - | bash
 echo "export XMAKE_ROOT=y" >> ~/.bashrc
 ```
 
-如需要编译生成的riscv汇编, 请执行prepare.sh下载riscv工具链, 该脚本将自动下载riscv工具链到tools/riscv-gcc并添加到环境变量中
+这些操作已经封装在prepare.sh中，在compiler-dev镜像下可一键配置
+
+运行测试部分目前使用qemu-riscv32-static和koopa, llc的工具链，在镜像中已经配置好，若要在其他环境下运行，请自行配置
 
 ## 目前进度
 
 - 词法分析(lex) 完成
 
 - 语法分析(gram) 完成
+
+- 语义分析(syntax/frontend) working (sysy working, koopa working)
+
+- 代码生成(backend) working (koopa基本完成, riscv working)
 
 ## 约定
 
@@ -222,22 +228,32 @@ CompUnit : FuncDef
 
 ### IR约定
 
-本项目IR基于北大Koopa IR, 原始规定文档链接为[koopa](https://pku-minic.github.io/online-doc/#/misc-app-ref/koopa), 但为了符合LR(1)语法分析的要求，对其进行了一定的修改, 具体修改如下
+本项目IR基于北大Koopa IR, 原始规定文档链接为[koopa](https://pku-minic.github.io/online-doc/#/misc-app-ref/koopa), 但为了符合LR(1)语法分析的要求，对其进行了一定的修改, 为了最小化修改内容，且不影响koopa官方编译器使用，特定空白字符TAB(即'\t')为语法关键字，使其不可随意使用，具体修改如下
 
-- 规则1：每一条IR指令以`;`结尾，对应的语法规则为：`Block ::= SYMBOL [BlockParamList] ":" {Statement ";"} EndStatement ";";`
+- 规则1：每一条空返回值的ret语句中，ret后面必须跟随且仅跟随一个TAB字符
 
-- 规则2：Initializer 语句外部增加一层大括号，对应的语法规则为：`InitializerBlock ::= "{" Initializer "}";`
+- 规则2: 除了规则1规定的情形外，不得在任何其他地方使用TAB字符
+
 
 修改示例：
 ```
 //规则1修改示例
-  %str = getelemptr @str, 0		--> %str = getelemptr @str, 0;
-  call @putstr(%str)			--> call @putstr(%str);
-  ret 0							--> ret 0;
-//规则2修改示例(注:global变量声明不受规则1限制)
-  alloc i32, 1									--> alloc i32, {1};
-  global @arr2 = alloc [[i32, 5], 2], zeroinit  --> global @arr2 = alloc [[i32, 5], 2], {zeroinit}
-  global @arr3 = alloc [i32, 3], {1, 2, 3}		--> global @arr3 = alloc [i32, 3], {{1, 2, 3}}      
+fun @main(): i32 {
+%entry:
+  ret
+}
+-->
+fun @main(): i32 {
+%entry:
+  ret	//这里有一个tab
+}
+```
+
+语法规则修改如下:
+```
+Return ::= "ret" [Value];
+-->
+Return ::= "ret" (Value | TAB);
 ```
 
 ### 汇编语言约定
