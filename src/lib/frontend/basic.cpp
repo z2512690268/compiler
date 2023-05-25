@@ -60,12 +60,11 @@ SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
         ret_ptr->funcnameIDENT = IDENT_func();
         RESERVED_func(); //(
         RESERVED_func(); //)
-        ret_ptr->Block = Block_func(ret_ptr->funcnameIDENT->identifer);
+        ret_ptr->Block = Block_func("%entry");
 
         // 退出作用域
         koopaIR->SetScopeFunction(ret_ptr->funcnameIDENT->identifer,
                                   ret_ptr->funcRetType->type);
-        koopaIR->ScopeAddBasicBlock(ret_ptr->Block->block);
         koopaIR->ReturnBackScope();
     }
     else
@@ -107,8 +106,8 @@ SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
     if (curToken.rule[0] == "\"{\"")
     {
         // 创建基本块，并加入符号表,更新当前块
-        std::string block_name = koopaIR->GetUniqueName("%entry");
         BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(block_name);
+        koopaIR->ScopeAddBasicBlock(block);
         PushNameMap();
 
         // 创建语句
@@ -161,21 +160,56 @@ SysyFrontend::BlockItem_Struct *SysyFrontend::BlockItem_func()
     return ret_ptr;
 }
 
-// Stmt          ::= LVal "=" Exp ";" | "return" Exp ";";
+// Stmt          ::= LVal "=" Exp ";"
+//                 | [Exp] ";"
+//                 | Block
+//                 | "return" [Exp] ";";
 SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
 {
     ENTRY_GRAMMER(SysyFrontend::Stmt_Struct);
 
-    // Stmt          ::= LVal "=" Exp ";" | "return" Exp ";";
+    // Stmt          ::= LVal "=" Exp ";"
+    //                 | [Exp] ";"
+    //                 | Block
+    //                 | "return" [Exp] ";";
     if (curToken.rule[0] == "\"return\"")
     {
         ret_ptr->type = Stmt_Struct::StmtType::StmtType_Return;
         RESERVED_func(); // return
+        if (curToken.rule[1] == "\";\"")
+        {
+            koopaIR->AddReturnStatement(KoopaSymbol());
+        }
+        else
+        {
+            ret_ptr->subStructPointer.Return = Exp_func();
+            koopaIR->AddReturnStatement(ret_ptr->subStructPointer.Return->value);
+        }
+        RESERVED_func(); //;
+    }
+    else if (curToken.rule[0] == "Exp")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Exp;
         ret_ptr->subStructPointer.Return = Exp_func();
         RESERVED_func(); //;
+    }
+    else if (curToken.rule[0] == "\";\"")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Exp;
+        RESERVED_func(); //;
+    }
+    else if (curToken.rule[0] == "Block")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Block;
+        std::string inner_block = koopaIR->GetUniqueName("%entry");
+        koopaIR->AddJumpStatement(inner_block);
+        ret_ptr->subStructPointer.Block = Block_func(inner_block);
 
-        // 返回语句
-        koopaIR->AddReturnStatement(ret_ptr->subStructPointer.Return->value);
+        std::string outer_block = koopaIR->GetUniqueName("%entry");
+        koopaIR->AddJumpStatement(outer_block);
+
+        BasicBlock* block = koopaIR->NewBasicBlockAndSetCur(outer_block);
+        koopaIR->ScopeAddBasicBlock(block);
     }
     else if (curToken.rule[0] == "LVal")
     {

@@ -55,7 +55,7 @@ SysyFrontend::ConstDecl_Struct *SysyFrontend::ConstDecl_func()
         RESERVED_func(); // 'const'
         ret_ptr->BType = BType_func();
         ret_ptr->ConstDefs.push_back(ConstDef_func(ret_ptr->BType));
-        if (curToken.rule[3] == ",")
+        if (curToken.rule[3] == "\",\"")
         {
             for (int i = 3; i < curToken.rule.size() - 1; i += 2)
             {
@@ -139,7 +139,7 @@ SysyFrontend::ConstInitVal_Struct *SysyFrontend::ConstInitVal_func(KoopaVar *rec
     return ret_ptr;
 }
 
-// VarDecl       ::= BType VarDef { ',' VarDef } ';';
+// VarDecl       ::= BType VarDef {"," VarDef} ";";
 SysyFrontend::VarDecl_Struct *SysyFrontend::VarDecl_func()
 {
     ENTRY_GRAMMER(SysyFrontend::VarDecl_Struct);
@@ -148,9 +148,9 @@ SysyFrontend::VarDecl_Struct *SysyFrontend::VarDecl_func()
     {
         ret_ptr->BType = BType_func();
         ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->BType));
-        if (curToken.rule[2] == ",")
+        if (curToken.rule[2] == "\",\"")
         {
-            for (int i = 3; i < curToken.rule.size() - 1; i += 2)
+            for (int i = 2; i < curToken.rule.size() - 1; i += 2)
             {
                 RESERVED_func(); // ','
                 ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->BType));

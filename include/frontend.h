@@ -186,6 +186,8 @@ struct SysyFrontend : public FrontendBase {
         enum StmtType {
             StmtType_Assign,
             StmtType_Return,
+            StmtType_Block,
+            StmtType_Exp,
         } type;
         
         struct Assign_Struct {
@@ -196,6 +198,8 @@ struct SysyFrontend : public FrontendBase {
         union SubStructPointer { 
             Assign_Struct Assign;
             Exp_Struct* Return;
+            Block_Struct* Block;
+            Exp_Struct* Exp;
         } subStructPointer;
     };
 
