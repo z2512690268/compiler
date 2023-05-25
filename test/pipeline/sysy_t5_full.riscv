@@ -1,0 +1,27 @@
+	.data
+	.text
+	.global main
+main:
+	addi sp, sp, -16
+main_entry:
+#   @x = alloc i32
+	addi t0, sp, 4
+	sw t0, 12(sp)
+#   %0 = add 1, 1
+	li t1, 1
+	addi t0, t1, 1
+	sw t0, 8(sp)
+#   store %0, @x
+	lw t0, 12(sp)
+	lw t1, 8(sp)
+	sw t1, 0(t0)
+#   %1 = load @x
+	lw t0, 12(sp)
+	lw t0, 0(t0)
+	sw t0, 4(sp)
+#   ret %1
+	lw t0, 4(sp)
+	addi a0, t0, 0
+	addi sp, sp, 16
+	ret
+
