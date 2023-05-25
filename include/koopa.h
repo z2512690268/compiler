@@ -147,6 +147,22 @@ struct KoopaVarType {
         }
         return type;
     }
+
+    int Size() {
+        switch(topType) {
+            case KoopaVarType::KOOPA_INT32:
+                return 4;
+            case KoopaVarType::KOOPA_ARRAY:
+                return (*arrayType.type).Size() * arrayType.size;
+            case KoopaVarType::KOOPA_PTR:
+                return 4;
+            case KoopaVarType::KOOPA_func:
+                return 0;
+            case KoopaVarType::KOOPA_undef:
+                return 0;
+        }
+        return 0;
+    }
 };
 
 // 初始化列表

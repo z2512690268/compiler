@@ -1,19 +1,20 @@
+	.data
 	.text
 	.global main
 main:
 	addi sp, sp, -16
 main_entry:
-//   %0 = mul 2, 3
+#   %0 = mul 2, 3
 	li t1, 2
 	li t2, 3
 	mul t0, t1, t2
-	sw t0, 0(sp)
-//   %1 = add 1, %0
-	lw t1, 0(sp)
-	addi t0, t1, 1
 	sw t0, 4(sp)
-//   ret %1
-	lw t0, 4(sp)
+#   %1 = add 1, %0
+	lw t1, 4(sp)
+	addi t0, t1, 1
+	sw t0, 0(sp)
+#   ret %1
+	lw t0, 0(sp)
 	addi a0, t0, 0
 	addi sp, sp, 16
 	ret

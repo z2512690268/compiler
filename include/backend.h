@@ -43,7 +43,7 @@ struct KoopaGenerator {
         std::string code;
         for(auto& item : global_scope.symbolTable.var_table) {
             if(item.second.var.type != KoopaVarType(KoopaVarType::KOOPA_func)) {
-                code += "global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + ";\n";
+                code += "global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + "\n";
             } else {
                 code += "decl " + item.second.var.varName + "(";
                 for(int i = 0; i < item.second.var.type.funcType.paramsType.size(); i++) {
@@ -52,7 +52,7 @@ struct KoopaGenerator {
                         code += ", ";
                     }
                 }
-                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + ";\n";
+                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + "\n";
             }
         }
         for(auto& func : func_scopes) {
@@ -72,7 +72,12 @@ struct KoopaGenerator {
                             code += "  " + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol() + "\n";
                             break;
                         case Statement::RETURN:
-                            code += "  ret " + stmt->returnStmt.ret.GetSymbol() + "\n";
+                            if(stmt->returnStmt.ret.GetSymbol() == "") {
+                                code += "  ret\t\n";
+                                break;
+                            } else {
+                                code += "  ret " + stmt->returnStmt.ret.GetSymbol() + "\n";
+                            }
                             break;
                         case Statement::CALL:
                             code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
@@ -123,6 +128,7 @@ struct RiscvGenerator : public KoopaGenerator {
     std::unordered_map<std::string, uint32_t> label_map;
     int label_count = 0;
     std::unordered_map<std::string, std::string> reg_map;
+    std::unordered_map<Statement*, int> local_alloc_map;
     std::string code;
     int cur_temp_reg = 0;
     std::unordered_set<std::string> regs_set = {
@@ -154,6 +160,7 @@ struct RiscvGenerator : public KoopaGenerator {
         } else if(input.IsImm()) {
             return input.GetSymbol();
         }
+        return "";
     }
 
 
@@ -191,9 +198,27 @@ struct RiscvGenerator : public KoopaGenerator {
         return var[var.size() - 1] == ')';
     }
 
+    int GetStackOffset(std::string var) {
+        int offset = 0;
+        for(int i = 0; i < var.size(); i++) {
+            if(var[i] == '(') {
+                offset = std::stoi(var.substr(0, i));
+                break;
+            }
+        }
+        return offset;
+    }
+
+    bool CheckMapReg_Gloabl(std::string var) {
+        return var[0] == '@';
+    }
+
     bool CheckMapReg_Imm(std::string var) {
         return (std::isdigit(var[0]) || var[0] == '-') && !CheckMapReg_Stack(var);
     }
+
+
+
 
   // R-Type : add, sub, and, or, xor, sll, srl, sra
     void EmitRTypeOperation(std::string op, std::string rd, std::string rs1, std::string rs2) {
@@ -233,24 +258,52 @@ struct RiscvGenerator : public KoopaGenerator {
         code += "\tlw " + reg + ", " + stack_sp + "\n";
     }
 
+    void EmitLoadGlobl(std::string reg, std::string var) {
+        code += "\tla " + reg + ", " + var + "\n";
+        code += "\tlw " + reg + ", 0(" + reg + ")\n";
+    }
+
+    void EmitStoreGlobl(std::string reg, std::string var) {
+        std::string temp_reg = GetTempReg();
+        code += "\tla " + temp_reg + ", " + var + "\n";
+        code += "\tsw " + reg + ", 0(" + temp_reg + ")\n";
+        FreeTempReg();
+    }
+
     void EmitStore(std::string reg, std::string stack_sp) {
         code += "\tsw " + reg + ", " + stack_sp + "\n";
     }
 
-    void EmitLabel(std::string func_name, std::string label) {
+    std::string GetLabel(std::string func_name, std::string label) {
         if(label[0] == '@') {
-            code += label.substr(1) + ":\n";    
+            return label.substr(1);
         } else {
-            code += func_name.substr(1) + "_" + label.substr(1) + ":\n";
+            return func_name.substr(1) + "_" + label.substr(1);
         }
     }
 
+    void EmitLabel(std::string func_name, std::string label) {
+        code += GetLabel(func_name, label) + ":\n";
+    }
+
     void EmitExplain(std::string explain) {
-        code += "// " + explain + "\n";
+        code += "# " + explain + "\n";
     }
 
     void Emit2RegInst(std::string op, std::string reg1, std::string reg2) {
         code += "\t" + op + " " + reg1 + ", " + reg2 + "\n";
+    }
+
+    void EmitUsedRegMap_IfStackVar(std::string& value_map) {
+        if(CheckMapReg_Stack(value_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value_map);
+            value_map = temp_reg;
+        } else if(CheckMapReg_Gloabl(value_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoadGlobl(temp_reg, value_map);
+            value_map = temp_reg;
+        }
     }
 
     // add, and, or, xor
@@ -258,7 +311,7 @@ struct RiscvGenerator : public KoopaGenerator {
         return op == "add" || op == "and" || op == "or" || op == "xor";
     }
     void EmitSymmetryOp(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
-        std::string ret_map = reg_map[ret_var];
+        std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
             EmitSymmetryOp_RetReg(op, ret_map, value1, value2);
         } else if(CheckMapReg_Stack(ret_map)) {
@@ -273,18 +326,9 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string value2_map = GetRegMap(value2);
 
         int temp_reg_count = GetTempRegCount();
-        std::cout << "SDAD" << temp_reg_count << std::endl;
-        if(CheckMapReg_Stack(value1_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value1_map);
-            value1_map = temp_reg;
-        }
 
-        if(CheckMapReg_Stack(value2_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value2_map);
-            value2_map = temp_reg;
-        }
+        EmitUsedRegMap_IfStackVar(value1_map);
+        EmitUsedRegMap_IfStackVar(value2_map);
 
         if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
@@ -297,7 +341,7 @@ struct RiscvGenerator : public KoopaGenerator {
             EmitImm(temp_reg, value1_map);
             EmitITypeOperation(op + "i", ret_reg, temp_reg, value2_map);
         }
-        
+
         ResetTempReg(temp_reg_count);
     }
 
@@ -306,7 +350,7 @@ struct RiscvGenerator : public KoopaGenerator {
         return op == "sub";
     }
     void EmitSub(std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
-        std::string ret_map = reg_map[ret_var];
+        std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
             EmitSub_RetReg(ret_map, value1, value2);
         } else if(CheckMapReg_Stack(ret_map)) {
@@ -321,17 +365,8 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string value2_map = GetRegMap(value2);
 
         int temp_reg_count = GetTempRegCount();
-        if(CheckMapReg_Stack(value1_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value1_map);
-            value1_map = temp_reg;
-        }
-
-        if(CheckMapReg_Stack(value2_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value2_map);
-            value2_map = temp_reg;
-        }
+        EmitUsedRegMap_IfStackVar(value1_map);
+        EmitUsedRegMap_IfStackVar(value2_map);
 
         if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitRTypeOperation("sub", ret_reg, value1_map, value2_map);
@@ -354,7 +389,7 @@ struct RiscvGenerator : public KoopaGenerator {
         return op == "shl" || op == "shr" || op == "sar";
     }
     void EmitShift(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
-        std::string ret_map = reg_map[ret_var];
+        std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
             EmitShift_RetReg(op, ret_map, value1, value2);
         } else if(CheckMapReg_Stack(ret_map)) {
@@ -369,17 +404,8 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string value2_map = GetRegMap(value2);
 
         int temp_reg_count = GetTempRegCount();
-        if(CheckMapReg_Stack(value1_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value1_map);
-            value1_map = temp_reg;
-        }
-
-        if(CheckMapReg_Stack(value2_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value2_map);
-            value2_map = temp_reg;
-        }
+        EmitUsedRegMap_IfStackVar(value1_map);
+        EmitUsedRegMap_IfStackVar(value2_map);
 
         if(op == "shl") op = "sll";
         if(op == "shr") op = "srl";
@@ -406,7 +432,7 @@ struct RiscvGenerator : public KoopaGenerator {
         return op == "eq" || op == "ne" || op == "lt" || op == "gt" || op == "le" || op == "ge";
     }
     void EmitCmp(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
-        std::string ret_map = reg_map[ret_var];
+        std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
             EmitCmp_RetReg(op, ret_map, value1, value2);
         } else if(CheckMapReg_Stack(ret_map)) {
@@ -425,17 +451,8 @@ struct RiscvGenerator : public KoopaGenerator {
         }
 
         int temp_reg_count = GetTempRegCount();
-        if(CheckMapReg_Stack(value1_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value1_map);
-            value1_map = temp_reg;
-        }
-
-        if(CheckMapReg_Stack(value2_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value2_map);
-            value2_map = temp_reg;
-        }
+        EmitUsedRegMap_IfStackVar(value1_map);
+        EmitUsedRegMap_IfStackVar(value2_map);
 
         if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitRTypeOperation("sub", ret_reg, value1_map, value2_map);
@@ -487,17 +504,8 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string value2_map = GetRegMap(value2);
 
         int temp_reg_count = GetTempRegCount();
-        if(CheckMapReg_Stack(value1_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value1_map);
-            value1_map = temp_reg;
-        }
-
-        if(CheckMapReg_Stack(value2_map)) {
-            std::string temp_reg = GetTempReg();
-            EmitLoad(temp_reg, value2_map);
-            value2_map = temp_reg;
-        }
+        EmitUsedRegMap_IfStackVar(value1_map);
+        EmitUsedRegMap_IfStackVar(value2_map);
 
         if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
@@ -519,35 +527,240 @@ struct RiscvGenerator : public KoopaGenerator {
         ResetTempReg(temp_reg_count);
     }
 
+    void EmitBranch(KoopaSymbol cond, std::string true_label, std::string false_label) {
+        std::string cond_map = GetRegMap(cond);
+        if(CheckMapReg_Reg(cond_map)) {
+            EmitBranch_Reg(cond_map, true_label, false_label);
+        } else if(CheckMapReg_Stack(cond_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, cond_map);
+            EmitBranch_Reg(temp_reg, true_label, false_label);
+            FreeTempReg();
+        } else if(CheckMapReg_Imm(cond_map)) {
+            // TODO: 优化常数条件的情况
+        }
+    }
+    void EmitBranch_Reg(std::string cond_reg, std::string true_label, std::string false_label) {
+        EmitSBTypeOperation("bne", cond_reg, "x0", true_label);
+        EmitUJTypeOperation("jal", "x0", false_label);
+    }
+
+
+    void EmitKoopaLoadStmt(std::string ret_var, std::string addr) {
+        std::string ret_map = GetRegMap(ret_var);
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitKoopaLoadStmt_RetReg(ret_map, addr);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitKoopaLoadStmt_RetReg(temp_reg, addr);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+
+    void EmitKoopaLoadStmt_RetReg(std::string ret_reg, std::string addr) {
+        std::string addr_map = GetRegMap(addr);
+
+        if(CheckMapReg_Stack(addr_map)) {
+            EmitLoad(ret_reg, addr_map);
+        } else {
+            std::cerr << "EmitKoopaLoadStmt_RetReg: addr_map is not stack var" << std::endl;
+        }
+    }
+
+    void EmitKoopaGetptrStmt(KoopaVar ret_var, KoopaVar varptr, int offset) {
+        std::string ret_map = GetRegMap(ret_var);
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitKoopaGetptrStmt_RetReg(ret_map, varptr, offset);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitKoopaGetptrStmt_RetReg(temp_reg, varptr, offset);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+
+    void EmitKoopaGetptrStmt_RetReg(std::string ret_reg, KoopaVar varptr, int offset) {
+        std::string varptr_map = GetRegMap(varptr);
+
+        int temp_reg_count = GetTempRegCount();
+        EmitUsedRegMap_IfStackVar(varptr_map);
+
+        EmitITypeOperation("addi", ret_reg, varptr_map, std::to_string(offset));
+
+        ResetTempReg(temp_reg_count);
+    }
+
+    void EmitKoopaGetelementptrStmt(KoopaVar ret_var, KoopaVar arrayptr, int offset) {
+        std::string ret_map = GetRegMap(ret_var);
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitKoopaGetelementptrStmt_RetReg(ret_map, arrayptr, offset);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitKoopaGetelementptrStmt_RetReg(temp_reg, arrayptr, offset);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+
+    void EmitKoopaGetelementptrStmt_RetReg(std::string ret_reg, KoopaVar arrayptr, int offset) {
+        std::string arrayptr_map = GetRegMap(arrayptr);
+
+        int temp_reg_count = GetTempRegCount();
+        EmitUsedRegMap_IfStackVar(arrayptr_map);
+
+        EmitITypeOperation("addi", ret_reg, arrayptr_map, std::to_string(offset));
+
+        ResetTempReg(temp_reg_count);
+    }
+
+    void EmitKoopaAllocStmt(std::string ret_var, int stack_sp) {
+        std::string ret_map = GetRegMap(ret_var);
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitKoopaAllocStmt_RetReg(ret_map, stack_sp);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitKoopaAllocStmt_RetReg(temp_reg, stack_sp);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+
+    void EmitKoopaAllocStmt_RetReg(std::string ret_reg, int stack_sp) {
+        EmitITypeOperation("addi", ret_reg, "sp", std::to_string(stack_sp));
+    }
+
+    void EmitKoopaStoreStmt_Symbol(std::string addr, std::string val_var) {
+        std::string addr_map = GetRegMap(addr);
+        std::string val_map = GetRegMap(val_var);
+
+        if(CheckMapReg_Stack(addr_map)) {
+            if(CheckMapReg_Reg(val_map)) {
+                EmitStore(val_map, addr_map);
+            } else if(CheckMapReg_Stack(val_map)) {
+                std::string temp_reg = GetTempReg();
+                EmitLoad(temp_reg, val_map);
+                EmitStore(temp_reg, addr_map);
+                FreeTempReg();
+            }
+        } else {
+            std::cerr << "EmitKoopaStoreStmt: addr_map is not stack var" << std::endl;
+        }
+    }
+
+    void EmitKoopaStoreStmt_InitList(std::string addr, KoopaInitList init_list) {
+        std::string addr_map = GetRegMap(addr);
+
+        if(CheckMapReg_Stack(addr_map)) {
+            if(init_list.GetInitListType() == "int") {
+                EmitStore(init_list.GetInitString(), addr_map);
+            } else if(init_list.GetInitListType() == "zeroinit") {
+                EmitStore("0", addr_map);
+            } else if(init_list.GetInitListType() == "aggregate") {
+                // TODO: aggregate init
+                std::string temp_reg = GetTempReg();
+                // EmitKoopaAllocStmt_RetReg(temp_reg, init_list.GetInitListSize());
+                // EmitStore(temp_reg, addr_map);
+                FreeTempReg();
+            }
+        } else {
+            std::cerr << "EmitKoopaStoreStmt: addr_map is not stack var" << std::endl;
+        }
+    }
+
+    void EmitGlobalInitList(KoopaInitList initList) {
+        if(initList.GetInitListType() == "int") {
+            code += "\t.word " + initList.GetInitString() + "\n";
+        } else if(initList.GetInitListType() == "zeroinit") {
+            code += "\t.word 0\n";
+        } else if(initList.GetInitListType() == "aggregate") {
+            for(auto& list : initList.initList) {
+                EmitGlobalInitList(list);
+            }
+        }
+    } 
+
     virtual std::string GenerateCode(KoopaIR* ir) {
         global_scope = ir->global_scope;
         func_scopes = ir->func_scopes;
+
+        // 全局变量定义和全局函数声明
+        code += "\t.data\n";
+        for(auto& item : global_scope.symbolTable.var_table) {
+            if(item.second.var.type == KoopaVarType(KoopaVarType::KOOPA_INT32)) {
+                std::string name = item.second.var.varName.substr(1);
+                code += "\t.global " + name + "\n";
+                code += name + ":\n";
+                EmitGlobalInitList(item.second.var.initList);
+                reg_map[item.second.var.varName] = item.second.var.varName;
+            } else if(item.second.var.type == KoopaVarType(KoopaVarType::KOOPA_func)) {
+                std::string name = item.second.var.varName.substr(1);
+                code += "\t.extern " + name + "\n";
+            } // DONE: 全局数组类型
+        }
         code += "\t.text\n";  // .text
+
+        for(auto& item : global_scope.symbolTable.var_table) {
+            if(item.second.var.type != KoopaVarType(KoopaVarType::KOOPA_func)) {
+                EmitExplain("global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString());
+            } else {
+                code += "decl " + item.second.var.varName + "(";
+                for(int i = 0; i < item.second.var.type.funcType.paramsType.size(); i++) {
+                    code += KoopaVarTypeToString(*item.second.var.type.funcType.paramsType[i]);
+                    if(i != item.second.var.type.funcType.paramsType.size() - 1) {
+                        code += ", ";
+                    }
+                }
+                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + "\n";
+            }
+        }
+
         for(auto& func : func_scopes) {
             code += "\t.global " + func->func_name.substr(1) + "\n";
             code += func->func_name.substr(1) + ":\n";
-            // 不多于8个局部变量的函数，使用寄存器存储
-            int local_count = 0;
-            int local_stack_count = 0;
-            int nested_arg_count = func->max_nested_call_varnum > 8 ? (func->max_nested_call_varnum - 8) : 0;
+            
+            int stack_pos = 0;
+            int ret_stack_count = func->nested_call > 0 ? 4 : 0;
 
+            int nested_arg_count = func->max_nested_call_varnum > 8 ? (func->max_nested_call_varnum - 8) * 4: 0;
+            
+            // 多余函数参数栈空间
+            stack_pos += nested_arg_count;
+            // alloc分配的栈空间
+            for(auto& block : func->basicBlocks) {
+                for(auto& stmt : block->statements) {
+                    if(stmt->type == Statement::ALLOC) {
+                        stack_pos += stmt->allocStmt.var.type.Size();
+                        local_alloc_map[stmt] = stack_pos;
+                    }
+                }
+            }
+
+            // 局部变量栈空间
             for(auto& item : func->symbolTable.var_table) {
                 reg_map[item.second.var.varName] = 
-                                    std::to_string((nested_arg_count + local_stack_count) * 4) + "(sp)";
-                ++local_stack_count;
-                // ++local_count;
+                                    std::to_string(stack_pos) + "(sp)";
+                stack_pos += 4;
             }
-            int ret_stack_count = func->nested_call > 0;
 
-            int stack_size = (local_stack_count + ret_stack_count + nested_arg_count) * 4;
-            // 向上取整16v
-            stack_size = (stack_size + 15) / 16 * 16;
+            // 先空出ra寄存器空间
+            stack_pos += nested_arg_count;
+            
+            // 向上取整16
+            stack_pos = (stack_pos + 15) / 16 * 16;
 
-            if(stack_size > 0) {
-                EmitITypeOperation("addi", "sp", "sp", "-" + std::to_string(stack_size));
+
+            // 映射大于8的函数参数
+            for(int i = 8; i < func->func_param.size(); ++i) {
+                reg_map[func->func_param[i].varName] = 
+                                    std::to_string(stack_pos + i * 4 - 32) + "(sp)";
+            }
+
+            if(stack_pos > 0) {
+                EmitITypeOperation("addi", "sp", "sp", "-" + std::to_string(stack_pos));
             }
             if(ret_stack_count) {
-                EmitStore("ra", std::to_string(stack_size - 4) + "(sp)");
+                EmitStore("ra", std::to_string(stack_pos - 4) + "(sp)");
             }
 
 
@@ -561,6 +774,7 @@ struct RiscvGenerator : public KoopaGenerator {
                 std::string value2;
                 std::string ret_var;
                 for(auto& stmt : block->statements) {
+                    std::string explain;
                     switch(stmt->type) {
                         case Statement::OPERATION:
                             EmitExplain("  " + stmt->binaryOpStmt.ret_var.varName + " = " + stmt->binaryOpStmt.op.op + " " + stmt->binaryOpStmt.input1.GetSymbol() + ", " + stmt->binaryOpStmt.input2.GetSymbol());
@@ -578,7 +792,12 @@ struct RiscvGenerator : public KoopaGenerator {
                             }
                             break;
                         case Statement::RETURN:
-                            EmitExplain("  ret " + stmt->returnStmt.ret.GetSymbol());
+                            if(stmt->returnStmt.ret.GetSymbol() == "") {
+                                EmitExplain("  ret\t");
+                                break;
+                            } else {
+                                EmitExplain("  ret " + stmt->returnStmt.ret.GetSymbol());
+                            }
                             if(stmt->returnStmt.ret.IsSymbol()) {
                                 std::string ret_map = GetRegMap(stmt->returnStmt.ret.GetSymbol());
                                 if(CheckMapReg_Reg(ret_map)) {
@@ -594,28 +813,67 @@ struct RiscvGenerator : public KoopaGenerator {
                             }
 
                             if(ret_stack_count) {
-                                EmitLoad("ra", std::to_string(stack_size - 4) + "(sp)");
+                                EmitLoad("ra", std::to_string(stack_pos - 4) + "(sp)");
                             }
-                            if(stack_size > 0) {
-                                EmitRTypeOperation("addi", "sp", "sp", std::to_string(stack_size));
+                            if(stack_pos > 0) {
+                                EmitRTypeOperation("addi", "sp", "sp", std::to_string(stack_pos));
                             }
                             code += "\tret\n";
                             break;
                         case Statement::CALL:
+                            explain += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            for(int i = 0; i < stmt->callStmt.params.size(); i++) {
+                                explain += stmt->callStmt.params[i].GetSymbol();
+                                if(i != stmt->callStmt.params.size() - 1) {
+                                    code += ", ";
+                                }
+                            }
+                            explain += ")";
+                            EmitExplain(explain);
                             break;
                         case Statement::BRANCH:
+                            EmitExplain("  br " + stmt->branchStmt.cond.GetSymbol() + ", " + stmt->branchStmt.true_label + ", " + stmt->branchStmt.false_label);
+                            EmitBranch(stmt->branchStmt.cond, 
+                                GetLabel(func->func_name, stmt->branchStmt.true_label), 
+                                GetLabel(func->func_name, stmt->branchStmt.false_label)); 
                             break;
                         case Statement::JUMP:
+                            explain = "  jump " + stmt->jumpStmt.label;
+                            EmitExplain(explain);
+                            EmitUJTypeOperation("jal", "x0", GetLabel(func->func_name, stmt->jumpStmt.label));
                             break;
                         case Statement::ALLOC:
+                            explain = "  " + stmt->allocStmt.var.varName + " = alloc " + KoopaVarTypeToString(stmt->allocStmt.var.type);
+                            EmitExplain(explain);
+                            EmitKoopaAllocStmt(stmt->allocStmt.var.varName, local_alloc_map[stmt]);
                             break;
                         case Statement::LOAD:
+                            explain = "  " + stmt->loadStmt.var.varName + " = load " + stmt->loadStmt.addr.GetSymbol();
+                            EmitExplain(explain);
+                            EmitKoopaLoadStmt(stmt->loadStmt.var.varName, stmt->loadStmt.addr.GetSymbol());
                             break;
                         case Statement::STORE:
+                            if(stmt->storeStmt.IsSymbol()){
+                                explain += "  store " + stmt->storeStmt.symbol.GetSymbol() + ", " + stmt->storeStmt.addr.GetSymbol();
+                            } else if(stmt->storeStmt.IsInit()) {
+                                explain += "  store " + stmt->storeStmt.initList.GetInitString() + ", " + stmt->storeStmt.addr.GetSymbol();
+                            }
+                            EmitExplain(explain);
+                            if(stmt->storeStmt.IsSymbol()) {
+                                EmitKoopaStoreStmt_Symbol(stmt->storeStmt.addr.GetSymbol(), stmt->storeStmt.symbol.GetSymbol());
+                            } else if(stmt->storeStmt.IsInit()) {
+                                EmitKoopaStoreStmt_InitList(stmt->storeStmt.addr.GetSymbol(), stmt->storeStmt.initList);
+                            }
                             break;
                         case Statement::GETPTR:
+                            explain = "  getptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol();
+                            EmitExplain(explain);
+                            EmitKoopaGetptrStmt(stmt->getptrStmt.ret_var, stmt->getptrStmt.varptr, stmt->getptrStmt.offset.GetImm() * stmt->getptrStmt.varptr.type.ptrType.type->Size());
                             break;
                         case Statement::GETELEMENTPTR:
+                            explain = "  getelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol();
+                            EmitExplain(explain);
+                            EmitKoopaGetelementptrStmt(stmt->getelementptrStmt.ret_var, stmt->getelementptrStmt.arrayptr, stmt->getelementptrStmt.index.GetImm() * stmt->getelementptrStmt.arrayptr.type.arrayType.type->Size());
                             break;
                     }
                 }
