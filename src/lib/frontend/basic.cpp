@@ -148,7 +148,7 @@ SysyFrontend::BlockItem_Struct *SysyFrontend::BlockItem_func()
     else if (curToken.rule[0] == "Stmt")
     {
         ret_ptr->type = BlockItem_Struct::BlockItemType::BlockItemType_Stmt;
-        ret_ptr->subStructPointer.Stmt = Stmt_func();
+        ret_ptr->subStructPointer.Stmt = Stmt_func("");
     }
     else
     {
@@ -160,21 +160,237 @@ SysyFrontend::BlockItem_Struct *SysyFrontend::BlockItem_func()
     return ret_ptr;
 }
 
-// Stmt          ::= LVal "=" Exp ";"
-//                 | [Exp] ";"
-//                 | Block
-//                 | "return" [Exp] ";";
-SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
+// Stmt          ::= "if" "(" Exp ")" ElseStmt "else" Stmt
+//                 | "if" "(" Exp ")" Stmt
+//                 | "while" "(" Exp ")" Stmt
+//                 | NoIfStmt;
+SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
 {
     ENTRY_GRAMMER(SysyFrontend::Stmt_Struct);
 
-    // Stmt          ::= LVal "=" Exp ";"
-    //                 | [Exp] ";"
-    //                 | Block
-    //                 | "return" [Exp] ";";
+    if (curToken.rule[0] == "\"if\"")
+    {
+        RESERVED_func(); // if
+        RESERVED_func(); // (
+        Exp_Struct *condition = Exp_func();
+        RESERVED_func(); // )
+        if (curToken.rule[4] == "ElseStmt")
+        {
+            ret_ptr->type = Stmt_Struct::StmtType::StmtType_IfElse;
+            std::string if_block_name = koopaIR->GetUniqueName("%ifelse_if");
+            std::string else_block_name = koopaIR->GetUniqueName("%ifelse_else");
+            std::string end_block_name = koopaIR->GetUniqueName("%ifelse_end");
+
+            koopaIR->AddBranchStatement(condition->value, if_block_name, else_block_name);
+
+            // if
+            BasicBlock *if_block = koopaIR->NewBasicBlockAndSetCur(if_block_name);
+            koopaIR->ScopeAddBasicBlock(if_block);
+            PushNameMap();
+            ElseStmt_Struct *if_clause = ElseStmt_func(end_block_name);
+            PopNameMap();
+
+            RESERVED_func(); // "else"
+
+            // else
+            BasicBlock *else_block = koopaIR->NewBasicBlockAndSetCur(else_block_name);
+            koopaIR->ScopeAddBasicBlock(else_block);
+            PushNameMap();
+            Stmt_Struct *else_clause = Stmt_func(end_block_name);
+            PopNameMap();
+
+            // end
+            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->ScopeAddBasicBlock(end_block);
+
+            ret_ptr->subStructPointer.IfElse.Condition = condition;
+            ret_ptr->subStructPointer.IfElse.IfClause = if_clause;
+            ret_ptr->subStructPointer.IfElse.ElseClause = else_clause;
+        }
+        else
+        {
+            ret_ptr->type = Stmt_Struct::StmtType::StmtType_If;
+            std::string if_block_name = koopaIR->GetUniqueName("%if_if");
+            std::string end_block_name = koopaIR->GetUniqueName("%if_end");
+
+            koopaIR->AddBranchStatement(condition->value, if_block_name, end_block_name);
+
+            // if
+            BasicBlock *if_block = koopaIR->NewBasicBlockAndSetCur(if_block_name);
+            koopaIR->ScopeAddBasicBlock(if_block);
+            PushNameMap();
+            Stmt_Struct *clause = Stmt_func(end_block_name);
+            PopNameMap();
+
+            // end
+            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->ScopeAddBasicBlock(end_block);
+
+            ret_ptr->subStructPointer.If.Condition = condition;
+            ret_ptr->subStructPointer.If.Clause = clause;
+        }
+    }
+    else if (curToken.rule[0] == "\"while\"")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_While;
+        RESERVED_func(); // while
+        RESERVED_func(); // (
+
+        std::string while_entry_name = koopaIR->GetUniqueName("%while_entry");
+        std::string while_body_name = koopaIR->GetUniqueName("%while_body");
+        std::string end_block_name = koopaIR->GetUniqueName("%while_end");
+
+        // while entry
+        koopaIR->AddJumpStatement(while_entry_name);
+        BasicBlock *while_entry = koopaIR->NewBasicBlockAndSetCur(while_entry_name);
+        koopaIR->ScopeAddBasicBlock(while_entry);
+        Exp_Struct *condition = Exp_func();
+        koopaIR->AddBranchStatement(condition->value, while_body_name, end_block_name);
+        std::cout << "here \n";
+        RESERVED_func(); // )
+
+        // while body
+        BasicBlock *while_body = koopaIR->NewBasicBlockAndSetCur(while_body_name);
+        koopaIR->ScopeAddBasicBlock(while_body);
+        PushNameMap();
+        PushWhile(while_entry_name, end_block_name);
+        Stmt_Struct *clause = Stmt_func(while_entry_name);
+        PopWhile();
+        PopNameMap();
+
+        // end
+        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+        koopaIR->ScopeAddBasicBlock(end_block);
+    }
+    else if (curToken.rule[0] == "NoIfStmt")
+    {
+        ret_ptr->type = Stmt_Struct::StmtType::StmtType_NoIf;
+        ret_ptr->subStructPointer.NoIfStmt = NoIfStmt_func();
+    }
+    else
+    {
+        std::cerr << "Stmt_func: " << curToken << std::endl;
+        exit(1);
+    }
+
+    if (end_label != "")
+    {
+        koopaIR->AddJumpStatement(end_label);
+    }
+    std::cout << "Exit -- " << curToken.token << std::endl;
+    return ret_ptr;
+}
+
+// ElseStmt    ::= "if" "(" Exp ")" ElseStmt "else" ElseStmt
+//                 | "while" "(" Exp ")" ElseStmt
+//                 | NoIfStmt;
+SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label)
+{
+    ENTRY_GRAMMER(SysyFrontend::ElseStmt_Struct);
+
+    if (curToken.rule[0] == "\"if\"")
+    {
+        ret_ptr->type = ElseStmt_Struct::ElseStmtType::ElseStmtType_IfElse;
+        RESERVED_func(); // if
+        RESERVED_func(); // (
+        Exp_Struct *condition = Exp_func();
+        RESERVED_func(); // )
+        std::string if_block_name = koopaIR->GetUniqueName("%ifelse_if");
+        std::string else_block_name = koopaIR->GetUniqueName("%ifelse_else");
+        std::string end_block_name = koopaIR->GetUniqueName("%ifelse_end");
+
+        koopaIR->AddBranchStatement(condition->value, if_block_name, else_block_name);
+
+        // if
+        BasicBlock *if_block = koopaIR->NewBasicBlockAndSetCur(if_block_name);
+        koopaIR->ScopeAddBasicBlock(if_block);
+        PushNameMap();
+        ElseStmt_Struct *if_clause = ElseStmt_func(end_block_name);
+        PopNameMap();
+
+        RESERVED_func(); // "else"
+
+        // else
+        BasicBlock *else_block = koopaIR->NewBasicBlockAndSetCur(else_block_name);
+        koopaIR->ScopeAddBasicBlock(else_block);
+        PushNameMap();
+        ElseStmt_Struct *else_clause = ElseStmt_func(end_block_name);
+        PopNameMap();
+
+        // end
+        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+        koopaIR->ScopeAddBasicBlock(end_block);
+
+        ret_ptr->subStructPointer.IfElse.Condition = condition;
+        ret_ptr->subStructPointer.IfElse.IfClause = if_clause;
+        ret_ptr->subStructPointer.IfElse.ElseClause = else_clause;
+    }
+    else if (curToken.rule[0] == "\"while\"")
+    {
+        ret_ptr->type = ElseStmt_Struct::ElseStmtType::ElseStmtType_While;
+        RESERVED_func(); // while
+        RESERVED_func(); // (
+        Exp_Struct *condition = Exp_func();
+        RESERVED_func(); // )
+        std::string while_entry_name = koopaIR->GetUniqueName("%while_entry");
+        std::string while_body_name = koopaIR->GetUniqueName("%while_body");
+        std::string end_block_name = koopaIR->GetUniqueName("%while_end");
+
+        // while entry
+        koopaIR->AddJumpStatement(while_entry_name);
+        BasicBlock *while_entry = koopaIR->NewBasicBlockAndSetCur(while_entry_name);
+        koopaIR->ScopeAddBasicBlock(while_entry);
+        koopaIR->AddBranchStatement(condition->value, while_body_name, end_block_name);
+
+        // while body
+        BasicBlock *while_body = koopaIR->NewBasicBlockAndSetCur(while_body_name);
+        koopaIR->ScopeAddBasicBlock(while_body);
+        PushNameMap();
+        PushWhile(while_entry_name, end_block_name);
+        ElseStmt_Struct *clause = ElseStmt_func(while_entry_name);
+        PopWhile();
+        PopNameMap();
+
+        // end
+        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+        koopaIR->ScopeAddBasicBlock(end_block);
+
+        ret_ptr->subStructPointer.While.Condition = condition;
+        ret_ptr->subStructPointer.While.Clause = clause;
+    }
+    else if (curToken.rule[0] == "NoIfStmt")
+    {
+        ret_ptr->type = ElseStmt_Struct::ElseStmtType::ElseStmtType_NoIf;
+        ret_ptr->subStructPointer.NoIfStmt = NoIfStmt_func();
+    }
+    else
+    {
+        std::cerr << "ElseStmt_func: " << curToken << std::endl;
+        exit(1);
+    }
+
+    if (end_label != "")
+    {
+        koopaIR->AddJumpStatement(end_label);
+    }
+
+    std::cout << "Exit -- " << curToken.token << std::endl;
+    return ret_ptr;
+}
+
+// NoIfStmt    ::= LVal "=" Exp ";"
+//                 | [Exp] ";"
+//                 | Block
+//                 | "break" ";"
+//                 | "continue" ";"
+//                 | "return" [Exp] ";";
+SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
+{
+    ENTRY_GRAMMER(SysyFrontend::NoIfStmt_Struct);
+
     if (curToken.rule[0] == "\"return\"")
     {
-        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Return;
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Return;
         RESERVED_func(); // return
         if (curToken.rule[1] == "\";\"")
         {
@@ -189,18 +405,18 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
     }
     else if (curToken.rule[0] == "Exp")
     {
-        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Exp;
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Exp;
         ret_ptr->subStructPointer.Return = Exp_func();
         RESERVED_func(); //;
     }
     else if (curToken.rule[0] == "\";\"")
     {
-        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Exp;
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Exp;
         RESERVED_func(); //;
     }
     else if (curToken.rule[0] == "Block")
     {
-        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Block;
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Block;
         std::string inner_block = koopaIR->GetUniqueName("%entry");
         koopaIR->AddJumpStatement(inner_block);
         ret_ptr->subStructPointer.Block = Block_func(inner_block);
@@ -208,12 +424,12 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
         std::string outer_block = koopaIR->GetUniqueName("%entry");
         koopaIR->AddJumpStatement(outer_block);
 
-        BasicBlock* block = koopaIR->NewBasicBlockAndSetCur(outer_block);
+        BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(outer_block);
         koopaIR->ScopeAddBasicBlock(block);
     }
     else if (curToken.rule[0] == "LVal")
     {
-        ret_ptr->type = Stmt_Struct::StmtType::StmtType_Assign;
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Assign;
         ret_ptr->subStructPointer.Assign.LVal = LVal_func();
         if (IsConst(ret_ptr->subStructPointer.Assign.LVal->ident))
         {
@@ -225,9 +441,23 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func()
         ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
         RESERVED_func(); //;
     }
+    else if (curToken.rule[0] == "\"break\"")
+    {
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Break;
+        RESERVED_func(); // break
+        RESERVED_func(); // ;
+        koopaIR->AddJumpStatement(while_struct->end_block_name);
+    }
+    else if (curToken.rule[0] == "\"continue\"")
+    {
+        ret_ptr->type = NoIfStmt_Struct::NoIfStmtType::NoIfStmtType_Continue;
+        RESERVED_func(); // continue
+        RESERVED_func(); // ;
+        koopaIR->AddJumpStatement(while_struct->while_entry_name);
+    }
     else
     {
-        std::cerr << "Stmt_func: " << curToken << std::endl;
+        std::cerr << "NoIfStmt_func: " << curToken << std::endl;
         exit(1);
     }
     std::cout << "Exit -- " << curToken.token << std::endl;
