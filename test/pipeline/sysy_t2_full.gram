@@ -6,36 +6,45 @@ CompUnits : CompUnit
 			IDENT = "main"
 			"(" = "("
 			")" = ")"
-			Block : "{" Stmt "}" 
+			Block : "{" BlockItem "}" 
 				"{" = "{"
-				Stmt : "return" Exp ";" 
-					"return" = "return"
-					Exp : AddExp 
-						AddExp : MulExp 
-							MulExp : UnaryExp 
-								UnaryExp : UnaryOp UnaryExp 
-									UnaryOp : "+" 
-										"+" = "+"
-									UnaryExp : PrimaryExp 
-										PrimaryExp : "(" Exp ")" 
-											"(" = "("
-											Exp : AddExp 
-												AddExp : MulExp 
-													MulExp : UnaryExp 
-														UnaryExp : UnaryOp UnaryExp 
-															UnaryOp : "-" 
-																"-" = "-"
-															UnaryExp : UnaryOp UnaryExp 
-																UnaryOp : "-" 
-																	"-" = "-"
-																UnaryExp : UnaryOp UnaryExp 
-																	UnaryOp : "!" 
-																		"!" = "!"
-																	UnaryExp : PrimaryExp 
-																		PrimaryExp : Number 
-																			Number : Integer 
-																				Integer : DEC_INTEGER 
-																					DEC_INTEGER = "6"
-											")" = ")"
-					";" = ";"
+				BlockItem : Stmt 
+					Stmt : "return" Exp ";" 
+						"return" = "return"
+						Exp : LOrExp 
+							LOrExp : LAndExp 
+								LAndExp : EqExp 
+									EqExp : RelExp 
+										RelExp : AddExp 
+											AddExp : MulExp 
+												MulExp : UnaryExp 
+													UnaryExp : UnaryOp UnaryExp 
+														UnaryOp : "+" 
+															"+" = "+"
+														UnaryExp : PrimaryExp 
+															PrimaryExp : "(" Exp ")" 
+																"(" = "("
+																Exp : LOrExp 
+																	LOrExp : LAndExp 
+																		LAndExp : EqExp 
+																			EqExp : RelExp 
+																				RelExp : AddExp 
+																					AddExp : MulExp 
+																						MulExp : UnaryExp 
+																							UnaryExp : UnaryOp UnaryExp 
+																								UnaryOp : "-" 
+																									"-" = "-"
+																								UnaryExp : UnaryOp UnaryExp 
+																									UnaryOp : "-" 
+																										"-" = "-"
+																									UnaryExp : UnaryOp UnaryExp 
+																										UnaryOp : "!" 
+																											"!" = "!"
+																										UnaryExp : PrimaryExp 
+																											PrimaryExp : Number 
+																												Number : Integer 
+																													Integer : DEC_INTEGER 
+																														DEC_INTEGER = "6"
+																")" = ")"
+						";" = ";"
 				"}" = "}"

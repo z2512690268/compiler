@@ -1,0 +1,17 @@
+	.data
+	.text
+	.global main
+main:
+	addi sp, sp, -16
+main_entry:
+#   %0 = le 1, 2
+	li t1, 2
+	addi t0, t1, -1
+	sgt t0, t0, x0
+	sw t0, 0(sp)
+#   ret %0
+	lw t0, 0(sp)
+	addi a0, t0, 0
+	addi sp, sp, 16
+	ret
+

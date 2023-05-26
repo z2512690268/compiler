@@ -563,6 +563,7 @@ struct RiscvGenerator : public KoopaGenerator {
 
         if(CheckMapReg_Stack(addr_map)) {
             EmitLoad(ret_reg, addr_map);
+            EmitLoad(ret_reg, "0(" + ret_reg + ")");
         } else {
             std::cerr << "EmitKoopaLoadStmt_RetReg: addr_map is not stack var" << std::endl;
         }
@@ -635,14 +636,23 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string val_map = GetRegMap(val_var);
 
         if(CheckMapReg_Stack(addr_map)) {
+            std::string addr_temp_reg = GetTempReg();
+            EmitLoad(addr_temp_reg, addr_map);
+            std::string addr_stack = "0(" + addr_temp_reg + ")";
             if(CheckMapReg_Reg(val_map)) {
-                EmitStore(val_map, addr_map);
+                EmitStore(val_map, addr_stack);
             } else if(CheckMapReg_Stack(val_map)) {
                 std::string temp_reg = GetTempReg();
                 EmitLoad(temp_reg, val_map);
-                EmitStore(temp_reg, addr_map);
+                EmitStore(temp_reg, addr_stack);
                 FreeTempReg();
+            } else if(CheckMapReg_Imm(val_map)) {
+                std::string temp_reg = GetTempReg();
+                EmitImm(temp_reg, val_map);
+                EmitStore(temp_reg, addr_stack);
+                FreeTempReg();               
             }
+            FreeTempReg();               
         } else {
             std::cerr << "EmitKoopaStoreStmt: addr_map is not stack var" << std::endl;
         }
@@ -651,9 +661,13 @@ struct RiscvGenerator : public KoopaGenerator {
     void EmitKoopaStoreStmt_InitList(std::string addr, KoopaInitList init_list) {
         std::string addr_map = GetRegMap(addr);
 
+        std::cout << init_list.GetInitString() << std::endl;
         if(CheckMapReg_Stack(addr_map)) {
             if(init_list.GetInitListType() == "int") {
-                EmitStore(init_list.GetInitString(), addr_map);
+                std::string temp_reg = GetTempReg();
+                EmitImm(temp_reg, std::to_string(init_list.initInt));
+                EmitStore(temp_reg, addr_map);
+                FreeTempReg();
             } else if(init_list.GetInitListType() == "zeroinit") {
                 EmitStore("0", addr_map);
             } else if(init_list.GetInitListType() == "aggregate") {
