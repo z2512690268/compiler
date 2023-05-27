@@ -145,7 +145,9 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             ret_ptr->type = Stmt_Struct::StmtType::StmtType_IfElse;
             std::string if_block_name = koopaIR->GetUniqueName("%ifelse_if");
             std::string else_block_name = koopaIR->GetUniqueName("%ifelse_else");
+            BasicBlock *else_block = koopaIR->NewBasicBlock(else_block_name);
             std::string end_block_name = koopaIR->GetUniqueName("%ifelse_end");
+            BasicBlock *end_block = koopaIR->NewBasicBlock(end_block_name);
 
             koopaIR->AddBranchStatement(condition->value, if_block_name, else_block_name);
             bool to_end = false;
@@ -164,7 +166,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             RESERVED_func(); // "else"
 
             // else
-            BasicBlock *else_block = koopaIR->NewBasicBlockAndSetCur(else_block_name);
+            koopaIR->SetCurBlock(else_block);
             koopaIR->ScopeAddBasicBlock(else_block);
             PushNameMap();
             Stmt_Struct *else_clause = Stmt_func(end_block_name);
@@ -177,7 +179,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             // end
             if (to_end)
             {
-                BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+                koopaIR->SetCurBlock(end_block);
                 koopaIR->ScopeAddBasicBlock(end_block);
             }
 
@@ -190,6 +192,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             ret_ptr->type = Stmt_Struct::StmtType::StmtType_If;
             std::string if_block_name = koopaIR->GetUniqueName("%if_if");
             std::string end_block_name = koopaIR->GetUniqueName("%if_end");
+            BasicBlock *end_block = koopaIR->NewBasicBlock(end_block_name);
 
             koopaIR->AddBranchStatement(condition->value, if_block_name, end_block_name);
 
@@ -200,7 +203,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             Stmt_Struct *clause = Stmt_func(end_block_name);
             PopNameMap();
 
-            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->SetCurBlock(end_block);
             koopaIR->ScopeAddBasicBlock(end_block);
 
             ret_ptr->subStructPointer.If.Condition = condition;
@@ -216,6 +219,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
         std::string while_entry_name = koopaIR->GetUniqueName("%while_entry");
         std::string while_body_name = koopaIR->GetUniqueName("%while_body");
         std::string end_block_name = koopaIR->GetUniqueName("%while_end");
+        BasicBlock *end_block = koopaIR->NewBasicBlock(end_block_name);
 
         // while entry
         koopaIR->AddJumpStatement(while_entry_name);
@@ -235,7 +239,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
         PopNameMap();
 
         // end
-        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+        koopaIR->SetCurBlock(end_block);
         koopaIR->ScopeAddBasicBlock(end_block);
     }
     else if (curToken.rule[0] == "NoIfStmt")
@@ -277,7 +281,9 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         RESERVED_func(); // )
         std::string if_block_name = koopaIR->GetUniqueName("%ifelse_if");
         std::string else_block_name = koopaIR->GetUniqueName("%ifelse_else");
+        BasicBlock *else_block = koopaIR->NewBasicBlock(else_block_name);
         std::string end_block_name = koopaIR->GetUniqueName("%ifelse_end");
+        BasicBlock *end_block = koopaIR->NewBasicBlock(end_block_name);
 
         koopaIR->AddBranchStatement(condition->value, if_block_name, else_block_name);
         bool to_end = false;
@@ -296,7 +302,7 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         RESERVED_func(); // "else"
 
         // else
-        BasicBlock *else_block = koopaIR->NewBasicBlockAndSetCur(else_block_name);
+        koopaIR->SetCurBlock(else_block);
         koopaIR->ScopeAddBasicBlock(else_block);
         PushNameMap();
         ElseStmt_Struct *else_clause = ElseStmt_func(end_block_name);
@@ -309,7 +315,7 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         // end
         if (to_end)
         {
-            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->SetCurBlock(end_block);
             koopaIR->ScopeAddBasicBlock(end_block);
         }
 
@@ -327,6 +333,7 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         std::string while_entry_name = koopaIR->GetUniqueName("%while_entry");
         std::string while_body_name = koopaIR->GetUniqueName("%while_body");
         std::string end_block_name = koopaIR->GetUniqueName("%while_end");
+        BasicBlock *end_block = koopaIR->NewBasicBlock(end_block_name);
 
         // while entry
         koopaIR->AddJumpStatement(while_entry_name);
@@ -344,7 +351,7 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         PopNameMap();
 
         // end
-        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+        koopaIR->SetCurBlock(end_block);
         koopaIR->ScopeAddBasicBlock(end_block);
 
         ret_ptr->subStructPointer.While.Condition = condition;

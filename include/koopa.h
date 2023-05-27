@@ -583,6 +583,17 @@ struct KoopaIR {
         return block;
     }
 
+    BasicBlock* NewBasicBlock(std::string name) {
+        BasicBlock* block = new BasicBlock();
+        block->label = name;
+        curScope->symbolTable.AddNewLabelSymbol(name, block);
+        return block;
+    }
+
+    void SetCurBlock(BasicBlock* block) {
+        curBlock = block;
+    }
+
     Statement* AddOperationStatement(std::string op, KoopaSymbol input1, KoopaSymbol input2, KoopaVar ret) {
         Statement* stmt = new Statement();
         stmt->type = Statement::OPERATION;
