@@ -129,7 +129,7 @@ SysyFrontend::VarDecl_Struct *SysyFrontend::VarDecl_func()
 {
     ENTRY_GRAMMER(SysyFrontend::VarDecl_Struct);
 
-    if (curToken.rule[0] == "BType")
+    if (curToken.rule[0] == "Type")
     {
         ret_ptr->Type = Type_func();
         ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->Type));

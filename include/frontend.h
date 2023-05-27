@@ -52,19 +52,31 @@ struct SysyFrontend : public FrontendBase {
     }
 
     // 前端符号表及其操作
+    struct Name_Struct
+    {
+        std::string source_name;
+        std::string ir_name;
+        bool is_const;
+        bool is_func_param;
+
+        Name_Struct(std::string source_name, std::string ir_name, bool is_const = false, bool is_func_param = false) {
+            this->source_name = source_name;
+            this->ir_name = ir_name;
+            this->is_const = is_const;
+            this->is_func_param = is_func_param;
+        }
+    };
+    
+
     struct Name_Map {
-        std::unordered_map<std::string, std::string> map;
-        std::vector<std::string> const_list;
+        std::unordered_map<std::string, Name_Struct*> map;
         Name_Map* parent;
     };
 
     Name_Map* name_map = new Name_Map();
 
-    void AddName(const std::string source_name, const std::string ir_name, bool is_const = false) {
-        name_map->map[source_name] = ir_name;
-        if (is_const) {
-            name_map->const_list.push_back(source_name);
-        }
+    void AddName(const std::string source_name, const std::string ir_name, bool is_const = false, bool is_func_param = false) {
+        name_map->map[source_name] = new Name_Struct(source_name, ir_name, is_const, is_func_param);
     }
 
     std::string GetIRName(const std::string source_name) {
@@ -72,7 +84,7 @@ struct SysyFrontend : public FrontendBase {
         while (cur_map->parent != nullptr)
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
-                return cur_map->map[source_name];
+                return cur_map->map[source_name]->ir_name;
             }
             cur_map = cur_map->parent;
         }
@@ -85,12 +97,20 @@ struct SysyFrontend : public FrontendBase {
         while (cur_map->parent != nullptr)
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
-                for (auto const_name : cur_map->const_list) {
-                    if (const_name == source_name) {
-                        return true;
-                    }
-                }
-                return false;
+                return cur_map->map[source_name]->is_const;
+            }
+            cur_map = cur_map->parent;
+        }
+        std::cerr << "Error: " << source_name << " not found" << std::endl;
+        exit(1);
+    }
+
+    bool IsParam(const std::string source_name) {
+        Name_Map* cur_map = name_map;
+        while (cur_map->parent != nullptr)
+        {
+            if (cur_map->map.find(source_name) != cur_map->map.end()) {
+                return cur_map->map[source_name]->is_func_param;
             }
             cur_map = cur_map->parent;
         }

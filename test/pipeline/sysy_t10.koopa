@@ -1,8 +1,10 @@
 fun @half(@x : i32) : i32 {
 %entry:
-  %0 = load @x
-  %1 = div %0, 2
-  ret %1
+  %1 = alloc i32
+  store @x, %1
+  %0 = load %1
+  %2 = div %0, 2
+  ret %2
 }
 fun @f() {
 %entry:

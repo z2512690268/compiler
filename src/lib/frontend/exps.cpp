@@ -214,7 +214,18 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
         ret_ptr->type = PrimaryExp_Struct::PrimaryExpType::PrimaryExpType_LVal;
         ret_ptr->subStructPointer.LVal = LVal_func();
         KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-        koopaIR->AddLoadStatement(GetIRName(ret_ptr->subStructPointer.LVal->ident), ret_var);
+        if (IsParam(ret_ptr->subStructPointer.LVal->ident))
+        {
+            KoopaVar temp_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            koopaIR->AddAllocStatement(temp_var);
+            koopaIR->AddStoreStatement(temp_var, koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.LVal->ident)));
+            koopaIR->AddLoadStatement(temp_var, ret_var);
+        }
+        else
+        {
+            koopaIR->AddLoadStatement(GetIRName(ret_ptr->subStructPointer.LVal->ident), ret_var);
+        }
+
         if (receiver != nullptr)
         {
             koopaIR->AddStoreStatement(*receiver, ret_var);

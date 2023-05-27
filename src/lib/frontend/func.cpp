@@ -86,7 +86,7 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
         std::string ir_name = koopaIR->GetUniqueName(param->IDENT->identifer);
         KoopaVar koopa_param = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
         ret_ptr->koopa_params.push_back(koopa_param);
-        AddName(param->IDENT->identifer, ir_name);
+        AddName(param->IDENT->identifer, ir_name, false, true);
         if (curToken.rule.size() > 1)
         {
             for (int i = 1; i < curToken.rule.size(); i += 2)
@@ -97,7 +97,7 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
                 ir_name = koopaIR->GetUniqueName(param->IDENT->identifer);
                 koopa_param = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
                 ret_ptr->koopa_params.push_back(koopa_param);
-                AddName(param->IDENT->identifer, ir_name);
+                AddName(param->IDENT->identifer, ir_name, false, true);
             }
         }
     }
