@@ -37,9 +37,7 @@ Exp           ::= LOrExp;
 LVal          ::= IDENT;
 PrimaryExp    ::= "(" Exp ")" | LVal | Number;
 Number        ::= Integer;
-UnaryExp      ::= PrimaryExp 
-                | IDENT "(" [FuncRParams] ")" 
-                | UnaryOp UnaryExp;
+UnaryExp      ::= PrimaryExp | IDENT "(" [FuncRParams] ")" | UnaryOp UnaryExp;
 UnaryOp       ::= "+" | "-" | "!";
 MulExp        ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
 AddExp        ::= MulExp | AddExp ("+" | "-") MulExp;
