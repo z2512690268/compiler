@@ -2,6 +2,25 @@
 #include "koopa.h"
 #include "transfer.h"
 
+bool isEndStmt(Statement *stmt)
+{
+    bool res = false;
+    if (stmt->type == Statement::StatementType::JUMP)
+    {
+        res = true;
+    }
+    else if (stmt->type == Statement::StatementType::BRANCH)
+    {
+        res = true;
+    }
+    else if (stmt->type == Statement::StatementType::RETURN)
+    {
+        res = true;
+    }
+    std::cout << "isEndStmt: " << res << std::endl;
+    return res;
+}
+
 // CompUnits      ::= CompUnit {CompUnit};
 SysyFrontend::CompUnits_Struct *SysyFrontend::CompUnits_func()
 {
@@ -200,8 +219,11 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             PopNameMap();
 
             // end
-            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
-            koopaIR->ScopeAddBasicBlock(end_block);
+            if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name || else_block->statements.back()->JUMP && else_block->statements.back()->jumpStmt.label == end_block_name)
+            {
+                BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+                koopaIR->ScopeAddBasicBlock(end_block);
+            }
 
             ret_ptr->subStructPointer.IfElse.Condition = condition;
             ret_ptr->subStructPointer.IfElse.IfClause = if_clause;
@@ -223,8 +245,11 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             PopNameMap();
 
             // end
-            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
-            koopaIR->ScopeAddBasicBlock(end_block);
+            if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name)
+            {
+                BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+                koopaIR->ScopeAddBasicBlock(end_block);
+            }
 
             ret_ptr->subStructPointer.If.Condition = condition;
             ret_ptr->subStructPointer.If.Clause = clause;
@@ -246,7 +271,6 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
         koopaIR->ScopeAddBasicBlock(while_entry);
         Exp_Struct *condition = Exp_func();
         koopaIR->AddBranchStatement(condition->value, while_body_name, end_block_name);
-        std::cout << "here \n";
         RESERVED_func(); // )
 
         // while body
@@ -275,7 +299,11 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
 
     if (end_label != "")
     {
-        koopaIR->AddJumpStatement(end_label);
+        if (koopaIR->curBlock->statements.size() == 0 || !isEndStmt(koopaIR->curBlock->statements.back()))
+        {
+            std::cout << "add jump to end_label: " << end_label << std::endl;
+            koopaIR->AddJumpStatement(end_label);
+        }
     }
     std::cout << "Exit -- " << curToken.token << std::endl;
     return ret_ptr;
@@ -318,8 +346,11 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         PopNameMap();
 
         // end
-        BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
-        koopaIR->ScopeAddBasicBlock(end_block);
+        if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name)
+        {
+            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->ScopeAddBasicBlock(end_block);
+        }
 
         ret_ptr->subStructPointer.IfElse.Condition = condition;
         ret_ptr->subStructPointer.IfElse.IfClause = if_clause;
@@ -371,7 +402,11 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
 
     if (end_label != "")
     {
-        koopaIR->AddJumpStatement(end_label);
+        if (koopaIR->curBlock->statements.size() == 0 || !isEndStmt(koopaIR->curBlock->statements.back()))
+        {
+            std::cout << "add jump to end_label: " << end_label << std::endl;
+            koopaIR->AddJumpStatement(end_label);
+        }
     }
 
     std::cout << "Exit -- " << curToken.token << std::endl;
@@ -421,11 +456,14 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
         koopaIR->AddJumpStatement(inner_block);
         ret_ptr->subStructPointer.Block = Block_func(inner_block);
 
-        std::string outer_block = koopaIR->GetUniqueName("%entry");
-        koopaIR->AddJumpStatement(outer_block);
+        if (koopaIR->curBlock->statements.size() == 0 || !isEndStmt(koopaIR->curBlock->statements.back()))
+        {
+            std::string outer_block = koopaIR->GetUniqueName("%entry");
+            koopaIR->AddJumpStatement(outer_block);
 
-        BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(outer_block);
-        koopaIR->ScopeAddBasicBlock(block);
+            BasicBlock *block = koopaIR->NewBasicBlockAndSetCur(outer_block);
+            koopaIR->ScopeAddBasicBlock(block);
+        }
     }
     else if (curToken.rule[0] == "LVal")
     {

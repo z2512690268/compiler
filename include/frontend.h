@@ -25,8 +25,6 @@ struct FrontendBase {
     //******************************************************************************
     // 解析过程中的全局变量区
     // 当前作用域/基本块
-    Scope* curScope;
-    BasicBlock* curBlock;
     KoopaIR* koopaIR;
     //******************************************************************************
     FrontendBase(std::string fname) {
@@ -34,8 +32,6 @@ struct FrontendBase {
     }
     virtual void Prepare() {
         stream.LoadFile(filename);
-        curScope = &koopaIR->global_scope;
-        curBlock = nullptr;
     }
     virtual KoopaIR* Process() {
         return nullptr;
