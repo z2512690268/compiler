@@ -244,12 +244,8 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             Stmt_Struct *clause = Stmt_func(end_block_name);
             PopNameMap();
 
-            // end
-            if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name)
-            {
-                BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
-                koopaIR->ScopeAddBasicBlock(end_block);
-            }
+            BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
+            koopaIR->ScopeAddBasicBlock(end_block);
 
             ret_ptr->subStructPointer.If.Condition = condition;
             ret_ptr->subStructPointer.If.Clause = clause;
