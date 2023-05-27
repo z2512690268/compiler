@@ -166,7 +166,7 @@ SysyFrontend::Stmt_Struct *SysyFrontend::Stmt_func(std::string end_label)
             PopNameMap();
 
             // end
-            if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name || else_block->statements.back()->JUMP && else_block->statements.back()->jumpStmt.label == end_block_name)
+            if (if_block->statements.back()->type == Statement::StatementType::JUMP && if_block->statements.back()->jumpStmt.label == end_block_name || else_block->statements.back()->type == Statement::StatementType::JUMP && else_block->statements.back()->jumpStmt.label == end_block_name)
             {
                 BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
                 koopaIR->ScopeAddBasicBlock(end_block);
@@ -289,7 +289,7 @@ SysyFrontend::ElseStmt_Struct *SysyFrontend::ElseStmt_func(std::string end_label
         PopNameMap();
 
         // end
-        if (if_block->statements.back()->JUMP && if_block->statements.back()->jumpStmt.label == end_block_name)
+        if (if_block->statements.back()->type == Statement::StatementType::JUMP && if_block->statements.back()->jumpStmt.label == end_block_name || else_block->statements.back()->type == Statement::StatementType::JUMP && else_block->statements.back()->jumpStmt.label == end_block_name)
         {
             BasicBlock *end_block = koopaIR->NewBasicBlockAndSetCur(end_block_name);
             koopaIR->ScopeAddBasicBlock(end_block);
