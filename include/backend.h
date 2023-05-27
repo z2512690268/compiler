@@ -42,7 +42,7 @@ struct KoopaGenerator {
         func_scopes = ir->func_scopes;
         std::string code;
         for(auto& item : global_scope.symbolTable.var_table) {
-            if(item.second.var.type != KoopaVarType(KoopaVarType::KOOPA_func)) {
+            if(item.second.var.type.topType != KoopaVarType::KOOPA_func) {
                 code += "global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + "\n";
             } else {
                 code += "decl " + item.second.var.varName + "(";
@@ -68,7 +68,12 @@ struct KoopaGenerator {
                     code += ", ";
                 }
             }
-            code += "): " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
+            code += ")";
+            if(func->func_ret_type.topType != KoopaVarType::KOOPA_undef) {
+                code += " : " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
+            } else {
+                code += " {\n";
+            }
             for(auto& block : func->basicBlocks) {;
                 code += block->label + ":\n";
                 for(auto& stmt : block->statements) {
@@ -85,7 +90,11 @@ struct KoopaGenerator {
                             }
                             break;
                         case Statement::CALL:
-                            code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            if(stmt->callStmt.ret_var.type.topType != KoopaVarType::KOOPA_undef) {
+                                code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            } else {
+                                code += "  call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            }
                             for(int i = 0; i < stmt->callStmt.params.size(); i++) {
                                 code += stmt->callStmt.params[i].GetSymbol();
                                 if(i != stmt->callStmt.params.size() - 1) {
@@ -114,10 +123,10 @@ struct KoopaGenerator {
                             }
                             break;
                         case Statement::GETPTR:
-                            code += "  getptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + "\n";
+                            code += "  " + stmt->getptrStmt.ret_var.varName + " = getptr " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + "\n";
                             break;
                         case Statement::GETELEMENTPTR:
-                            code += "  getelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol() + "\n";
+                            code += "  " + stmt->getelementptrStmt.arrayptr.varName + " = getelementptr" +  + ", " + stmt->getelementptrStmt.index.GetSymbol() + "\n";
                             break;
                     }
                 }
@@ -886,12 +895,13 @@ struct RiscvGenerator : public KoopaGenerator {
                             }
                             break;
                         case Statement::GETPTR:
-                            explain = "  getptr " + stmt->getptrStmt.ret_var.varName + " = " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol();
+                            explain = "  " + stmt->getptrStmt.ret_var.varName + " = getptr " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol();
+
                             EmitExplain(explain);
                             EmitKoopaGetptrStmt(stmt->getptrStmt.ret_var, stmt->getptrStmt.varptr, stmt->getptrStmt.offset.GetImm() * stmt->getptrStmt.varptr.type.ptrType.type->Size());
                             break;
                         case Statement::GETELEMENTPTR:
-                            explain = "  getelementptr " + stmt->getelementptrStmt.ret_var.varName + " = " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol();
+                            explain = "  " + stmt->getelementptrStmt.arrayptr.varName + " = getelementptr" +  + ", " + stmt->getelementptrStmt.index.GetSymbol();
                             EmitExplain(explain);
                             EmitKoopaGetelementptrStmt(stmt->getelementptrStmt.ret_var, stmt->getelementptrStmt.arrayptr, stmt->getelementptrStmt.index.GetImm() * stmt->getelementptrStmt.arrayptr.type.arrayType.type->Size());
                             break;
