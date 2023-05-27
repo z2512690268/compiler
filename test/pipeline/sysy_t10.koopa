@@ -1,4 +1,4 @@
-fun @half(i32 @x) : i32 {
+fun @half(@x : i32) : i32 {
 %entry:
   %0 = load @x
   %1 = div %0, 2

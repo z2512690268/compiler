@@ -1,7 +1,7 @@
 CompUnits : CompUnit 
 	CompUnit : FuncDef 
-		FuncDef : FuncType IDENT "(" ")" Block 
-			FuncType : "int" 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
 				"int" = "int"
 			IDENT = "main"
 			"(" = "("

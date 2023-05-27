@@ -63,7 +63,7 @@ struct KoopaGenerator {
         for(auto& func : func_scopes) {
             code += "fun " + func->func_name + "(";
             for(int i = 0; i < func->func_param.size(); i++) {
-                code += KoopaVarTypeToString(func->func_param[i].type) + " " + func->func_param[i].varName;
+                code += func->func_param[i].varName + " : " + KoopaVarTypeToString(func->func_param[i].type);
                 if(i != func->func_param.size() - 1) {
                     code += ", ";
                 }

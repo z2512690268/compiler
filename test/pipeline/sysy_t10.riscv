@@ -1,0 +1,38 @@
+	.data
+	.text
+	.global half
+half:
+	addi sp, sp, -16
+half_entry:
+#   %0 = load @x
+	lw t0, 8(sp)
+	lw t0, 0(t0)
+	sw t0, 4(sp)
+#   %1 = div %0, 2
+	lw t1, 4(sp)
+	li t2, 2
+	div t0, t1, t2
+	sw t0, 0(sp)
+#   ret %1
+	lw t0, 0(sp)
+	addi a0, t0, 0
+	addi sp, sp, 16
+	ret
+	.global f
+f:
+f_entry:
+#   ret	
+	.global main
+main:
+	addi sp, sp, -16
+	sw ra, 12(sp)
+main_entry:
+#   %0 = call @f()
+#   %1 = call @half(10)
+#   ret %1
+	lw t0, 0(sp)
+	addi a0, t0, 0
+	lw ra, 12(sp)
+	addi sp, sp, 16
+	ret
+

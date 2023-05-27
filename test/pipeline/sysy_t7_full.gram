@@ -1,7 +1,7 @@
 CompUnits : CompUnit 
 	CompUnit : FuncDef 
-		FuncDef : FuncType IDENT "(" ")" Block 
-			FuncType : "int" 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
 				"int" = "int"
 			IDENT = "main"
 			"(" = "("
@@ -10,8 +10,8 @@ CompUnits : CompUnit
 				"{" = "{"
 				BlockItem : Decl 
 					Decl : VarDecl 
-						VarDecl : BType VarDef "," VarDef ";" 
-							BType : "int" 
+						VarDecl : Type VarDef "," VarDef ";" 
+							Type : "int" 
 								"int" = "int"
 							VarDef : IDENT "=" InitVal 
 								IDENT = "a"
@@ -54,8 +54,8 @@ CompUnits : CompUnit
 								"{" = "{"
 								BlockItem : Decl 
 									Decl : VarDecl 
-										VarDecl : BType VarDef ";" 
-											BType : "int" 
+										VarDecl : Type VarDef ";" 
+											Type : "int" 
 												"int" = "int"
 											VarDef : IDENT "=" InitVal 
 												IDENT = "a"
