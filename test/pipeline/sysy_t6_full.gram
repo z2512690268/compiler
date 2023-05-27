@@ -62,49 +62,51 @@ CompUnits : CompUnit
 																				DEC_INTEGER = "10"
 							";" = ";"
 				BlockItem : Stmt 
-					Stmt : LVal "=" Exp ";" 
-						LVal : IDENT 
-							IDENT = "y"
-						"=" = "="
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : AddExp 
-											AddExp : AddExp "+" MulExp 
+					Stmt : NoIfStmt 
+						NoIfStmt : LVal "=" Exp ";" 
+							LVal : IDENT 
+								IDENT = "y"
+							"=" = "="
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : AddExp "+" MulExp 
+													AddExp : MulExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : LVal 
+																	LVal : IDENT 
+																		IDENT = "y"
+													"+" = "+"
+													MulExp : MulExp "/" UnaryExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : LVal 
+																	LVal : IDENT 
+																		IDENT = "x"
+														"/" = "/"
+														UnaryExp : PrimaryExp 
+															PrimaryExp : Number 
+																Number : Integer 
+																	Integer : DEC_INTEGER 
+																		DEC_INTEGER = "2"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
 												AddExp : MulExp 
 													MulExp : UnaryExp 
 														UnaryExp : PrimaryExp 
 															PrimaryExp : LVal 
 																LVal : IDENT 
 																	IDENT = "y"
-												"+" = "+"
-												MulExp : MulExp "/" UnaryExp 
-													MulExp : UnaryExp 
-														UnaryExp : PrimaryExp 
-															PrimaryExp : LVal 
-																LVal : IDENT 
-																	IDENT = "x"
-													"/" = "/"
-													UnaryExp : PrimaryExp 
-														PrimaryExp : Number 
-															Number : Integer 
-																Integer : DEC_INTEGER 
-																	DEC_INTEGER = "2"
-						";" = ";"
-				BlockItem : Stmt 
-					Stmt : "return" Exp ";" 
-						"return" = "return"
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : AddExp 
-											AddExp : MulExp 
-												MulExp : UnaryExp 
-													UnaryExp : PrimaryExp 
-														PrimaryExp : LVal 
-															LVal : IDENT 
-																IDENT = "y"
-						";" = ";"
+							";" = ";"
 				"}" = "}"

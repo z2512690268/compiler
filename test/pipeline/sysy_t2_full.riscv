@@ -4,7 +4,11 @@
 main:
 	addi sp, sp, -16
 main_entry:
-#   %0 = not 0, 6
+#   %0 = eq 0, 6
+	li t1, 0
+	addi t0, t1, -6
+	seqz t0, t0
+	sw t0, 8(sp)
 #   %1 = sub 0, %0
 	lw t1, 8(sp)
 	li t2, 0

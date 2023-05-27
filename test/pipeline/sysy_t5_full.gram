@@ -41,18 +41,19 @@ CompUnits : CompUnit
 																					DEC_INTEGER = "1"
 							";" = ";"
 				BlockItem : Stmt 
-					Stmt : "return" Exp ";" 
-						"return" = "return"
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : AddExp 
-											AddExp : MulExp 
-												MulExp : UnaryExp 
-													UnaryExp : PrimaryExp 
-														PrimaryExp : LVal 
-															LVal : IDENT 
-																IDENT = "x"
-						";" = ";"
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "x"
+							";" = ";"
 				"}" = "}"

@@ -9,19 +9,20 @@ CompUnits : CompUnit
 			Block : "{" BlockItem "}" 
 				"{" = "{"
 				BlockItem : Stmt 
-					Stmt : "return" Exp ";" 
-						"return" = "return"
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : AddExp 
-											AddExp : MulExp 
-												MulExp : UnaryExp 
-													UnaryExp : PrimaryExp 
-														PrimaryExp : Number 
-															Number : Integer 
-																Integer : OCT_INTEGER 
-																	OCT_INTEGER = "0"
-						";" = ";"
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : Number 
+																Number : Integer 
+																	Integer : OCT_INTEGER 
+																		OCT_INTEGER = "0"
+							";" = ";"
 				"}" = "}"

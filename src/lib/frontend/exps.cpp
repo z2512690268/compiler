@@ -70,7 +70,7 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
         else if (op->type == UnaryOp_Struct::UnaryOpType::UnaryOpType_Not)
         {
             KoopaVar ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-            koopaIR->AddOperationStatement("not", 0, exp->value, ret_var);
+            koopaIR->AddOperationStatement("eq", 0, exp->value, ret_var);
             if (receiver != nullptr)
             {
                 koopaIR->AddStoreStatement(*receiver, ret_var);

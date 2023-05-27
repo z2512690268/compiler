@@ -1,0 +1,28 @@
+fun @main(): i32 {
+%entry:
+  @i = alloc i32
+  store 0, @i
+  @pow = alloc i32
+  store 1, @pow
+  jump %while_entry
+%while_entry:
+  %0 = load @i
+  %1 = lt %0, 7
+  br %1, %while_body, %while_end
+%while_body:
+  jump %entry_0
+%entry_0:
+  %2 = load @pow
+  %3 = mul %2, 2
+  store %3, @pow
+  %4 = load @i
+  %5 = add %4, 1
+  store %5, @i
+  jump %entry_1
+%entry_1:
+  jump %while_entry
+%while_end:
+  %6 = load @pow
+  ret %6
+}
+

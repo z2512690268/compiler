@@ -5,3 +5,6 @@ build/
 tools/
 test/asm
 log/
+tmp.gram
+tmp.lex
+sysyc

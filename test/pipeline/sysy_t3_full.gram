@@ -9,34 +9,35 @@ CompUnits : CompUnit
 			Block : "{" BlockItem "}" 
 				"{" = "{"
 				BlockItem : Stmt 
-					Stmt : "return" Exp ";" 
-						"return" = "return"
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : AddExp 
-											AddExp : AddExp "+" MulExp 
-												AddExp : MulExp 
-													MulExp : UnaryExp 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : AddExp "+" MulExp 
+													AddExp : MulExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : Number 
+																	Number : Integer 
+																		Integer : DEC_INTEGER 
+																			DEC_INTEGER = "1"
+													"+" = "+"
+													MulExp : MulExp "*" UnaryExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : Number 
+																	Number : Integer 
+																		Integer : DEC_INTEGER 
+																			DEC_INTEGER = "2"
+														"*" = "*"
 														UnaryExp : PrimaryExp 
 															PrimaryExp : Number 
 																Number : Integer 
 																	Integer : DEC_INTEGER 
-																		DEC_INTEGER = "1"
-												"+" = "+"
-												MulExp : MulExp "*" UnaryExp 
-													MulExp : UnaryExp 
-														UnaryExp : PrimaryExp 
-															PrimaryExp : Number 
-																Number : Integer 
-																	Integer : DEC_INTEGER 
-																		DEC_INTEGER = "2"
-													"*" = "*"
-													UnaryExp : PrimaryExp 
-														PrimaryExp : Number 
-															Number : Integer 
-																Integer : DEC_INTEGER 
-																	DEC_INTEGER = "3"
-						";" = ";"
+																		DEC_INTEGER = "3"
+							";" = ";"
 				"}" = "}"

@@ -1,0 +1,33 @@
+fun @main(): i32 {
+%entry:
+  @a = alloc i32
+  store 1, @a
+  %0 = load @a
+  %1 = eq %0, 2
+  %2 = load @a
+  %3 = eq %2, 3
+  %4 = or %1, %3
+  br %4, %ifelse_if, %ifelse_else
+%ifelse_if:
+  jump %entry_0
+%entry_0:
+  ret 0
+%sdada:
+  jump %entry_1
+%entry_1:
+  jump %ifelse_end
+%ifelse_else:
+  jump %entry_2
+%entry_2:
+  %5 = load @a
+  %6 = add %5, 1
+  ret %6
+%sdadas:
+  jump %entry_3
+  
+%entry_3:
+  jump %ifelse_end
+%ifelse_end:
+  jump %ifelse_end
+}
+

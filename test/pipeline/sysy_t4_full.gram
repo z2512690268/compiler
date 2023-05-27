@@ -9,28 +9,29 @@ CompUnits : CompUnit
 			Block : "{" BlockItem "}" 
 				"{" = "{"
 				BlockItem : Stmt 
-					Stmt : "return" Exp ";" 
-						"return" = "return"
-						Exp : LOrExp 
-							LOrExp : LAndExp 
-								LAndExp : EqExp 
-									EqExp : RelExp 
-										RelExp : RelExp "<=" AddExp 
-											RelExp : AddExp 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : RelExp "<=" AddExp 
+												RelExp : AddExp 
+													AddExp : MulExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : Number 
+																	Number : Integer 
+																		Integer : DEC_INTEGER 
+																			DEC_INTEGER = "1"
+												"<=" = "<="
 												AddExp : MulExp 
 													MulExp : UnaryExp 
 														UnaryExp : PrimaryExp 
 															PrimaryExp : Number 
 																Number : Integer 
 																	Integer : DEC_INTEGER 
-																		DEC_INTEGER = "1"
-											"<=" = "<="
-											AddExp : MulExp 
-												MulExp : UnaryExp 
-													UnaryExp : PrimaryExp 
-														PrimaryExp : Number 
-															Number : Integer 
-																Integer : DEC_INTEGER 
-																	DEC_INTEGER = "2"
-						";" = ";"
+																		DEC_INTEGER = "2"
+							";" = ";"
 				"}" = "}"
