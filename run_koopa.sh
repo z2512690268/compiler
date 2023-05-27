@@ -28,10 +28,7 @@ obj=${buildpath}${obj}
 exe=${buildpath}${exe}
 
 sed -i 's/main/originmain/g' ${file}
-echo "decl @putint(i32)
-decl @putch(i32)
-decl @starttime()
-decl @stoptime()
+echo "
 
 fun @main(): i32 {
 %entry:

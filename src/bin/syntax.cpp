@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     if(std::string(argv[1]) == "sysy") {
         frontend = new SysyFrontend(file_name);
     } else if(std::string(argv[1]) == "koopa") {
-        // frontend = new KoopaFrontend(file_name, generator);
+        frontend = new KoopaFrontend(file_name);
     } else {
         std::cerr << "Unknown source: " << argv[2] << std::endl;
         exit(1);

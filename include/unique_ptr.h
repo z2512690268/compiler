@@ -45,13 +45,13 @@ public:
     //例子：unique_ptr<Test> tPtr3(std::move(tPtr1));
 	unique_ptr(unique_ptr&& move) noexcept
 	{
-        std::cout << "construct for unique_ptr&&" << std::endl;
+        //std::cout << "construct for unique_ptr&&" << std::endl;
 		move.swap(*this);
 	}
 	// ptr = std::move(resource)
 	unique_ptr& operator=(unique_ptr&& move) noexcept
 	{
-        std::cout << "operator= for unique_ptr&&" << std::endl;
+        //std::cout << "operator= for unique_ptr&&" << std::endl;
 
 		move.swap(*this);
 		return *this;

@@ -44,27 +44,39 @@ struct SysyFrontend : public FrontendBase {
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }
 
-    void AddLibFunc(std::string name, bool isVoid) {
+    void AddLibFunc(std::string name, bool isVoid, bool hasI32, bool hasI32Ptr) {
         FuncDef_Struct* func = new FuncDef_Struct();
         func->funcnameIDENT = new IDENT_Struct();
         func->funcnameIDENT->identifer = "@" + name;
         func->funcRetType = new Type_Struct();
         func->funcRetType->type = isVoid ? Type_Struct::Type::Type_Void : Type_Struct::Type::Type_Int;
         func_list.push_back(func);
+
+        KoopaVarType ret_type = isVoid ? KoopaVarType::KOOPA_undef : KoopaVarType::KOOPA_INT32;
+        std::vector<KoopaVarType> param_types;
+        if (hasI32) {
+            param_types.push_back(KoopaVarType::KOOPA_INT32);
+        }
+        if (hasI32Ptr) {
+            KoopaVarType type = KoopaVarType::PTR_Type(KoopaVarType::KOOPA_INT32);
+            param_types.push_back(type);
+        }
+        KoopaVarType funcType = KoopaVarType::FUNC_Type(ret_type, param_types);
+        koopaIR->NewVar(funcType, func->funcnameIDENT->identifer);
     }
 
     virtual KoopaIR* Process() {
         koopaIR = new KoopaIR();
         line_num = 1;
         Prepare();
-        AddLibFunc("getint", false);
-        AddLibFunc("getch", false);
-        AddLibFunc("getarray", false);
-        AddLibFunc("putint", true);
-        AddLibFunc("putch", true);
-        AddLibFunc("putarray", true);
-        AddLibFunc("starttime", true);
-        AddLibFunc("stoptime", true);
+        AddLibFunc("getint", false, false, false);
+        AddLibFunc("getch", false, false, false);
+        AddLibFunc("getarray", false, false, true);
+        AddLibFunc("putint", true, true, false);
+        AddLibFunc("putch", true, true, false);
+        AddLibFunc("putarray", true, true, true);
+        AddLibFunc("starttime", true, false, false);
+        AddLibFunc("stoptime", true, false, false);
         CompUnits_func();
         return koopaIR;
     }
@@ -880,5 +892,460 @@ struct RiscvFrontend : public FrontendBase {
 
         return nullptr;
     }
+    //******************************************************************************
+};
+
+struct KoopaFrontend : public FrontendBase
+{
+    //******************************************************************************
+    // 接口函数
+    KoopaFrontend(std::string fname) : FrontendBase(fname) {}
+    virtual KoopaIR *Process()
+    {
+        koopaIR = new KoopaIR();
+        Prepare();
+        CompUnits_func();
+        return koopaIR;
+    }
+    //******************************************************************************
+
+    //******************************************************************************
+    // 函数和结构体前置声明
+    // 非终结符
+    struct CompUnits_Struct;
+    struct CompUnit_Struct;
+    struct Type_Struct;
+    struct ArrayType_Struct;
+    struct PointerType_Struct;
+    struct FunType_Struct;
+    struct GetPointer_Struct;
+    struct GetElementPointer_Struct;
+    struct BinaryExpr_Struct;
+    struct Value_Struct;
+    struct Initializer_Struct;
+    struct Aggregate_Struct;
+    struct SymbolDef_Struct;
+    struct GlobalSymbolDef_Struct;
+    struct MemoryDeclaration_Struct;
+    struct GlobalMemoryDeclaration_Struct;
+    struct Load_Struct;
+    struct Store_Struct;
+    struct Branch_Struct;
+    struct Jump_Struct;
+    struct BlockArgList_Struct;
+    struct FunCall_Struct;
+    struct Return_Struct;
+    struct FunDef_Struct;
+    struct FunParams_Struct;
+    struct Block_Struct;
+    struct BlockParamList_Struct;
+    struct Statement_Struct;
+    struct EndStatement_Struct;
+    struct FunDecl_Struct;
+    struct FunDeclParams_Struct;
+
+    // 终结符
+    struct TAB_Struct;
+    struct SYMBOL_Struct;
+    struct INT_Struct;
+    struct BINARY_OP_Struct;
+    struct RESERVED_Struct;
+    //******************************************************************************
+
+    //******************************************************************************
+    // 带属性语法树节点
+    // 各个类型的结构体
+    struct KoopaGramStruct
+    {
+        CompUnits_Struct *CompUnits;
+        // ATTRIBUTES
+    };
+
+    struct CompUnits_Struct
+    {
+        std::vector<CompUnit_Struct *> CompUnit;
+        // ATTRIBUTES
+    };
+
+    struct CompUnit_Struct
+    {
+        GlobalSymbolDef_Struct *GlobalSymbolDef;
+        FunDecl_Struct *FunDecl;
+        FunDef_Struct *FunDef;
+        // ATTRIBUTES
+    };
+
+    struct FunDef_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        Type_Struct *Type;
+        std::vector<Block_Struct *> Block;
+        FunParams_Struct *FunParams;
+        // ATTRIBUTES
+    };
+
+    struct FunParams_Struct
+    {
+        std::vector<SYMBOL_Struct *> SYMBOL;
+        std::vector<Type_Struct *> Type;
+        // ATTRIBUTES
+    };
+
+    struct Type_Struct
+    {
+        KoopaVarType Type;
+        ArrayType_Struct *ArrayType;
+        PointerType_Struct *PointerType;
+        FunType_Struct *FunType;
+        // ATTRIBUTES
+    };
+
+    struct ArrayType_Struct
+    {
+        Type_Struct *Type;
+        INT_Struct *INT;
+        // ATTRIBUTES
+    };
+
+    struct PointerType_Struct
+    {
+        Type_Struct *Type;
+        // ATTRIBUTES
+    };
+
+    struct FunType_Struct
+    {
+        std::vector<Type_Struct *> Type;
+        // ATTRIBUTES
+    };
+
+    struct Block_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        BlockParamList_Struct *BlockParamList;
+        std::vector<Statement_Struct *> Statement;
+        EndStatement_Struct *EndStatement;
+        // ATTRIBUTES
+        BasicBlock *block;
+    };
+
+    struct BlockParamList_Struct
+    {
+        std::vector<SYMBOL_Struct *> SYMBOL;
+        std::vector<Type_Struct *> Type;
+        // ATTRIBUTES
+    };
+
+    struct Statement_Struct
+    {
+        SymbolDef_Struct *SymbolDef;
+        Store_Struct *Store;
+        FunCall_Struct *FunCall;
+        // ATTRIBUTES
+    };
+
+    struct SymbolDef_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        MemoryDeclaration_Struct *MemoryDeclaration;
+        Load_Struct *Load;
+        GetPointer_Struct *GetPointer;
+        GetElementPointer_Struct *GetElementPointer;
+        BinaryExpr_Struct *BinaryExpr;
+        FunCall_Struct *FunCall;
+        // ATTRIBUTES
+        std::string SymbolName;
+    };
+
+    struct GlobalSymbolDef_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        GlobalMemoryDeclaration_Struct *GlobalMemoryDeclaration;
+        // ATTRIBUTES
+        std::string SymbolName;
+    };
+
+    struct GetPointer_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        Value_Struct *Value;
+        // ATTRIBUTES
+    };
+
+    struct GetElementPointer_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        Value_Struct *Value;
+        // ATTRIBUTES
+    };
+
+    struct BinaryExpr_Struct
+    {
+        BinaryExpr_Struct *BinaryExpr;
+        BINARY_OP_Struct *BINARY_OP;
+        Value_Struct *Value1;
+        Value_Struct *Value2;
+        KoopaSymbol value;
+        // ATTRIBUTES
+    };
+
+    struct EndStatement_Struct
+    {
+        Branch_Struct *Branch;
+        Jump_Struct *Jump;
+        Return_Struct *Return;
+        // ATTRIBUTES
+    };
+
+    struct FunCall_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        std::vector<Value_Struct *> Value;
+        // ATTRIBUTES
+    };
+
+    struct Return_Struct
+    {
+        Value_Struct *Value;
+        // ATTRIBUTES
+    };
+
+    struct Value_Struct
+    {
+        enum ValueType
+        {
+            SYMBOL_TYPE,
+            INT_TYPE,
+            UNDEF_TYPE
+        };
+        ValueType type;
+        // SYMBOL_TYPE
+        SYMBOL_Struct *SYMBOL;
+        // INT_TYPE
+        INT_Struct *INT;
+        // ATTRIBUTES
+    };
+
+    struct Initializer_Struct
+    {
+        enum InitializerType
+        {
+            INT_TYPE,
+            UNDEF_TYPE,
+            AGGREGATE_TYPE,
+            ZEROINIT_TYPE,
+        };
+        InitializerType type;
+        // INT_TYPE
+        INT_Struct *INT;
+        // AGGREGATE_TYPE
+        Aggregate_Struct *Aggregate;
+        KoopaInitList *initList;
+        // ATTRIBUTES
+    };
+
+    struct Aggregate_Struct
+    {
+        std::vector<Initializer_Struct *> InitializerList;
+
+        // ATTRIBUTES
+    };
+
+    struct MemoryDeclaration_Struct
+    {
+        Type_Struct *Type;
+    };
+
+    struct GlobalMemoryDeclaration_Struct
+    {
+        Type_Struct *Type;
+        Initializer_Struct *Initializer;
+    };
+
+    struct Load_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+    };
+
+    struct Store_Struct
+    {
+        SYMBOL_Struct *SYMBOL0;
+        SYMBOL_Struct *SYMBOL;
+        Initializer_Struct *Initializer;
+    };
+
+    struct Branch_Struct
+    {
+        Value_Struct *Value;
+        SYMBOL_Struct *SYMBOL1;
+        BlockArgList_Struct *BlockArgList1;
+        SYMBOL_Struct *SYMBOL2;
+        BlockArgList_Struct *BlockArgList2;
+    };
+
+    struct Jump_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        BlockArgList_Struct *BlockArgList;
+    };
+
+    struct BlockArgList_Struct
+    {
+        Value_Struct *Value;
+        std::vector<Value_Struct *> ValueList;
+        // ATTRIBUTES
+    };
+
+    struct FunDecl_Struct
+    {
+        SYMBOL_Struct *SYMBOL;
+        FunDeclParams_Struct *FunDeclParams;
+        Type_Struct *Type;
+        // ATTRIBUTES
+    };
+
+    struct FunDeclParams_Struct
+    {
+        std::vector<Type_Struct *> Type;
+        // ATTRIBUTES
+    };
+
+    struct TAB_Struct
+    {
+
+        // ATTRIBUTES
+    };
+
+    struct SYMBOL_Struct
+    {
+        std::string SYMBOL;
+        // ATTRIBUTES
+    };
+
+    struct INT_Struct
+    {
+        int INT;
+        // ATTRIBUTES
+    };
+
+    struct BINARY_OP_Struct
+    {
+        std::string BINARY_OP;
+        // ATTRIBUTES
+    };
+
+    struct RESERVED_Struct
+    {
+        std::string RESERVED;
+        // ATTRIBUTES
+    };
+
+    //******************************************************************************
+
+    // CompUnits ::= CompUnit {CompUnit};
+    CompUnits_Struct *CompUnits_func();
+
+    // CompUnit  ::= FunDef;
+    CompUnit_Struct *CompUnit_func();
+
+    // FunDef ::= "fun" SYMBOL "(" ")" [":" Type] "{" {Block} "}";
+    FunDef_Struct *FunDef_func();
+    // Type ::= "i32";
+    Type_Struct *Type_func();
+
+    // ArrayType ::= "[" Type "," INT "]";
+    ArrayType_Struct *ArrayType_func();
+
+    // PointerType ::= "*" Type;
+    PointerType_Struct *PointerType_func();
+
+    // FunType ::= "(" [Type {"," Type}] ")" [":" Type];
+    FunType_Struct *FunType_func();
+
+    // Block ::= SYMBOL ":" {Statement ";"} EndStatement ";";
+    Block_Struct *Block_func();
+
+    // Statement ::= SymbolDef;
+    Statement_Struct *Statement_func();
+
+    // SymbolDef ::= SYMBOL "=" BinaryExpr;
+    SymbolDef_Struct *SymbolDef_func();
+
+    // GlobalSymbolDef ::= SYMBOL "=" GlobalMemoryDeclaration;
+    GlobalSymbolDef_Struct *GlobalSymbolDef_func();
+
+    // GetPointer ::= "getptr" SYMBOL "," Value;
+    GetPointer_Struct *GetPointer_func();
+
+    // GetElementPointer ::= "getelemptr" SYMBOL "," Value;    //2
+    GetElementPointer_Struct *GetElementPointer_func();
+
+    // BinaryExpr ::= BINARY_OP Value "," Value;
+    BinaryExpr_Struct *BinaryExpr_func();
+
+    // Branch ::= "br" Value "," SYMBOL [BlockArgList] "," SYMBOL [BlockArgList];
+    Branch_Struct *Branch_func();
+
+    // Jump ::= "jmp" SYMBOL [BlockArgList];
+    Jump_Struct *Jump_func();
+
+    // BlockArgList ::= Value {"," Value};
+    BlockArgList_Struct *BlockArgList_func();
+
+    // EndStatement ::= Return;
+    EndStatement_Struct *EndStatement_func();
+
+    // FunCall ::= SYMBOL "(" [Value {"," Value}] ")";
+    FunCall_Struct *FunCall_func();
+
+    // FunParams ::= SYMBOL ":" Type {"," SYMBOL ":" Type};
+    FunParams_Struct *FunParams_func();
+
+    // BlockParamList ::= "(" SYMBOL ":" Type {"," SYMBOL ":" Type} ")";
+    BlockParamList_Struct *BlockParamList_func();
+
+    // FunDecl ::= "decl" SYMBOL "(" [FunDeclParams] ")" [":" Type];
+    FunDecl_Struct *FunDecl_func();
+
+    // FunDeclParams ::= Type {"," Type};
+    FunDeclParams_Struct *FunDeclParams_func();
+
+    // Return ::= "ret" [Value];
+    Return_Struct *Return_func();
+
+    // Value ::= SYMBOL | INT | "undef";
+    Value_Struct *Value_func();
+
+    // Initializer  ::= INT | "undef" | Aggregate | "zeroinit";
+    Initializer_Struct *Initializer_func();
+
+    // Aggregate ::= "{" [Initializer {"," Initializer}] "}";
+    Aggregate_Struct *Aggregate_func();
+
+    // MemoryDeclaration ::= "alloc" Type;
+    MemoryDeclaration_Struct *MemoryDeclaration_func();
+
+    // GlobalMemoryDeclaration ::= "alloc" Type "," Initializer;
+    GlobalMemoryDeclaration_Struct *GlobalMemoryDeclaration_func();
+
+    // Load ::= "load" SYMBOL;
+    Load_Struct *Load_func();
+
+    // Store ::= "store" (Value | InitializerBlock) "," SYMBOL;
+    Store_Struct *Store_func();
+
+    TAB_Struct *TAB_func();
+
+    // SYMBOL
+    SYMBOL_Struct *SYMBOL_func();
+
+    // INT
+    INT_Struct *INT_func();
+
+    // BINARY_OP
+    BINARY_OP_Struct *BINARY_OP_func();
+
+    // RESERVED
+    RESERVED_Struct *RESERVED_func();
     //******************************************************************************
 };

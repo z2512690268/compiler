@@ -6,6 +6,7 @@
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 struct KoopaGenerator {
@@ -42,6 +43,7 @@ struct KoopaGenerator {
         func_scopes = ir->func_scopes;
         std::string code;
         for(auto& item : global_scope.symbolTable.var_table) {
+            std::cout << item.second.var.varName << " " << KoopaVarTypeToString(item.second.var.type) << std::endl;
             if(item.second.var.type.topType != KoopaVarType::KOOPA_func) {
                 code += "global " + item.second.var.varName + " = alloc " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + "\n";
             } else {
@@ -572,11 +574,15 @@ struct RiscvGenerator : public KoopaGenerator {
     }
 
     void EmitKoopaLoadStmt_RetReg(std::string ret_reg, std::string addr) {
+        // std::cout << addr << std::endl;
         std::string addr_map = GetRegMap(addr);
+        // std::cout << addr_map << std::endl;
 
         if(CheckMapReg_Stack(addr_map)) {
             EmitLoad(ret_reg, addr_map);
             EmitLoad(ret_reg, "0(" + ret_reg + ")");
+        } else if(CheckMapReg_Gloabl(addr_map)) {
+            EmitLoadGlobl(ret_reg, addr_map.substr(1));
         } else {
             std::cerr << "EmitKoopaLoadStmt_RetReg: addr_map is not stack var" << std::endl;
         }
@@ -666,7 +672,22 @@ struct RiscvGenerator : public KoopaGenerator {
                 FreeTempReg();               
             }
             FreeTempReg();               
-        } else {
+        } else if(CheckMapReg_Gloabl(addr)) {
+            if(CheckMapReg_Reg(val_map)) {
+                EmitStoreGlobl(val_map, addr_map.substr(1));
+            } else if(CheckMapReg_Stack(val_map)) {
+                std::string temp_reg = GetTempReg();
+                EmitLoad(temp_reg, val_map);
+                EmitStoreGlobl(temp_reg, addr_map.substr(1));
+                FreeTempReg();
+            } else if(CheckMapReg_Imm(val_map)) {
+                std::string temp_reg = GetTempReg();
+                EmitImm(temp_reg, val_map);
+                EmitStoreGlobl(temp_reg, addr_map.substr(1));
+                FreeTempReg();               
+            }
+        }
+        else {
             std::cerr << "EmitKoopaStoreStmt: addr_map is not stack var" << std::endl;
         }
     }
@@ -707,6 +728,53 @@ struct RiscvGenerator : public KoopaGenerator {
         }
     } 
 
+    void EmitCallStmt(KoopaVar ret_var, std::string func_name, std::vector<KoopaSymbol> args) {
+        std::string ret_map = GetRegMap(ret_var);
+        if(CheckMapReg_Reg(ret_map)) {
+            EmitCallStmt_RetReg(ret_map, func_name, args);
+        } else if(CheckMapReg_Stack(ret_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitCallStmt_RetReg(temp_reg, func_name, args);
+            EmitStore(temp_reg, ret_map);
+            FreeTempReg();
+        }
+    }
+
+    void EmitCallStmt_RetReg(std::string ret_reg, std::string func_name, std::vector<KoopaSymbol> args) {
+        int temp_reg_count = GetTempRegCount();
+        std::string arg_reg;
+        for(int i = 0; i < args.size(); ++i) {
+            if(i < 8) {
+                arg_reg = GetRegMap(args[i]);
+                if(CheckMapReg_Reg(arg_reg)) {
+                    Emit2RegInst("mv", "a" + std::to_string(i), arg_reg);
+                } else if(CheckMapReg_Stack(arg_reg)) {
+                    EmitLoad("a" + std::to_string(i), arg_reg);
+                } else if(CheckMapReg_Imm(arg_reg)) {
+                    EmitImm("a" + std::to_string(i), arg_reg);
+                }
+            } else {
+                arg_reg = GetRegMap(args[i]);
+                if(CheckMapReg_Reg(arg_reg)) {
+                    EmitStore(arg_reg, std::to_string((i - 8) * 4) + "(sp)");
+                } else if(CheckMapReg_Stack(arg_reg)) {
+                    std::string temp_reg = GetTempReg();
+                    EmitLoad(temp_reg, arg_reg);
+                    EmitStore(temp_reg, std::to_string((i - 8) * 4) + "(sp)");
+                    FreeTempReg();
+                } else if(CheckMapReg_Imm(arg_reg)) {
+                    std::string temp_reg = GetTempReg();
+                    EmitImm(temp_reg, arg_reg);
+                    EmitStore(temp_reg, std::to_string((i - 8) * 4) + "(sp)");
+                    FreeTempReg();
+                }
+            }
+        }
+        EmitUJTypeOperation("jal", "ra", func_name.substr(1));
+        Emit2RegInst("mv", ret_reg, "a0");
+        ResetTempReg(temp_reg_count);
+    }
+
     virtual std::string GenerateCode(KoopaIR* ir) {
         global_scope = ir->global_scope;
         func_scopes = ir->func_scopes;
@@ -714,35 +782,19 @@ struct RiscvGenerator : public KoopaGenerator {
         // 全局变量定义和全局函数声明
         code += "\t.data\n";
         for(auto& item : global_scope.symbolTable.var_table) {
-            if(item.second.var.type == KoopaVarType(KoopaVarType::KOOPA_INT32)) {
+            if(item.second.var.type.topType != KoopaVarType::KOOPA_func) {
                 std::string name = item.second.var.varName.substr(1);
                 code += "\t.global " + name + "\n";
                 code += name + ":\n";
                 EmitGlobalInitList(item.second.var.initList);
                 reg_map[item.second.var.varName] = item.second.var.varName;
-            } else if(item.second.var.type == KoopaVarType(KoopaVarType::KOOPA_func)) {
-                std::string name = item.second.var.varName.substr(1);
-                code += "\t.extern " + name + "\n";
-            } // DONE: 全局数组类型
+            } 
         }
         code += "\t.text\n";  // .text
 
-        for(auto& item : global_scope.symbolTable.var_table) {
-            if(item.second.var.type != KoopaVarType(KoopaVarType::KOOPA_func)) {
-                EmitExplain("global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString());
-            } else {
-                code += "decl " + item.second.var.varName + "(";
-                for(int i = 0; i < item.second.var.type.funcType.paramsType.size(); i++) {
-                    code += KoopaVarTypeToString(*item.second.var.type.funcType.paramsType[i]);
-                    if(i != item.second.var.type.funcType.paramsType.size() - 1) {
-                        code += ", ";
-                    }
-                }
-                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + "\n";
-            }
-        }
-
         for(auto& func : func_scopes) {
+            std::unordered_map<std::string, std::string> reg_map_backup = reg_map;
+            local_alloc_map.clear();
             code += "\t.global " + func->func_name.substr(1) + "\n";
             code += func->func_name.substr(1) + ":\n";
             
@@ -771,11 +823,15 @@ struct RiscvGenerator : public KoopaGenerator {
             }
 
             // 先空出ra寄存器空间
-            stack_pos += nested_arg_count;
+            stack_pos += ret_stack_count;
             
             // 向上取整16
             stack_pos = (stack_pos + 15) / 16 * 16;
 
+            //映射八个参数
+            for(int i = 0; i < 8 && i < func->func_param.size(); ++i) {
+                reg_map[func->func_param[i].varName] = "a" + std::to_string(i);
+            }
 
             // 映射大于8的函数参数
             for(int i = 8; i < func->func_param.size(); ++i) {
@@ -790,12 +846,12 @@ struct RiscvGenerator : public KoopaGenerator {
                 EmitStore("ra", std::to_string(stack_pos - 4) + "(sp)");
             }
 
-            // for(auto& item : reg_map) {
-            //     std::cout << item.first << " " << item.second << std::endl;
-            // }
-            // for(auto& item : local_alloc_map) {
-            //     std::cout << " " << item.second << std::endl;
-            // }
+            for(auto& item : reg_map) {
+                std::cout << item.first << " " << item.second << std::endl;
+            }
+            for(auto& item : local_alloc_map) {
+                std::cout << "~~~" << item.first->allocStmt.var.varName << " " << item.second << std::endl;
+            }
             for(auto& block : func->basicBlocks) {
                 ++label_count;
                 label_map[block->label] = label_count;
@@ -857,11 +913,12 @@ struct RiscvGenerator : public KoopaGenerator {
                             for(int i = 0; i < stmt->callStmt.params.size(); i++) {
                                 explain += stmt->callStmt.params[i].GetSymbol();
                                 if(i != stmt->callStmt.params.size() - 1) {
-                                    code += ", ";
+                                    explain += ", ";
                                 }
                             }
                             explain += ")";
                             EmitExplain(explain);
+                            EmitCallStmt(stmt->callStmt.ret_var, stmt->callStmt.func_name.GetSymbol(), stmt->callStmt.params);
                             break;
                         case Statement::BRANCH:
                             EmitExplain("  br " + stmt->branchStmt.cond.GetSymbol() + ", " + stmt->branchStmt.true_label + ", " + stmt->branchStmt.false_label);
@@ -911,6 +968,7 @@ struct RiscvGenerator : public KoopaGenerator {
                     }
                 }
             }
+            reg_map = reg_map_backup;
         }
         return code;
     }

@@ -33,8 +33,8 @@ exe=${buildpath}${exe}
 
 sed -i 's/main/originmain/g' ${file}
 echo "
-extern void putint(int);
-extern void putch(int);
+extern int putint(int);
+extern int putch(int);
 extern void starttime();
 extern void stoptime();
 

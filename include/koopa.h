@@ -117,13 +117,13 @@ struct KoopaVarType {
         return !(*this == other);
     }
 
-    KoopaVarType INT32_Type() {
+    static KoopaVarType INT32_Type() {
         KoopaVarType type;
         type.topType = KOOPA_INT32;
         return type;
     }
 
-    KoopaVarType ARRAY_Type(KoopaVarType element_type, int size) {
+    static KoopaVarType ARRAY_Type(KoopaVarType element_type, int size) {
         KoopaVarType type;
         type.topType = KOOPA_ARRAY;
         type.arrayType.type = unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
@@ -131,14 +131,14 @@ struct KoopaVarType {
         return type;
     }
 
-    KoopaVarType PTR_Type(KoopaVarType element_type) {
+    static KoopaVarType PTR_Type(KoopaVarType element_type) {
         KoopaVarType type;
         type.topType = KOOPA_PTR;
         type.ptrType.type = unique_ptr<KoopaVarType>(new KoopaVarType(element_type));
         return type;
     }
 
-    KoopaVarType FUNC_Type(KoopaVarType ret_type, std::vector<KoopaVarType> params_type) {
+    static KoopaVarType FUNC_Type(KoopaVarType ret_type, std::vector<KoopaVarType> params_type) {
         KoopaVarType type;
         type.topType = KOOPA_func;
         type.funcType.retType = unique_ptr<KoopaVarType>(new KoopaVarType(ret_type));

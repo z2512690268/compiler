@@ -1,4 +1,12 @@
-global @var = i32, zeroinit
+global @var = alloc i32, zeroinit
+decl @putarray(i32, *i32)
+decl @putch(i32)
+decl @stoptime()
+decl @putint(i32)
+decl @getarray(*i32) : i32
+decl @getch() : i32
+decl @starttime()
+decl @getint() : i32
 fun @func(@x : i32) : i32 {
 %entry:
   %0 = load @var
