@@ -5,6 +5,7 @@ files=$(find test/minic-test-cases-2021s/functional -name "*.c")
 # 按照_前面的数字排序
 files=$(echo "$files" | sort -t_ -k1 -n)
 
+mkdir -p log/minic
 cp build/linux/x86_64/release/sysyc .
 
 # 若存在$1, 则只测试_前面的数字等于$1的测试用例
@@ -44,7 +45,11 @@ do
         exit 1
     fi
     # 测试编译执行riscv，如果失败，就退出
-    ./run_riscv.sh $file_base test/minic-test-cases-2021s/functional/
+    ./rungdb_riscv.sh $file_base test/minic-test-cases-2021s/functional/
+
+    # 用clang编译
+    echo C: $file
+    ./run_c.sh $file_base test/minic-test-cases-2021s/functional/ build/test/ c
     # 换行
     echo
     echo

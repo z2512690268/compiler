@@ -52,7 +52,12 @@ struct KoopaGenerator {
                         code += ", ";
                     }
                 }
-                code += ") : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + "\n";
+                code += ")";
+                if(item.second.var.type.funcType.retType->topType != KoopaVarType::KOOPA_undef) {
+                    code += " : " + KoopaVarTypeToString(*item.second.var.type.funcType.retType) + "\n";
+                } else {
+                    code += "\n";
+                }
             }
         }
         for(auto& func : func_scopes) {
@@ -486,10 +491,11 @@ struct RiscvGenerator : public KoopaGenerator {
 
     // mul, div, rem
     bool IsMulOp(std::string op) {
-        return op == "mul" || op == "div" || op == "rem";
+        return op == "mul" || op == "div" || op == "mod";
     }
     void EmitMul(std::string op, std::string ret_var, KoopaSymbol value1, KoopaSymbol value2) {
         std::string ret_map = reg_map[ret_var];
+        if(op == "mod") op = "rem";
         if(CheckMapReg_Reg(ret_map)) {
             EmitMul_RetReg(op, ret_map, value1, value2);
         } else if(CheckMapReg_Stack(ret_map)) {

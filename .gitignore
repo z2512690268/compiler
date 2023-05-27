@@ -4,6 +4,8 @@
 build/
 tools/
 test/asm
+test/minic-test-cases-2021s/*/*.koopa
+test/minic-test-cases-2021s/*/*.riscv
 log/
 tmp.gram
 tmp.lex

@@ -46,15 +46,10 @@ main_entry_0:
 	li a0, 0
 	addi sp, sp, 48
 	ret
+main_ifelse_else:
 #   jump %entry_1
 	jal x0, main_entry_1
 main_entry_1:
-#   jump %ifelse_end
-	jal x0, main_ifelse_end
-main_ifelse_else:
-#   jump %entry_2
-	jal x0, main_entry_2
-main_entry_2:
 #   %5 = load @a
 	lw t0, 32(sp)
 	lw t0, 0(t0)
@@ -68,10 +63,4 @@ main_entry_2:
 	addi a0, t0, 0
 	addi sp, sp, 48
 	ret
-#   jump %entry_3
-	jal x0, main_entry_3
-main_entry_3:
-#   jump %ifelse_end
-	jal x0, main_ifelse_end
-main_ifelse_end:
 
