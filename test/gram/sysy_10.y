@@ -1,13 +1,11 @@
 CompUnits      ::= CompUnit {CompUnit};
 CompUnit       ::= FuncDef;
 
-FuncDef     ::= Type IDENT "(" [FuncFParams] ")" Block;
-Type    ::= "void" | "int";
-FuncFParams ::= FuncFParam {"," FuncFParam};
-FuncFParam  ::= Type IDENT;
-
-UnaryExp      ::= PrimaryExp | IDENT "(" [FuncRParams] ")" | UnaryOp UnaryExp;
-FuncRParams ::= Exp {"," Exp};
+FuncDef       ::= Type IDENT "(" [FuncFParams] ")" Block;
+Type          ::= "void" | "int";
+FuncFParams   ::= FuncFParam {"," FuncFParam};
+FuncFParam    ::= Type IDENT;
+FuncRParams   ::= Exp {"," Exp};
 
 Decl          ::= ConstDecl | VarDecl;
 ConstDecl     ::= "const" Type ConstDef {"," ConstDef} ";";
@@ -16,7 +14,6 @@ ConstInitVal  ::= ConstExp;
 VarDecl       ::= Type VarDef {"," VarDef} ";";
 VarDef        ::= IDENT | IDENT "=" InitVal;
 InitVal       ::= Exp;
-
 
 Block         ::= "{" {BlockItem} "}";
 BlockItem     ::= Decl | Stmt;
@@ -40,6 +37,9 @@ Exp           ::= LOrExp;
 LVal          ::= IDENT;
 PrimaryExp    ::= "(" Exp ")" | LVal | Number;
 Number        ::= Integer;
+UnaryExp      ::= PrimaryExp 
+                | IDENT "(" [FuncRParams] ")" 
+                | UnaryOp UnaryExp;
 UnaryOp       ::= "+" | "-" | "!";
 MulExp        ::= UnaryExp | MulExp ("*" | "/" | "%") UnaryExp;
 AddExp        ::= MulExp | AddExp ("+" | "-") MulExp;

@@ -1,6 +1,9 @@
 CompUnits      ::= CompUnit {CompUnit};
 CompUnit       ::= FuncDef;
 
+FuncDef       ::= FuncType IDENT "(" ")" Block;
+FuncType      ::= "int";
+
 Decl          ::= ConstDecl | VarDecl;
 ConstDecl     ::= "const" BType ConstDef {"," ConstDef} ";";
 BType         ::= "int";
@@ -9,9 +12,6 @@ ConstInitVal  ::= ConstExp;
 VarDecl       ::= BType VarDef {"," VarDef} ";";
 VarDef        ::= IDENT | IDENT "=" InitVal;
 InitVal       ::= Exp;
-
-FuncDef       ::= FuncType IDENT "(" ")" Block;
-FuncType      ::= "int";
 
 Block         ::= "{" {BlockItem} "}";
 BlockItem     ::= Decl | Stmt;

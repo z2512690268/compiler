@@ -45,7 +45,7 @@ SysyFrontend::Decl_Struct *SysyFrontend::Decl_func()
     return ret_ptr;
 }
 
-// ConstDecl     ::= "const" BType ConstDef { ',' ConstDef } ';';
+// ConstDecl     ::= "const" Type ConstDef { ',' ConstDef } ';';
 SysyFrontend::ConstDecl_Struct *SysyFrontend::ConstDecl_func()
 {
     ENTRY_GRAMMER(SysyFrontend::ConstDecl_Struct);
@@ -53,14 +53,14 @@ SysyFrontend::ConstDecl_Struct *SysyFrontend::ConstDecl_func()
     if (curToken.rule[0] == "\"const\"")
     {
         RESERVED_func(); // 'const'
-        ret_ptr->BType = BType_func();
-        ret_ptr->ConstDefs.push_back(ConstDef_func(ret_ptr->BType));
+        ret_ptr->Type = Type_func();
+        ret_ptr->ConstDefs.push_back(ConstDef_func(ret_ptr->Type));
         if (curToken.rule[3] == "\",\"")
         {
             for (int i = 3; i < curToken.rule.size() - 1; i += 2)
             {
                 RESERVED_func(); // ','
-                ret_ptr->ConstDefs.push_back(ConstDef_func(ret_ptr->BType));
+                ret_ptr->ConstDefs.push_back(ConstDef_func(ret_ptr->Type));
             }
         }
         RESERVED_func(); // ';'
@@ -75,30 +75,15 @@ SysyFrontend::ConstDecl_Struct *SysyFrontend::ConstDecl_func()
     return ret_ptr;
 }
 
-// BType         ::= "int";
-SysyFrontend::BType_Struct *SysyFrontend::BType_func()
-{
-    ENTRY_GRAMMER(SysyFrontend::BType_Struct);
-
-    if (curToken.rule[0] == "\"int\"")
-    {
-        RESERVED_func(); // "int"
-        ret_ptr->type = SysyFrontend::BType_Struct::BTypeType::BTypeType_INT;
-    }
-    else
-    {
-        std::cerr << "BType_func: " << curToken << std::endl;
-        exit(1);
-    }
-
-    std::cout << "Exit -- " << curToken.token << std::endl;
-    return ret_ptr;
-}
-
 // ConstDef      ::= IDENT "=" ConstInitVal;
-SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::BType_Struct *BType)
+SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::Type_Struct *Type)
 {
     ENTRY_GRAMMER(SysyFrontend::ConstDef_Struct);
+
+    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void) {
+        std::cerr << "Can't define void variables" << std::endl;
+        exit(1);
+    }
 
     if (curToken.rule[0] == "IDENT")
     {
@@ -139,21 +124,21 @@ SysyFrontend::ConstInitVal_Struct *SysyFrontend::ConstInitVal_func(KoopaVar *rec
     return ret_ptr;
 }
 
-// VarDecl       ::= BType VarDef {"," VarDef} ";";
+// VarDecl       ::= Type VarDef {"," VarDef} ";";
 SysyFrontend::VarDecl_Struct *SysyFrontend::VarDecl_func()
 {
     ENTRY_GRAMMER(SysyFrontend::VarDecl_Struct);
 
     if (curToken.rule[0] == "BType")
     {
-        ret_ptr->BType = BType_func();
-        ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->BType));
+        ret_ptr->Type = Type_func();
+        ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->Type));
         if (curToken.rule[2] == "\",\"")
         {
             for (int i = 2; i < curToken.rule.size() - 1; i += 2)
             {
                 RESERVED_func(); // ','
-                ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->BType));
+                ret_ptr->VarDefs.push_back(VarDef_func(ret_ptr->Type));
             }
         }
         RESERVED_func(); // ';'
@@ -169,9 +154,14 @@ SysyFrontend::VarDecl_Struct *SysyFrontend::VarDecl_func()
 }
 
 // VarDef        ::= IDENT | IDENT "=" InitVal;
-SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::BType_Struct *BType)
+SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct *Type)
 {
     ENTRY_GRAMMER(SysyFrontend::VarDef_Struct);
+
+    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void) {
+        std::cerr << "Can't define void variables." << std::endl;
+        exit(1);
+    }
 
     if (curToken.rule[0] == "IDENT")
     {

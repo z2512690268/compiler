@@ -63,59 +63,6 @@ SysyFrontend::CompUnit_Struct *SysyFrontend::CompUnit_func()
     return ret_ptr;
 }
 
-// FuncDef   ::= FuncType IDENT "(" ")" Block;
-SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
-{
-    ENTRY_GRAMMER(SysyFrontend::FuncDef_Struct);
-
-    // 创建函数
-    // FuncDef   ::= FuncType IDENT "(" ")" Block;
-    if (curToken.rule[0] == "FuncType")
-    {
-        // 创建作用域
-        Scope *scope = koopaIR->AddNewScope();
-
-        ret_ptr->funcRetType = FuncType_func();
-        ret_ptr->funcnameIDENT = IDENT_func();
-        RESERVED_func(); //(
-        RESERVED_func(); //)
-        ret_ptr->Block = Block_func("%entry");
-
-        // 退出作用域
-        koopaIR->SetScopeFunction(ret_ptr->funcnameIDENT->identifer,
-                                  ret_ptr->funcRetType->type);
-        koopaIR->ReturnBackScope();
-    }
-    else
-    {
-        std::cerr << "FuncDef_func: " << curToken << std::endl;
-        exit(1);
-    }
-    std::cout << "Exit -- " << curToken.token << std::endl;
-    return ret_ptr;
-}
-
-// FuncType  ::= "int";
-SysyFrontend::FuncType_Struct *SysyFrontend::FuncType_func()
-{
-    ENTRY_GRAMMER(SysyFrontend::FuncType_Struct);
-
-    // INT32
-    // FuncType  ::= "int";
-    if (curToken.rule[0] == "\"int\"")
-    {
-        ret_ptr->type.topType = KoopaVarType::KOOPA_INT32;
-        RESERVED_func(); // "int"
-    }
-    else
-    {
-        std::cerr << "FuncType_func: " << curToken << std::endl;
-        exit(1);
-    }
-    std::cout << "Exit -- " << curToken.token << std::endl;
-    return ret_ptr;
-}
-
 // Block         ::= "{" {BlockItem} "}";
 SysyFrontend::Block_Struct *SysyFrontend::Block_func(std::string block_name)
 {

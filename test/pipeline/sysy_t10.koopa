@@ -1,0 +1,17 @@
+fun @half(i32 @x) : i32 {
+%entry:
+  %0 = load @x
+  %1 = div %0, 2
+  ret %1
+}
+fun @f() {
+%entry:
+  ret	
+}
+fun @main() : i32 {
+%entry:
+  call @f()
+  %1 = call @half(10)
+  ret %1
+}
+

@@ -22,17 +22,59 @@ SysyFrontend::Exp_Struct *SysyFrontend::Exp_func(KoopaVar *receiver)
     return ret_ptr;
 }
 
-// UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
+// UnaryExp      ::= PrimaryExp
+//                 | IDENT "(" [FuncRParams] ")"
+//                 | UnaryOp UnaryExp;
 SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
 {
     ENTRY_GRAMMER(SysyFrontend::UnaryExp_Struct);
 
-    // UnaryExp    ::= PrimaryExp | UnaryOp UnaryExp;
     if (curToken.rule[0] == "PrimaryExp")
     {
         ret_ptr->type = UnaryExp_Struct::UnaryExpType::UnaryExpType_PrimaryExp;
         ret_ptr->subStructPointer.PrimaryExp = PrimaryExp_func(receiver);
         ret_ptr->value = ret_ptr->subStructPointer.PrimaryExp->value;
+    }
+    else if (curToken.rule[0] == "IDENT")
+    {
+        ret_ptr->type = UnaryExp_Struct::UnaryExpType::UnaryExpType_FuncCall;
+        IDENT_Struct *func_ident = IDENT_func();
+        ret_ptr->subStructPointer.FuncCall.IDENT = func_ident;
+        RESERVED_func(); // '('
+        if (curToken.rule[2] == "FuncRParams")
+        {
+            FuncRParams_Struct *params = FuncRParams_func();
+            ret_ptr->subStructPointer.FuncCall.FuncRParams = params;
+            FuncDef_Struct *func_def = GetFuncDef(func_ident->identifer);
+            KoopaVar ret_var;
+            if (func_def->funcRetType->type == Type_Struct::Type::Type_Void)
+            {
+                ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_undef);
+            }
+            else
+            {
+                ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            }
+            koopaIR->AddCallStatement(func_ident->identifer, params->koopa_params, ret_var);
+            ret_ptr->value.SetSymbol(ret_var.varName);
+        }
+        else
+        {
+            ret_ptr->subStructPointer.FuncCall.FuncRParams = nullptr;
+            FuncDef_Struct *func_def = GetFuncDef(func_ident->identifer);
+            KoopaVar ret_var;
+            if (func_def->funcRetType->type == Type_Struct::Type::Type_Void)
+            {
+                ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_undef);
+            }
+            else
+            {
+                ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
+            }
+            koopaIR->AddCallStatement(func_ident->identifer, {}, ret_var);
+            ret_ptr->value.SetSymbol(ret_var.varName);
+        }
+        RESERVED_func(); // ')'
     }
     else if (curToken.rule[0] == "UnaryOp")
     {

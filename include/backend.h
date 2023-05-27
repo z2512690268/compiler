@@ -68,7 +68,12 @@ struct KoopaGenerator {
                     code += ", ";
                 }
             }
-            code += "): " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
+            code += ")";
+            if(func->func_ret_type.topType != KoopaVarType::KOOPA_undef) {
+                code += " : " + KoopaVarTypeToString(func->func_ret_type) + " {\n";
+            } else {
+                code += " {\n";
+            }
             for(auto& block : func->basicBlocks) {;
                 code += block->label + ":\n";
                 for(auto& stmt : block->statements) {
@@ -85,7 +90,11 @@ struct KoopaGenerator {
                             }
                             break;
                         case Statement::CALL:
-                            code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            if(stmt->callStmt.ret_var.type.topType != KoopaVarType::KOOPA_undef) {
+                                code += "  " + stmt->callStmt.ret_var.varName + " = call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            } else {
+                                code += "  call " + stmt->callStmt.func_name.GetSymbol() + "(";
+                            }
                             for(int i = 0; i < stmt->callStmt.params.size(); i++) {
                                 code += stmt->callStmt.params[i].GetSymbol();
                                 if(i != stmt->callStmt.params.size() - 1) {

@@ -141,13 +141,17 @@ struct SysyFrontend : public FrontendBase {
     // // 非终结符
     struct CompUnits_Struct;
     struct CompUnit_Struct;
-    struct FuncDef_Struct;
-    struct FuncType_Struct;
     struct Block_Struct;
     struct BlockItem_Struct;
     struct Stmt_Struct;
     struct ElseStmt_Struct;
     struct NoIfStmt_Struct;
+
+    struct FuncDef_Struct;
+    struct Type_Struct;
+    struct FuncFParams_Struct;
+    struct FuncFParam_Struct;
+    struct FuncRParams_Struct;
 
     struct Exp_Struct;
     struct LVal_Struct;
@@ -166,7 +170,6 @@ struct SysyFrontend : public FrontendBase {
     struct Integer_Struct;
     struct Decl_Struct;
     struct ConstDecl_Struct;
-    struct BType_Struct;
     struct ConstDef_Struct;
     struct ConstInitVal_Struct;
     struct VarDecl_Struct;
@@ -180,6 +183,19 @@ struct SysyFrontend : public FrontendBase {
     struct IDENT_Struct;
     struct RESERVED_Struct;
     // //******************************************************************************
+
+    // 函数列表
+    std::vector<FuncDef_Struct*> func_list;
+
+    FuncDef_Struct* GetFuncDef(const std::string& func_name) {
+        for (auto func : func_list) {
+            if (func->funcnameIDENT->identifer == func_name) {
+                return func;
+            }
+        }
+        std::cerr << "Error: " << func_name << " not found" << std::endl;
+        exit(1);
+    }
 
     //******************************************************************************
     // 带属性语法树节点
@@ -197,13 +213,35 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct FuncDef_Struct {
-        FuncType_Struct* funcRetType;
-        IDENT_Struct*   funcnameIDENT;
+        Type_Struct* funcRetType;
+        IDENT_Struct* funcnameIDENT;
+        FuncFParams_Struct* funcFParams;
         Block_Struct* Block;
     };
+    
+    struct Type_Struct
+    {
+        enum Type {
+            Type_Int,
+            Type_Void,
+        } type;
 
-    struct FuncType_Struct {
-        KoopaVarType type;
+        KoopaVarType koopa_type;
+    };
+
+    struct FuncFParams_Struct {
+        std::vector<FuncFParam_Struct*> Params;
+        std::vector<KoopaVar> koopa_params;
+    };
+
+    struct FuncFParam_Struct {
+        Type_Struct* Type;
+        IDENT_Struct* IDENT;
+    };
+
+    struct FuncRParams_Struct {
+        std::vector<Exp_Struct*> Params;
+        std::vector<KoopaSymbol> koopa_params;
     };
 
     struct Block_Struct {
@@ -340,6 +378,7 @@ struct SysyFrontend : public FrontendBase {
         enum UnaryExpType {
             UnaryExpType_PrimaryExp,
             UnaryExpType_UnaryExpWithOp,
+            UnaryExpType_FuncCall,
         } type;
 
         struct UnaryExpWithOp_Struct
@@ -348,10 +387,16 @@ struct SysyFrontend : public FrontendBase {
             UnaryExp_Struct* UnaryExp;
         };
         
+        struct FuncCall_Struct
+        {
+            IDENT_Struct* IDENT;
+            FuncRParams_Struct* FuncRParams;
+        };
 
         union SubStructPointer {
             PrimaryExp_Struct* PrimaryExp;
             UnaryExpWithOp_Struct UnaryExpWithOp;
+            FuncCall_Struct FuncCall;
         } subStructPointer;
 
         KoopaSymbol value;
@@ -555,14 +600,8 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct ConstDecl_Struct {
-        BType_Struct* BType;
+        Type_Struct* Type;
         std::vector<ConstDef_Struct*> ConstDefs;
-    };
-
-    struct BType_Struct {
-        enum BTypeType {
-            BTypeType_INT,
-        } type;
     };
 
     struct ConstDef_Struct {
@@ -577,7 +616,7 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct VarDecl_Struct {
-        BType_Struct* BType;
+        Type_Struct* Type;
         std::vector<VarDef_Struct*> VarDefs;
     };
 
@@ -631,13 +670,17 @@ struct SysyFrontend : public FrontendBase {
     // basic
     CompUnits_Struct* CompUnits_func();
     CompUnit_Struct* CompUnit_func();
-    FuncDef_Struct* FuncDef_func();
-    FuncType_Struct* FuncType_func();
     Block_Struct* Block_func(std::string block_name);
     BlockItem_Struct* BlockItem_func();
     Stmt_Struct* Stmt_func(std::string end_label);
     ElseStmt_Struct* ElseStmt_func(std::string end_label);
     NoIfStmt_Struct* NoIfStmt_func();
+    // func
+    FuncDef_Struct* FuncDef_func();
+    Type_Struct* Type_func();
+    FuncFParams_Struct* FuncFParams_func();
+    FuncFParam_Struct* FuncFParam_func();
+    FuncRParams_Struct* FuncRParams_func();
     // exps
     Exp_Struct* Exp_func(KoopaVar* receiver = nullptr);
     LVal_Struct* LVal_func();
@@ -656,11 +699,10 @@ struct SysyFrontend : public FrontendBase {
     Integer_Struct* Integer_func();
     Decl_Struct* Decl_func();
     ConstDecl_Struct* ConstDecl_func();
-    BType_Struct* BType_func();
-    ConstDef_Struct* ConstDef_func(BType_Struct* BType);
+    ConstDef_Struct* ConstDef_func(Type_Struct* Type);
     ConstInitVal_Struct* ConstInitVal_func(KoopaVar* receiver);
     VarDecl_Struct* VarDecl_func();
-    VarDef_Struct* VarDef_func(BType_Struct* BType);
+    VarDef_Struct* VarDef_func(Type_Struct* Type);
     InitVal_Struct* InitVal_func(KoopaVar* receiver);
     // 终结符
     DEC_INTEGER_Struct* DEC_INTEGER_func();

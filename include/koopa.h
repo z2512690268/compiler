@@ -43,7 +43,7 @@ struct KoopaVarType {
     }
 
     KoopaVarType(TopType type) {
-        if(type == KOOPA_INT32) {
+        if(type == KOOPA_INT32 || type == KOOPA_undef) {
             topType = type;
         } else {
             std::cerr << "Invalid KoopaVarType" << std::endl;
@@ -522,7 +522,7 @@ struct KoopaIR {
         curScope->func_ret_type = func_ret_type;
     }
 
-    void SetScopeFuntion(std::string func_name, KoopaVarType func_ret_type,
+    void SetScopeFunction(std::string func_name, KoopaVarType func_ret_type,
                             std::vector<KoopaVar> params) {
         curScope->func_name = func_name;
         curScope->func_ret_type = func_ret_type;
