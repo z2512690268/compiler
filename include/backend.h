@@ -43,7 +43,7 @@ struct KoopaGenerator {
         std::string code;
         for(auto& item : global_scope.symbolTable.var_table) {
             if(item.second.var.type.topType != KoopaVarType::KOOPA_func) {
-                code += "global " + item.second.var.varName + " = " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + "\n";
+                code += "global " + item.second.var.varName + " = alloc " + KoopaVarTypeToString(item.second.var.type) + ", " + item.second.var.initList.GetInitString() + "\n";
             } else {
                 code += "decl " + item.second.var.varName + "(";
                 for(int i = 0; i < item.second.var.type.funcType.paramsType.size(); i++) {
@@ -460,10 +460,6 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string value1_map = GetRegMap(value1);
         std::string value2_map = GetRegMap(value2);
 
-        if(op == "le" || op == "ge") {
-            std::swap(value1_map, value2_map);
-        }
-
         int temp_reg_count = GetTempRegCount();
         EmitUsedRegMap_IfStackVar(value1_map);
         EmitUsedRegMap_IfStackVar(value2_map);
@@ -492,8 +488,10 @@ struct RiscvGenerator : public KoopaGenerator {
             EmitRTypeOperation("sgt", ret_reg, ret_reg, "x0");
         } else if(op == "le") {
             EmitRTypeOperation("sgt", ret_reg, ret_reg, "x0");
+            EmitITypeOperation("xori", ret_reg, ret_reg, "1");
         } else if(op == "ge") {
             EmitRTypeOperation("slt", ret_reg, ret_reg, "x0");
+            EmitITypeOperation("xori", ret_reg, ret_reg, "1");
         }
         ResetTempReg(temp_reg_count);
     }
@@ -759,8 +757,8 @@ struct RiscvGenerator : public KoopaGenerator {
             for(auto& block : func->basicBlocks) {
                 for(auto& stmt : block->statements) {
                     if(stmt->type == Statement::ALLOC) {
-                        stack_pos += stmt->allocStmt.var.type.Size();
                         local_alloc_map[stmt] = stack_pos;
+                        stack_pos += stmt->allocStmt.var.type.Size();
                     }
                 }
             }
@@ -792,7 +790,12 @@ struct RiscvGenerator : public KoopaGenerator {
                 EmitStore("ra", std::to_string(stack_pos - 4) + "(sp)");
             }
 
-
+            // for(auto& item : reg_map) {
+            //     std::cout << item.first << " " << item.second << std::endl;
+            // }
+            // for(auto& item : local_alloc_map) {
+            //     std::cout << " " << item.second << std::endl;
+            // }
             for(auto& block : func->basicBlocks) {
                 ++label_count;
                 label_map[block->label] = label_count;

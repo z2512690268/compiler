@@ -1,0 +1,132 @@
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" BlockItem BlockItem "}" 
+				"{" = "{"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : IDENT "=" InitVal 
+								IDENT = "a"
+								"=" = "="
+								InitVal : Exp 
+									Exp : LOrExp 
+										LOrExp : LAndExp 
+											LAndExp : EqExp 
+												EqExp : RelExp 
+													RelExp : AddExp 
+														AddExp : MulExp 
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : Number 
+																		Number : Integer 
+																			Integer : DEC_INTEGER 
+																				DEC_INTEGER = "1"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : "if" "(" Exp ")" ElseStmt "else" Stmt 
+						"if" = "if"
+						"(" = "("
+						Exp : LOrExp 
+							LOrExp : LOrExp "||" LAndExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : EqExp "==" RelExp 
+											EqExp : RelExp 
+												RelExp : AddExp 
+													AddExp : MulExp 
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : LVal 
+																	LVal : IDENT 
+																		IDENT = "a"
+											"==" = "=="
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : Number 
+																Number : Integer 
+																	Integer : DEC_INTEGER 
+																		DEC_INTEGER = "2"
+								"||" = "||"
+								LAndExp : EqExp 
+									EqExp : EqExp "==" RelExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : MulExp 
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT 
+																	IDENT = "a"
+										"==" = "=="
+										RelExp : AddExp 
+											AddExp : MulExp 
+												MulExp : UnaryExp 
+													UnaryExp : PrimaryExp 
+														PrimaryExp : Number 
+															Number : Integer 
+																Integer : DEC_INTEGER 
+																	DEC_INTEGER = "3"
+						")" = ")"
+						ElseStmt : NoIfStmt 
+							NoIfStmt : Block 
+								Block : "{" BlockItem "}" 
+									"{" = "{"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : "return" Exp ";" 
+												"return" = "return"
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : MulExp 
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : Number 
+																					Number : Integer 
+																						Integer : OCT_INTEGER 
+																							OCT_INTEGER = "0"
+												";" = ";"
+									"}" = "}"
+						"else" = "else"
+						Stmt : NoIfStmt 
+							NoIfStmt : Block 
+								Block : "{" BlockItem "}" 
+									"{" = "{"
+									BlockItem : Stmt 
+										Stmt : NoIfStmt 
+											NoIfStmt : "return" Exp ";" 
+												"return" = "return"
+												Exp : LOrExp 
+													LOrExp : LAndExp 
+														LAndExp : EqExp 
+															EqExp : RelExp 
+																RelExp : AddExp 
+																	AddExp : AddExp "+" MulExp 
+																		AddExp : MulExp 
+																			MulExp : UnaryExp 
+																				UnaryExp : PrimaryExp 
+																					PrimaryExp : LVal 
+																						LVal : IDENT 
+																							IDENT = "a"
+																		"+" = "+"
+																		MulExp : UnaryExp 
+																			UnaryExp : PrimaryExp 
+																				PrimaryExp : Number 
+																					Number : Integer 
+																						Integer : DEC_INTEGER 
+																							DEC_INTEGER = "1"
+												";" = ";"
+									"}" = "}"
+				"}" = "}"

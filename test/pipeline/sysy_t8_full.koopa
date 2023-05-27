@@ -1,4 +1,4 @@
-fun @main(): i32 {
+fun @main() : i32 {
 %entry:
   @a = alloc i32
   store 1, @a

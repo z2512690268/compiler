@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     //----------------------------------------------------------------------------------------------------------------
 
     // gram
-    std::ifstream gram_in(tmp.append("test").append("gram").append("sysy_9.y"));
+    std::ifstream gram_in(tmp.append("test").append("gram").append("sysy_10.y"));
     if(!gram_in.is_open())  { std::cout << "gram_in open failed!" << std::endl; return 1; }
     std::ifstream lex_in("tmp.lex");
     std::ofstream gram_out("tmp.gram");
