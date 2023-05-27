@@ -45,7 +45,7 @@ do
         exit 1
     fi
     # 测试编译执行riscv，如果失败，就退出
-    ./rungdb_riscv.sh $file_base test/minic-test-cases-2021s/functional/
+    ./run_riscv.sh $file_base test/minic-test-cases-2021s/functional/
 
     # 用clang编译
     echo C: $file
