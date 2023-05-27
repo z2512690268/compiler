@@ -1,11 +1,11 @@
 CompUnits      ::= CompUnit {CompUnit};
 CompUnit       ::= Decl | FuncDef;
 
-FuncDef     ::= Type IDENT "(" [FuncFParams] ")" Block;
-Type        ::= "void" | "int";
-FuncFParams ::= FuncFParam {"," FuncFParam};
-FuncFParam  ::= Type IDENT;
-FuncRParams ::= Exp {"," Exp};
+FuncDef       ::= Type IDENT "(" [FuncFParams] ")" Block;
+Type          ::= "void" | "int";
+FuncFParams   ::= FuncFParam {"," FuncFParam};
+FuncFParam    ::= Type IDENT;
+FuncRParams   ::= Exp {"," Exp};
 
 Decl          ::= ConstDecl | VarDecl;
 ConstDecl     ::= "const" Type ConstDef {"," ConstDef} ";";

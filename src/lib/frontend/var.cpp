@@ -80,7 +80,8 @@ SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::Type_St
 {
     ENTRY_GRAMMER(SysyFrontend::ConstDef_Struct);
 
-    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void) {
+    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void)
+    {
         std::cerr << "Can't define void variables" << std::endl;
         exit(1);
     }
@@ -90,10 +91,18 @@ SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::Type_St
         ret_ptr->ident = IDENT_func()->identifer;
         RESERVED_func(); // '='
         std::string ir_name = koopaIR->GetUniqueName(ret_ptr->ident);
-        KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
         AddName(ret_ptr->ident, ir_name, true);
-        koopaIR->AddAllocStatement(var);
-        ret_ptr->ConstInitVal = ConstInitVal_func(&var);
+        if (koopaIR->curScope == &koopaIR->global_scope)
+        {
+            ret_ptr->ConstInitVal = ConstInitVal_func();
+            KoopaVar var = koopaIR->NewVarWithInit(KoopaVarType::KOOPA_INT32, ir_name, ret_ptr->ConstInitVal->value.GetImm());
+        }
+        else
+        {
+            KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
+            koopaIR->AddAllocStatement(var);
+            ret_ptr->ConstInitVal = ConstInitVal_func(&var);
+        }
     }
     else
     {
@@ -113,6 +122,7 @@ SysyFrontend::ConstInitVal_Struct *SysyFrontend::ConstInitVal_func(KoopaVar *rec
     if (curToken.rule[0] == "ConstExp")
     {
         ret_ptr->ConstExp = ConstExp_func(receiver);
+        ret_ptr->value = ret_ptr->ConstExp->value;
     }
     else
     {
@@ -158,7 +168,8 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
 {
     ENTRY_GRAMMER(SysyFrontend::VarDef_Struct);
 
-    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void) {
+    if (Type->type == SysyFrontend::Type_Struct::Type::Type_Void)
+    {
         std::cerr << "Can't define void variables." << std::endl;
         exit(1);
     }
@@ -167,18 +178,36 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
     {
         ret_ptr->ident = IDENT_func()->identifer;
         std::string ir_name = koopaIR->GetUniqueName(ret_ptr->ident);
-        KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
         AddName(ret_ptr->ident, ir_name);
-        koopaIR->AddAllocStatement(var);
-        if (curToken.rule.size() > 1 && curToken.rule[1] == "\"=\"")
+        if (koopaIR->curScope == &koopaIR->global_scope)
         {
-            RESERVED_func(); // "="
-            ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Initialized;
-            ret_ptr->InitVal = InitVal_func(&var);
+            if (curToken.rule.size() > 1 && curToken.rule[1] == "\"=\"")
+            {
+                RESERVED_func(); // "="
+                ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Initialized;
+                ret_ptr->InitVal = InitVal_func();
+                KoopaVar var = koopaIR->NewVarWithInit(KoopaVarType::KOOPA_INT32, ir_name, ret_ptr->InitVal->value.GetImm());
+            }
+            else
+            {
+                ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Uninitialized;
+                KoopaVar var = koopaIR->NewVarWithInit(KoopaVarType::KOOPA_INT32, ir_name, std::string("zeroinit"));
+            }
         }
         else
         {
-            ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Uninitialized;
+            KoopaVar var = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
+            koopaIR->AddAllocStatement(var);
+            if (curToken.rule.size() > 1 && curToken.rule[1] == "\"=\"")
+            {
+                RESERVED_func(); // "="
+                ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Initialized;
+                ret_ptr->InitVal = InitVal_func(&var);
+            }
+            else
+            {
+                ret_ptr->type = SysyFrontend::VarDef_Struct::VarDefType::VarDefType_Uninitialized;
+            }
         }
     }
     else
@@ -198,6 +227,7 @@ SysyFrontend::InitVal_Struct *SysyFrontend::InitVal_func(KoopaVar *receiver)
     if (curToken.rule[0] == "Exp")
     {
         ret_ptr->Exp = Exp_func(receiver);
+        ret_ptr->value = ret_ptr->Exp->value;
     }
     else
     {

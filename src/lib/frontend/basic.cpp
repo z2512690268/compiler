@@ -45,14 +45,20 @@ SysyFrontend::CompUnits_Struct *SysyFrontend::CompUnits_func()
     return ret_ptr;
 }
 
-// CompUnit       ::= FuncDef;
+// CompUnit       ::= Decl | FuncDef;
 SysyFrontend::CompUnit_Struct *SysyFrontend::CompUnit_func()
 {
     ENTRY_GRAMMER(SysyFrontend::CompUnit_Struct);
 
     if (curToken.rule[0] == "FuncDef")
     {
-        ret_ptr->FuncDef = FuncDef_func();
+        ret_ptr->compUnitType = SysyFrontend::CompUnit_Struct::CompUnitType::CompUnitType_FuncDef;
+        ret_ptr->subStructPointer.FuncDef = FuncDef_func();
+    }
+    else if (curToken.rule[0] == "Decl")
+    {
+        ret_ptr->compUnitType = SysyFrontend::CompUnit_Struct::CompUnitType::CompUnitType_Decl;
+        ret_ptr->subStructPointer.Decl = Decl_func();
     }
     else
     {

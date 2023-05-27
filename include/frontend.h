@@ -43,10 +43,28 @@ struct SysyFrontend : public FrontendBase {
     //******************************************************************************
     // 接口函数
     SysyFrontend(std::string fname) : FrontendBase(fname){ }
+
+    void AddLibFunc(std::string name, bool isVoid) {
+        FuncDef_Struct* func = new FuncDef_Struct();
+        func->funcnameIDENT = new IDENT_Struct();
+        func->funcnameIDENT->identifer = "@" + name;
+        func->funcRetType = new Type_Struct();
+        func->funcRetType->type = isVoid ? Type_Struct::Type::Type_Void : Type_Struct::Type::Type_Int;
+        func_list.push_back(func);
+    }
+
     virtual KoopaIR* Process() {
         koopaIR = new KoopaIR();
         line_num = 1;
         Prepare();
+        AddLibFunc("getint", false);
+        AddLibFunc("getch", false);
+        AddLibFunc("getarray", false);
+        AddLibFunc("putint", true);
+        AddLibFunc("putch", true);
+        AddLibFunc("putarray", true);
+        AddLibFunc("starttime", true);
+        AddLibFunc("stoptime", true);
         CompUnits_func();
         return koopaIR;
     }
@@ -81,7 +99,7 @@ struct SysyFrontend : public FrontendBase {
 
     std::string GetIRName(const std::string source_name) {
         Name_Map* cur_map = name_map;
-        while (cur_map->parent != nullptr)
+        while (cur_map != nullptr)
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
                 return cur_map->map[source_name]->ir_name;
@@ -94,7 +112,7 @@ struct SysyFrontend : public FrontendBase {
 
     bool IsConst(const std::string source_name) {
         Name_Map* cur_map = name_map;
-        while (cur_map->parent != nullptr)
+        while (cur_map != nullptr)
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
                 return cur_map->map[source_name]->is_const;
@@ -107,7 +125,7 @@ struct SysyFrontend : public FrontendBase {
 
     bool IsParam(const std::string source_name) {
         Name_Map* cur_map = name_map;
-        while (cur_map->parent != nullptr)
+        while (cur_map != nullptr)
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
                 return cur_map->map[source_name]->is_func_param;
@@ -229,7 +247,15 @@ struct SysyFrontend : public FrontendBase {
     };
 
     struct CompUnit_Struct {
-        FuncDef_Struct* FuncDef;
+        enum CompUnitType {
+            CompUnitType_Decl,
+            CompUnitType_FuncDef,
+        } compUnitType;
+        
+        struct SubStructPointer {
+            Decl_Struct* Decl;
+            FuncDef_Struct* FuncDef;
+        } subStructPointer;        
     };
 
     struct FuncDef_Struct {
@@ -720,10 +746,10 @@ struct SysyFrontend : public FrontendBase {
     Decl_Struct* Decl_func();
     ConstDecl_Struct* ConstDecl_func();
     ConstDef_Struct* ConstDef_func(Type_Struct* Type);
-    ConstInitVal_Struct* ConstInitVal_func(KoopaVar* receiver);
+    ConstInitVal_Struct* ConstInitVal_func(KoopaVar* receiver = nullptr);
     VarDecl_Struct* VarDecl_func();
     VarDef_Struct* VarDef_func(Type_Struct* Type);
-    InitVal_Struct* InitVal_func(KoopaVar* receiver);
+    InitVal_Struct* InitVal_func(KoopaVar* receiver = nullptr);
     // 终结符
     DEC_INTEGER_Struct* DEC_INTEGER_func();
     HEX_INTEGER_Struct* HEX_INTEGER_func();

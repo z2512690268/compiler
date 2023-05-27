@@ -708,6 +708,16 @@ struct KoopaIR {
         return var;
     }
 
+    KoopaVar NewVarWithInit(KoopaVarType type, std::string name, KoopaInitList list)
+    {
+        KoopaVar var;
+        var.type = type;
+        var.varName = name;
+        var.initList = list;
+        curScope->symbolTable.AddNewVarSymbol(var.varName, var);
+        return var;
+    }
+
     KoopaVar NewTempVar(KoopaVarType type) {
         KoopaVar var;
         var.type = type;
