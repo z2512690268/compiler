@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -107,7 +108,15 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
                             std::cout << "Error: \\x must be followed by two hex digits" << std::endl;
                             return 1;
                         }
-                        new_regex += toupper(regex[i + 2]) + toupper(regex[i + 3]);
+                        new_regex += "\\x";
+                        if(std::islower(regex[i + 2]))
+                            new_regex += std::toupper(regex[i + 2]);
+                        else
+                            new_regex += regex[i + 2];
+                        if(std::islower(regex[i + 3]))
+                            new_regex += std::toupper(regex[i + 3]);
+                        else
+                            new_regex += regex[i + 3];
                         i += 2;
                         break;
                     default:
@@ -162,6 +171,8 @@ int lexer(std::istream& fin, std::istream& input, std::vector<std::pair<std::str
             }
             new_regex += "(";
             for(uint8_t ch = start; ch <= end; ch++) {
+                if(end == 0xFF && ch == 0xFF)
+                    break;
                 new_regex += TransferHex(ch);
                 if(ch != end)
                     new_regex += '|';

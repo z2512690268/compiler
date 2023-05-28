@@ -1,0 +1,9 @@
+Add Bracket:(( |\t|\n|\r)( |\t|\n|\r)*)
+Transfer:((\x20|\x09|\x0A|\x0D)(\x20|\x09|\x0A|\x0D)*)
+Expand:((\x20|\x09|\x0A|\x0D)(\x20|\x09|\x0A|\x0D)*)
+general match sign:((\x20|\x09|\x0A|\x0D)(\x20|\x09|\x0A|\x0D)*)
+End the regex
+
+Add Bracket:((//(\x00-\xFF)*))
+Transfer:((\x2F\x2F(`-Œ)*))
+[0m[1;38;2;255;0;0;1merror: [0mexecv(/root/compiler/lex/compiler/build/linux/x86_64/release/lex sysy maze_1 maze_1) failed(1)[0m

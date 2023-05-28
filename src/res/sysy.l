@@ -1,7 +1,7 @@
 #空白
 WhiteSpace:( |\t|\n|\r)( |\t|\n|\r)*
 #注释
-LineComment://.*
+LineComment:(//.*)|(/\*(((((\x20-\x29)|(\x2B-\x7E)).)|(\*((\x20-\x2E)|(\x30-\x7E))))|\n)*\*/)
 #语法字符串
 RESERVED:(const)|(int)|(void)|(if)|(while)|(break)|(continue)|(return)|(else)|(\+|\-|=|!|\*|/|%|>|<|<=|>=|==|!=|&&|\|\|)|(\{|\}|\[|\]|\(|\))|(,|;)
 #const , ; int [ ] = { } ( ) void if while break continue return "+" "-" "!" "*" "/" "%" ">" "<" "<=" ">=" "==" "!=" "&&" "||"
