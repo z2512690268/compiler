@@ -56,7 +56,15 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
                 ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
             }
             koopaIR->AddCallStatement(func_ident->identifer, params->koopa_params, ret_var);
-            ret_ptr->value.SetSymbol(ret_var.varName);
+            if (receiver != nullptr)
+            {
+                koopaIR->AddStoreStatement(*receiver, ret_var);
+                ret_ptr->value.SetSymbol(receiver->varName);
+            }
+            else
+            {
+                ret_ptr->value.SetSymbol(ret_var.varName);
+            }
         }
         else
         {
@@ -72,7 +80,15 @@ SysyFrontend::UnaryExp_Struct *SysyFrontend::UnaryExp_func(KoopaVar *receiver)
                 ret_var = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
             }
             koopaIR->AddCallStatement(func_ident->identifer, {}, ret_var);
-            ret_ptr->value.SetSymbol(ret_var.varName);
+            if (receiver != nullptr)
+            {
+                koopaIR->AddStoreStatement(*receiver, ret_var);
+                ret_ptr->value.SetSymbol(receiver->varName);
+            }
+            else
+            {
+                ret_ptr->value.SetSymbol(ret_var.varName);
+            }
         }
         RESERVED_func(); // ')'
     }
