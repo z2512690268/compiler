@@ -47,4 +47,4 @@ LAndExp       ::= EqExp | LAndExp "&&" EqExp;
 LOrExp        ::= LAndExp | LOrExp "||" LAndExp;
 ConstExp      ::= Exp;
 
-Integer     ::= DEC_INTEGER | HEX_INTEGER | OCT_INTEGER;
+Integer       ::= DEC_INTEGER | HEX_INTEGER | OCT_INTEGER;

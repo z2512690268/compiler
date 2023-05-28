@@ -451,6 +451,7 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
         RESERVED_func(); // =
         if (IsParam(ret_ptr->subStructPointer.Assign.LVal->ident))
         {
+            // TODO: 数组参数
             if (IsAssigned(ret_ptr->subStructPointer.Assign.LVal->ident))
             {
                 KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
@@ -467,8 +468,24 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
         }
         else
         {
-            KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
-            ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+            if (ret_ptr->subStructPointer.Assign.LVal->index.size() > 0)
+            {
+                LVal_Struct *lval = ret_ptr->subStructPointer.Assign.LVal;
+                KoopaVar ptr;
+                KoopaVarType type = koopaIR->GetVar(GetIRName(lval->ident)).type;
+                for (int i = 0; i < lval->index.size(); i++)
+                {
+                    ptr = koopaIR->NewTempVar(type);
+                    koopaIR->AddGetelementptrStatement(koopaIR->GetVar(GetIRName(lval->ident)), lval->index[i]->value, ptr);
+                    type = *type.ptrType.type.get();
+                }
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&ptr);
+            }
+            else
+            {
+                KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+            }
         }
         RESERVED_func(); //;
     }
