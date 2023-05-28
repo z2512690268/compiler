@@ -1,0 +1,52 @@
+	.data
+	.text
+	.global half
+half:
+	addi sp, sp, -32
+half_entry:
+#   %1 = alloc i32
+	addi t0, sp, 0
+	sw t0, 8(sp)
+#   store @x, %1
+	lw t0, 8(sp)
+	sw a0, 0(t0)
+#   %0 = load %1
+	lw t0, 8(sp)
+	lw t0, 0(t0)
+	sw t0, 12(sp)
+#   %2 = div %0, 2
+	lw t1, 12(sp)
+	li t2, 2
+	div t0, t1, t2
+	sw t0, 4(sp)
+#   ret %2
+	lw t0, 4(sp)
+	addi a0, t0, 0
+	addi sp, sp, 32
+	ret
+	.global f
+f:
+f_entry:
+#   ret	
+	ret
+	.global main
+main:
+	addi sp, sp, -16
+	sw ra, 12(sp)
+main_entry:
+#   %0 = call @f()
+	jal ra, f
+	mv t0, a0
+	sw t0, 4(sp)
+#   %1 = call @half(10)
+	li a0, 10
+	jal ra, half
+	mv t0, a0
+	sw t0, 0(sp)
+#   ret %1
+	lw t0, 0(sp)
+	addi a0, t0, 0
+	lw ra, 12(sp)
+	addi sp, sp, 16
+	ret
+

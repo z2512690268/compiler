@@ -882,24 +882,24 @@ struct RiscvGenerator : public KoopaGenerator {
                         case Statement::RETURN:
                             if(stmt->returnStmt.ret.GetSymbol() == "") {
                                 EmitExplain("  ret\t");
-                                break;
                             } else {
                                 EmitExplain("  ret " + stmt->returnStmt.ret.GetSymbol());
                             }
-                            if(stmt->returnStmt.ret.IsSymbol()) {
-                                std::string ret_map = GetRegMap(stmt->returnStmt.ret.GetSymbol());
-                                if(CheckMapReg_Reg(ret_map)) {
-                                    EmitITypeOperation("addi", "a0", ret_map, "0");
-                                } else if(CheckMapReg_Stack(ret_map)) {
-                                    std::string temp_reg = GetTempReg();
-                                    EmitLoad(temp_reg, ret_map);
-                                    EmitITypeOperation("addi", "a0", temp_reg, "0");
-                                    FreeTempReg();
+                            if(stmt->returnStmt.ret.GetSymbol() != "") {
+                                if(stmt->returnStmt.ret.IsSymbol()) {
+                                    std::string ret_map = GetRegMap(stmt->returnStmt.ret.GetSymbol());
+                                    if(CheckMapReg_Reg(ret_map)) {
+                                        EmitITypeOperation("addi", "a0", ret_map, "0");
+                                    } else if(CheckMapReg_Stack(ret_map)) {
+                                        std::string temp_reg = GetTempReg();
+                                        EmitLoad(temp_reg, ret_map);
+                                        EmitITypeOperation("addi", "a0", temp_reg, "0");
+                                        FreeTempReg();
+                                    }
+                                } else if(stmt->returnStmt.ret.IsImm()) {
+                                    EmitImm("a0", stmt->returnStmt.ret.GetSymbol());
                                 }
-                            } else if(stmt->returnStmt.ret.IsImm()) {
-                                EmitImm("a0", stmt->returnStmt.ret.GetSymbol());
                             }
-
                             if(ret_stack_count) {
                                 EmitLoad("ra", std::to_string(stack_pos - 4) + "(sp)");
                             }
