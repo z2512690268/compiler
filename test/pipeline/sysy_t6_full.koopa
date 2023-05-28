@@ -1,4 +1,12 @@
-fun @main(): i32 {
+decl @putarray(i32, *i32)
+decl @putch(i32)
+decl @stoptime()
+decl @putint(i32)
+decl @getarray(*i32) : i32
+decl @getch() : i32
+decl @starttime()
+decl @getint() : i32
+fun @main() : i32 {
 %entry:
   @x = alloc i32
   %0 = mul 233, 4

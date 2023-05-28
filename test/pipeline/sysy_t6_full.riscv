@@ -5,7 +5,7 @@ main:
 	addi sp, sp, -48
 main_entry:
 #   @x = alloc i32
-	addi t0, sp, 4
+	addi t0, sp, 0
 	sw t0, 36(sp)
 #   %0 = mul 233, 4
 	li t1, 233
@@ -17,7 +17,7 @@ main_entry:
 	lw t1, 32(sp)
 	sw t1, 0(t0)
 #   @y = alloc i32
-	addi t0, sp, 8
+	addi t0, sp, 4
 	sw t0, 28(sp)
 #   store 10, @y
 	lw t0, 28(sp)

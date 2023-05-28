@@ -1,4 +1,5 @@
 global @var = alloc i32, zeroinit
+decl @func(i32) : i32
 decl @putarray(i32, *i32)
 decl @putch(i32)
 decl @stoptime()

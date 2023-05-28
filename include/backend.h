@@ -243,12 +243,29 @@ struct RiscvGenerator : public KoopaGenerator {
 
     // I-Type : addi, andi, ori, xori, slli, srli, srai; lb, lh, lw, ld; jalr
     void EmitITypeOperation(std::string op, std::string rd, std::string rs1, std::string imm) {
-        code += "\t" + op + " " + rd + ", " + rs1 + ", " + imm + "\n";
+        int imm_num = std::stoi(imm);
+        if(imm_num < -2048 || imm_num > 2047) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, imm);
+            code += "\t" + op.substr(0, op.size() - 1) + " " + rd + ", " + rs1 + ", " + temp_reg + "\n";
+            FreeTempReg();
+        } else {
+            code += "\t" + op + " " + rd + ", " + rs1 + ", " + imm + "\n";
+        }
     }
 
     // S-Type : sw, sh, sb
     void EmitSTypeOperation(std::string op, std::string rs1, std::string rs2, std::string imm) {
-        code += "\t" + op + " " + rs1 + ", " + imm + "(" + rs2 + ")\n";
+        int imm_num = std::stoi(imm);
+        if(imm_num < -2048 || imm_num > 2047) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, imm);
+            EmitRTypeOperation("add", temp_reg, temp_reg, rs2);
+            code += "\t" + op + " " + rs1 + ", 0(" + temp_reg + ")\n";
+            FreeTempReg();
+        } else {
+            code += "\t" + op + " " + rs1 + ", " + imm + "(" + rs2 + ")\n";
+        }
     }
 
     // SB-Type : beq, bne, blt, bge, bltu, bgeu
@@ -349,6 +366,7 @@ struct RiscvGenerator : public KoopaGenerator {
         if(CheckMapReg_Reg(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitRTypeOperation(op, ret_reg, value1_map, value2_map);
         } else if(CheckMapReg_Reg(value1_map) && CheckMapReg_Imm(value2_map)) {
+            int imm = std::stoi(value2_map);
             EmitITypeOperation(op + "i", ret_reg, value1_map, value2_map);
         } else if(CheckMapReg_Imm(value1_map) && CheckMapReg_Reg(value2_map)) {
             EmitITypeOperation(op + "i", ret_reg, value2_map, value1_map);

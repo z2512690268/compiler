@@ -5,7 +5,7 @@ main:
 	addi sp, sp, -16
 main_entry:
 #   @x = alloc i32
-	addi t0, sp, 4
+	addi t0, sp, 0
 	sw t0, 12(sp)
 #   %0 = add 1, 1
 	li t1, 1

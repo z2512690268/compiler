@@ -5,14 +5,14 @@ main:
 	addi sp, sp, -48
 main_entry:
 #   @a = alloc i32
-	addi t0, sp, 4
+	addi t0, sp, 0
 	sw t0, 36(sp)
 #   store 1, @a
 	lw t0, 36(sp)
 	li t1, 1
 	sw t1, 0(t0)
 #   @b = alloc i32
-	addi t0, sp, 8
+	addi t0, sp, 4
 	sw t0, 32(sp)
 #   store 2, @b
 	lw t0, 32(sp)
@@ -22,7 +22,7 @@ main_entry:
 	jal x0, main_entry_0
 main_entry_0:
 #   @a_0 = alloc i32
-	addi t0, sp, 12
+	addi t0, sp, 8
 	sw t0, 28(sp)
 #   store 2, @a_0
 	lw t0, 28(sp)
