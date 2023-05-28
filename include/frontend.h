@@ -88,12 +88,14 @@ struct SysyFrontend : public FrontendBase {
         std::string ir_name;
         bool is_const;
         bool is_func_param;
+        bool assigned;
 
         Name_Struct(std::string source_name, std::string ir_name, bool is_const = false, bool is_func_param = false) {
             this->source_name = source_name;
             this->ir_name = ir_name;
             this->is_const = is_const;
             this->is_func_param = is_func_param;
+            this->assigned = false;
         }
     };
     
@@ -141,6 +143,34 @@ struct SysyFrontend : public FrontendBase {
         {
             if (cur_map->map.find(source_name) != cur_map->map.end()) {
                 return cur_map->map[source_name]->is_func_param;
+            }
+            cur_map = cur_map->parent;
+        }
+        std::cerr << "Error: " << source_name << " not found" << std::endl;
+        exit(1);
+    }
+
+    void ChangeName(const std::string source_name, const std::string ir_name) {
+        Name_Map* cur_map = name_map;
+        while (cur_map != nullptr)
+        {
+            if (cur_map->map.find(source_name) != cur_map->map.end()) {
+                cur_map->map[source_name]->ir_name = ir_name;
+                cur_map->map[source_name]->assigned = true;
+                return;
+            }
+            cur_map = cur_map->parent;
+        }
+        std::cerr << "Error: " << source_name << " not found" << std::endl;
+        exit(1);
+    }
+
+    bool IsAssigned(const std::string source_name) {
+        Name_Map* cur_map = name_map;
+        while (cur_map != nullptr)
+        {
+            if (cur_map->map.find(source_name) != cur_map->map.end()) {
+                return cur_map->map[source_name]->assigned;
             }
             cur_map = cur_map->parent;
         }

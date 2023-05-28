@@ -449,8 +449,27 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
             exit(1);
         }
         RESERVED_func(); // =
-        KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
-        ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+        if (IsParam(ret_ptr->subStructPointer.Assign.LVal->ident))
+        {
+            if (IsAssigned(ret_ptr->subStructPointer.Assign.LVal->ident))
+            {
+                KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+            }
+            else
+            {
+                std::string temp_name = koopaIR->GetUniqueName(ret_ptr->subStructPointer.Assign.LVal->ident);
+                KoopaVar receiver = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, temp_name);
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func();
+                koopaIR->AddAllocStatement(receiver);
+                koopaIR->AddStoreStatement(receiver, ret_ptr->subStructPointer.Assign.Exp->value);
+            }
+        }
+        else
+        {
+            KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+            ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+        }
         RESERVED_func(); //;
     }
     else if (curToken.rule[0] == "\"break\"")
