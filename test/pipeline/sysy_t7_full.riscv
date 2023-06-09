@@ -3,7 +3,7 @@
 	.global main
 main:
 	addi sp, sp, -48
-main_entry:
+main_t_entry:
 #   @a = alloc i32
 	addi t0, sp, 0
 	sw t0, 36(sp)
@@ -19,8 +19,8 @@ main_entry:
 	li t1, 2
 	sw t1, 0(t0)
 #   jump %entry_0
-	jal x0, main_entry_0
-main_entry_0:
+	jal x0, main_t_entry_0
+main_t_entry_0:
 #   @a_0 = alloc i32
 	addi t0, sp, 8
 	sw t0, 28(sp)
@@ -46,8 +46,8 @@ main_entry_0:
 	lw t1, 16(sp)
 	sw t1, 0(t0)
 #   jump %entry_1
-	jal x0, main_entry_1
-main_entry_1:
+	jal x0, main_t_entry_1
+main_t_entry_1:
 #   %3 = load @b
 	lw t0, 32(sp)
 	lw t0, 0(t0)

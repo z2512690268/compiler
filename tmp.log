@@ -1,0 +1,1282 @@
+sdadasdada
+sdadasdada
+CompUnits : CompUnit 
+	CompUnit : FuncDef 
+		FuncDef : Type IDENT "(" ")" Block 
+			Type : "int" 
+				"int" = "int"
+			IDENT = "main"
+			"(" = "("
+			")" = ")"
+			Block : "{" BlockItem BlockItem BlockItem BlockItem BlockItem BlockItem "}" 
+				"{" = "{"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+									IDENT = "a"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"]" = "]"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"]" = "]"
+								"=" = "="
+								InitVal : "{" "}" 
+									"{" = "{"
+									"}" = "}"
+							";" = ";"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+									IDENT = "b"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"]" = "]"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"]" = "]"
+								"=" = "="
+								InitVal : "{" InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "}" 
+									"{" = "{"
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "1"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "3"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "5"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "6"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "7"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "8"
+									"}" = "}"
+							";" = ";"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+									IDENT = "c"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"]" = "]"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"]" = "]"
+								"=" = "="
+								InitVal : "{" InitVal "," InitVal "," InitVal "," InitVal "}" 
+									"{" = "{"
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "1"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "2"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "3"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "4"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "5"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "6"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "7"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "8"
+										"}" = "}"
+									"}" = "}"
+							";" = ";"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+									IDENT = "d"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"]" = "]"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"]" = "]"
+								"=" = "="
+								InitVal : "{" InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "}" 
+									"{" = "{"
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "1"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"," = ","
+									InitVal : "{" InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "3"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "5"
+										"}" = "}"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "7"
+									"," = ","
+									InitVal : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "8"
+									"}" = "}"
+							";" = ";"
+				BlockItem : Decl 
+					Decl : VarDecl 
+						VarDecl : Type VarDef ";" 
+							Type : "int" 
+								"int" = "int"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+									IDENT = "e"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "4"
+									"]" = "]"
+									"[" = "["
+									ConstExp : Exp 
+										Exp : LOrExp 
+											LOrExp : LAndExp 
+												LAndExp : EqExp 
+													EqExp : RelExp 
+														RelExp : AddExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : Number 
+																			Number : Integer 
+																				Integer : DEC_INTEGER 
+																					DEC_INTEGER = "2"
+									"]" = "]"
+								"=" = "="
+								InitVal : "{" InitVal "," InitVal "," InitVal "," InitVal "}" 
+									"{" = "{"
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : LVal 
+																				LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																					IDENT = "d"
+																					"[" = "["
+																					Exp : LOrExp 
+																						LOrExp : LAndExp 
+																							LAndExp : EqExp 
+																								EqExp : RelExp 
+																									RelExp : AddExp 
+																										AddExp : MulExp 
+																											MulExp : UnaryExp 
+																												UnaryExp : PrimaryExp 
+																													PrimaryExp : Number 
+																														Number : Integer 
+																															Integer : DEC_INTEGER 
+																																DEC_INTEGER = "2"
+																					"]" = "]"
+																					"[" = "["
+																					Exp : LOrExp 
+																						LOrExp : LAndExp 
+																							LAndExp : EqExp 
+																								EqExp : RelExp 
+																									RelExp : AddExp 
+																										AddExp : MulExp 
+																											MulExp : UnaryExp 
+																												UnaryExp : PrimaryExp 
+																													PrimaryExp : Number 
+																														Number : Integer 
+																															Integer : DEC_INTEGER 
+																																DEC_INTEGER = "1"
+																					"]" = "]"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : LVal 
+																				LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																					IDENT = "c"
+																					"[" = "["
+																					Exp : LOrExp 
+																						LOrExp : LAndExp 
+																							LAndExp : EqExp 
+																								EqExp : RelExp 
+																									RelExp : AddExp 
+																										AddExp : MulExp 
+																											MulExp : UnaryExp 
+																												UnaryExp : PrimaryExp 
+																													PrimaryExp : Number 
+																														Number : Integer 
+																															Integer : DEC_INTEGER 
+																																DEC_INTEGER = "2"
+																					"]" = "]"
+																					"[" = "["
+																					Exp : LOrExp 
+																						LOrExp : LAndExp 
+																							LAndExp : EqExp 
+																								EqExp : RelExp 
+																									RelExp : AddExp 
+																										AddExp : MulExp 
+																											MulExp : UnaryExp 
+																												UnaryExp : PrimaryExp 
+																													PrimaryExp : Number 
+																														Number : Integer 
+																															Integer : DEC_INTEGER 
+																																DEC_INTEGER = "1"
+																					"]" = "]"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "3"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "4"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "5"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "6"
+										"}" = "}"
+									"," = ","
+									InitVal : "{" InitVal "," InitVal "}" 
+										"{" = "{"
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "7"
+										"," = ","
+										InitVal : Exp 
+											Exp : LOrExp 
+												LOrExp : LAndExp 
+													LAndExp : EqExp 
+														EqExp : RelExp 
+															RelExp : AddExp 
+																AddExp : MulExp 
+																	MulExp : UnaryExp 
+																		UnaryExp : PrimaryExp 
+																			PrimaryExp : Number 
+																				Number : Integer 
+																					Integer : DEC_INTEGER 
+																						DEC_INTEGER = "8"
+										"}" = "}"
+									"}" = "}"
+							";" = ";"
+				BlockItem : Stmt 
+					Stmt : NoIfStmt 
+						NoIfStmt : "return" Exp ";" 
+							"return" = "return"
+							Exp : LOrExp 
+								LOrExp : LAndExp 
+									LAndExp : EqExp 
+										EqExp : RelExp 
+											RelExp : AddExp 
+												AddExp : AddExp "+" MulExp 
+													AddExp : AddExp "+" MulExp 
+														AddExp : AddExp "+" MulExp 
+															AddExp : MulExp 
+																MulExp : UnaryExp 
+																	UnaryExp : PrimaryExp 
+																		PrimaryExp : LVal 
+																			LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																				IDENT = "e"
+																				"[" = "["
+																				Exp : LOrExp 
+																					LOrExp : LAndExp 
+																						LAndExp : EqExp 
+																							EqExp : RelExp 
+																								RelExp : AddExp 
+																									AddExp : MulExp 
+																										MulExp : UnaryExp 
+																											UnaryExp : PrimaryExp 
+																												PrimaryExp : Number 
+																													Number : Integer 
+																														Integer : DEC_INTEGER 
+																															DEC_INTEGER = "3"
+																				"]" = "]"
+																				"[" = "["
+																				Exp : LOrExp 
+																					LOrExp : LAndExp 
+																						LAndExp : EqExp 
+																							EqExp : RelExp 
+																								RelExp : AddExp 
+																									AddExp : MulExp 
+																										MulExp : UnaryExp 
+																											UnaryExp : PrimaryExp 
+																												PrimaryExp : Number 
+																													Number : Integer 
+																														Integer : DEC_INTEGER 
+																															DEC_INTEGER = "1"
+																				"]" = "]"
+															"+" = "+"
+															MulExp : UnaryExp 
+																UnaryExp : PrimaryExp 
+																	PrimaryExp : LVal 
+																		LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																			IDENT = "e"
+																			"[" = "["
+																			Exp : LOrExp 
+																				LOrExp : LAndExp 
+																					LAndExp : EqExp 
+																						EqExp : RelExp 
+																							RelExp : AddExp 
+																								AddExp : MulExp 
+																									MulExp : UnaryExp 
+																										UnaryExp : PrimaryExp 
+																											PrimaryExp : Number 
+																												Number : Integer 
+																													Integer : OCT_INTEGER 
+																														OCT_INTEGER = "0"
+																			"]" = "]"
+																			"[" = "["
+																			Exp : LOrExp 
+																				LOrExp : LAndExp 
+																					LAndExp : EqExp 
+																						EqExp : RelExp 
+																							RelExp : AddExp 
+																								AddExp : MulExp 
+																									MulExp : UnaryExp 
+																										UnaryExp : PrimaryExp 
+																											PrimaryExp : Number 
+																												Number : Integer 
+																													Integer : OCT_INTEGER 
+																														OCT_INTEGER = "0"
+																			"]" = "]"
+														"+" = "+"
+														MulExp : UnaryExp 
+															UnaryExp : PrimaryExp 
+																PrimaryExp : LVal 
+																	LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																		IDENT = "e"
+																		"[" = "["
+																		Exp : LOrExp 
+																			LOrExp : LAndExp 
+																				LAndExp : EqExp 
+																					EqExp : RelExp 
+																						RelExp : AddExp 
+																							AddExp : MulExp 
+																								MulExp : UnaryExp 
+																									UnaryExp : PrimaryExp 
+																										PrimaryExp : Number 
+																											Number : Integer 
+																												Integer : OCT_INTEGER 
+																													OCT_INTEGER = "0"
+																		"]" = "]"
+																		"[" = "["
+																		Exp : LOrExp 
+																			LOrExp : LAndExp 
+																				LAndExp : EqExp 
+																					EqExp : RelExp 
+																						RelExp : AddExp 
+																							AddExp : MulExp 
+																								MulExp : UnaryExp 
+																									UnaryExp : PrimaryExp 
+																										PrimaryExp : Number 
+																											Number : Integer 
+																												Integer : DEC_INTEGER 
+																													DEC_INTEGER = "1"
+																		"]" = "]"
+													"+" = "+"
+													MulExp : UnaryExp 
+														UnaryExp : PrimaryExp 
+															PrimaryExp : LVal 
+																LVal : IDENT "[" Exp "]" "[" Exp "]" 
+																	IDENT = "a"
+																	"[" = "["
+																	Exp : LOrExp 
+																		LOrExp : LAndExp 
+																			LAndExp : EqExp 
+																				EqExp : RelExp 
+																					RelExp : AddExp 
+																						AddExp : MulExp 
+																							MulExp : UnaryExp 
+																								UnaryExp : PrimaryExp 
+																									PrimaryExp : Number 
+																										Number : Integer 
+																											Integer : DEC_INTEGER 
+																												DEC_INTEGER = "2"
+																	"]" = "]"
+																	"[" = "["
+																	Exp : LOrExp 
+																		LOrExp : LAndExp 
+																			LAndExp : EqExp 
+																				EqExp : RelExp 
+																					RelExp : AddExp 
+																						AddExp : MulExp 
+																							MulExp : UnaryExp 
+																								UnaryExp : PrimaryExp 
+																									PrimaryExp : Number 
+																										Number : Integer 
+																											Integer : OCT_INTEGER 
+																												OCT_INTEGER = "0"
+																	"]" = "]"
+							";" = ";"
+				"}" = "}"
+
+Enter -- CompUnits : CompUnit 
+Enter -- CompUnit : FuncDef 
+Enter -- FuncDef : Type IDENT "(" ")" Block 
+Enter -- Type : "int" 
+Enter -- "int" = "int" 
+Exit -- "int"
+Exit -- Type
+Enter -- IDENT = "main" 
+Exit -- IDENT
+Enter -- "(" = "(" 
+Exit -- "("
+Enter -- ")" = ")" 
+Exit -- ")"
+Enter -- Block : "{" BlockItem BlockItem BlockItem BlockItem BlockItem BlockItem "}" 
+Enter -- "{" = "{" 
+Exit -- "{"
+Enter -- BlockItem : Decl 
+Enter -- Decl : VarDecl 
+Enter -- VarDecl : Type VarDef ";" 
+Enter -- Type : "int" 
+Enter -- "int" = "int" 
+Exit -- "int"
+Exit -- Type
+Enter -- VarDef : VarDefLeft "=" InitVal 
+Enter -- VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+Enter -- IDENT = "a" 
+Exit -- IDENT
+Enter -- "[" = "[" 
+Exit -- "["
+Enter -- ConstExp : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "4" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- ConstExp
+Enter -- "]" = "]" 
+Exit -- "]"
+Enter -- "[" = "[" 
+Exit -- "["
+Enter -- ConstExp : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "2" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- ConstExp
+Enter -- "]" = "]" 
+Exit -- "]"
+Exit -- VarDefLeft
+Enter -- "=" = "=" 
+Exit -- "="
+Enter -- InitVal : "{" "}" 
+Enter -- "{" = "{" 
+Exit -- "{"
+Enter -- "}" = "}" 
+Exit -- "}"
+Exit -- InitVal
+Exit -- VarDef
+Enter -- ";" = ";" 
+Exit -- ";"
+Exit -- VarDecl
+Exit -- Decl
+Exit -- BlockItem
+Enter -- BlockItem : Decl 
+Enter -- Decl : VarDecl 
+Enter -- VarDecl : Type VarDef ";" 
+Enter -- Type : "int" 
+Enter -- "int" = "int" 
+Exit -- "int"
+Exit -- Type
+Enter -- VarDef : VarDefLeft "=" InitVal 
+Enter -- VarDefLeft : IDENT "[" ConstExp "]" "[" ConstExp "]" 
+Enter -- IDENT = "b" 
+Exit -- IDENT
+Enter -- "[" = "[" 
+Exit -- "["
+Enter -- ConstExp : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "4" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- ConstExp
+Enter -- "]" = "]" 
+Exit -- "]"
+Enter -- "[" = "[" 
+Exit -- "["
+Enter -- ConstExp : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "2" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- ConstExp
+Enter -- "]" = "]" 
+Exit -- "]"
+Exit -- VarDefLeft
+Enter -- "=" = "=" 
+Exit -- "="
+Enter -- InitVal : "{" InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "," InitVal "}" 
+Enter -- "{" = "{" 
+Exit -- "{"
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "1" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "2" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "3" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "4" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "5" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "6" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "7" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "," = "," 
+Exit -- ","
+Enter -- InitVal : Exp 
+Enter -- Exp : LOrExp 
+Enter -- LOrExp : LAndExp 
+Enter -- LAndExp : EqExp 
+Enter -- EqExp : RelExp 
+Enter -- RelExp : AddExp 
+Enter -- AddExp : MulExp 
+Enter -- MulExp : UnaryExp 
+Enter -- UnaryExp : PrimaryExp 
+Enter -- PrimaryExp : Number 
+Enter -- Number : Integer 
+Enter -- Integer : DEC_INTEGER 
+Enter -- DEC_INTEGER = "8" 
+Exit -- DEC_INTEGER
+Exit -- Integer
+Exit -- Number
+Exit -- PrimaryExp
+Exit -- UnaryExp
+Exit -- MulExp
+Exit -- AddExp
+Exit -- RelExp
+Exit -- EqExp
+Exit -- LAndExp
+Exit -- LOrExp
+Exit -- Exp
+Exit -- InitVal
+Enter -- "}" = "}" 
+Exit -- "}"
+Enter -- ";" = ";" 

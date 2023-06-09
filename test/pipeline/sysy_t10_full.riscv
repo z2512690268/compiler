@@ -3,7 +3,7 @@
 	.global half
 half:
 	addi sp, sp, -32
-half_entry:
+half_t_entry:
 #   %1 = alloc i32
 	addi t0, sp, 0
 	sw t0, 12(sp)
@@ -26,14 +26,14 @@ half_entry:
 	ret
 	.global f
 f:
-f_entry:
+f_t_entry:
 #   ret	
 	ret
 	.global main
 main:
 	addi sp, sp, -16
 	sw ra, 12(sp)
-main_entry:
+main_t_entry:
 #   %0 = call @f()
 	jal ra, f
 	mv t0, a0

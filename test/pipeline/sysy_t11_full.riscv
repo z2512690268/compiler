@@ -6,7 +6,7 @@ var:
 	.global func
 func:
 	addi sp, sp, -32
-func_entry:
+func_t_entry:
 #   %0 = load @var
 	la t0, var
 	lw t0, 0(t0)
@@ -43,7 +43,7 @@ func_entry:
 main:
 	addi sp, sp, -48
 	sw ra, 44(sp)
-main_entry:
+main_t_entry:
 #   %0 = call @func(1)
 	li a0, 1
 	jal ra, func

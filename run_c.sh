@@ -48,5 +48,5 @@ int main() {
 }
 " >> ${file}
 
-clang -x c $file -L$CDE_LIBRARY_PATH/native -lsysy -o $exe
+clang -x c -Wno-implicit-function-declaration $file -L$CDE_LIBRARY_PATH/native -lsysy -o $exe 
 $exe
