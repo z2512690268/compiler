@@ -374,6 +374,8 @@ struct SysyFrontend : public FrontendBase
     {
         Type_Struct *Type;
         IDENT_Struct *IDENT;
+        
+        KoopaVarType koopa_type;
     };
 
     struct FuncRParams_Struct

@@ -451,19 +451,47 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
         RESERVED_func(); // =
         if (IsParam(ret_ptr->subStructPointer.Assign.LVal->ident))
         {
-            // TODO: 数组参数
-            if (IsAssigned(ret_ptr->subStructPointer.Assign.LVal->ident))
+            if (ret_ptr->subStructPointer.Assign.LVal->index.size() > 0)
             {
-                KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                // 获取值
+                KoopaVar receiver = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
                 ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+
+                // 值存入指针
+                KoopaVar param = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                KoopaVar ptr = koopaIR->NewTempVar(param.type);
+                koopaIR->AddAllocStatement(ptr);
+                koopaIR->AddStoreStatement(ptr, param);
+                KoopaVar source = koopaIR->NewTempVar(param.type);
+                koopaIR->AddLoadStatement(ptr, source);
+                KoopaVar dest = koopaIR->NewTempVar(*source.type.ptrType.type.get());
+                koopaIR->AddGetptrStatement(source, ret_ptr->subStructPointer.Assign.LVal->index[0]->value, dest);
+                if (ret_ptr->subStructPointer.Assign.LVal->index.size() > 1) {
+                    for (int i = 1; i < ret_ptr->subStructPointer.Assign.LVal->index.size(); i++) {
+                        source = dest;
+                        dest = koopaIR->NewTempVar(*dest.type.arrayType.type.get());
+                        koopaIR->AddGetelementptrStatement(source, ret_ptr->subStructPointer.Assign.LVal->index[i]->value, dest);
+                    }
+                }
+                koopaIR->AddStoreStatement(dest, receiver);
             }
             else
             {
-                std::string temp_name = koopaIR->GetUniqueName(ret_ptr->subStructPointer.Assign.LVal->ident);
-                KoopaVar receiver = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, temp_name);
-                ret_ptr->subStructPointer.Assign.Exp = Exp_func();
-                koopaIR->AddAllocStatement(receiver);
-                koopaIR->AddStoreStatement(receiver, ret_ptr->subStructPointer.Assign.Exp->value);
+                if (IsAssigned(ret_ptr->subStructPointer.Assign.LVal->ident))
+                {
+                    KoopaVar receiver = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                    ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+                }
+                else
+                {
+                    KoopaVar old_var = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
+                    std::string temp_name = koopaIR->GetUniqueName(ret_ptr->subStructPointer.Assign.LVal->ident);
+                    KoopaVar receiver = koopaIR->NewVar(old_var.type, temp_name);
+                    ret_ptr->subStructPointer.Assign.Exp = Exp_func();
+                    koopaIR->AddAllocStatement(receiver);
+                    koopaIR->AddStoreStatement(receiver, ret_ptr->subStructPointer.Assign.Exp->value);
+                    ChangeName(ret_ptr->subStructPointer.Assign.LVal->ident, temp_name);
+                }
             }
         }
         else
@@ -471,15 +499,16 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
             if (ret_ptr->subStructPointer.Assign.LVal->index.size() > 0)
             {
                 LVal_Struct *lval = ret_ptr->subStructPointer.Assign.LVal;
-                KoopaVar ptr;
-                KoopaVarType type = koopaIR->GetVar(GetIRName(lval->ident)).type;
+                KoopaVar dest = koopaIR->GetVar(GetIRName(lval->ident));
+                KoopaVarType type = dest.type;
                 for (int i = 0; i < lval->index.size(); i++)
                 {
-                    ptr = koopaIR->NewTempVar(type);
-                    koopaIR->AddGetelementptrStatement(koopaIR->GetVar(GetIRName(lval->ident)), lval->index[i]->value, ptr);
-                    type = *type.ptrType.type.get();
+                    KoopaVar source = dest;
+                    dest = koopaIR->NewTempVar(type);
+                    type = *type.arrayType.type.get();
+                    koopaIR->AddGetelementptrStatement(source, lval->index[i]->value, dest);
                 }
-                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&ptr);
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&dest);
             }
             else
             {

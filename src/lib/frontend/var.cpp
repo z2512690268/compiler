@@ -104,7 +104,7 @@ SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::Type_St
             {
                 ret_ptr->ConstInitVal = ConstInitVal_func();
                 KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                for (int i = 0; i < ret_ptr->Lengths.size(); i++)
+                for (int i = ret_ptr->Lengths.size() -1; i >= 0; i--)
                 {
                     type = KoopaVarType::ARRAY_Type(type, ret_ptr->Lengths[i]->value.GetImm());
                 }
@@ -113,7 +113,7 @@ SysyFrontend::ConstDef_Struct *SysyFrontend::ConstDef_func(SysyFrontend::Type_St
             else
             {
                 KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                for (int i = 0; i < ret_ptr->Lengths.size(); i++)
+                for (int i = ret_ptr->Lengths.size() -1; i >= 0; i--)
                 {
                     type = KoopaVarType::ARRAY_Type(type, ret_ptr->Lengths[i]->value.GetImm());
                 }
@@ -257,7 +257,7 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
                 {
                     AddName(ret_ptr->VarDefLeft->ident, ir_name, false, false, true);
                     KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                    for (int i = 0; i < ret_ptr->VarDefLeft->Lengths.size(); i++)
+                    for (int i = ret_ptr->VarDefLeft->Lengths.size() - 1; i >= 0; i--)
                     {
                         type = KoopaVarType::ARRAY_Type(type, ret_ptr->VarDefLeft->Lengths[i]->value.GetImm());
                     }
@@ -276,7 +276,7 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
                 {
                     AddName(ret_ptr->VarDefLeft->ident, ir_name, false, false, true);
                     KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                    for (int i = 0; i < ret_ptr->VarDefLeft->Lengths.size(); i++)
+                    for (int i = ret_ptr->VarDefLeft->Lengths.size() - 1; i >= 0; i--)
                     {
                         type = KoopaVarType::ARRAY_Type(type, ret_ptr->VarDefLeft->Lengths[i]->value.GetImm());
                     }
@@ -299,7 +299,7 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
                 {
                     AddName(ret_ptr->VarDefLeft->ident, ir_name, false, false, true);
                     KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                    for (int i = 0; i < ret_ptr->VarDefLeft->Lengths.size(); i++)
+                    for (int i = ret_ptr->VarDefLeft->Lengths.size() - 1; i >= 0; i--)
                     {
                         type = KoopaVarType::ARRAY_Type(type, ret_ptr->VarDefLeft->Lengths[i]->value.GetImm());
                     }
@@ -322,7 +322,7 @@ SysyFrontend::VarDef_Struct *SysyFrontend::VarDef_func(SysyFrontend::Type_Struct
                 {
                     AddName(ret_ptr->VarDefLeft->ident, ir_name, false, false, true);
                     KoopaVarType type = KoopaVarType::KOOPA_INT32;
-                    for (int i = 0; i < ret_ptr->VarDefLeft->Lengths.size(); i++)
+                    for (int i = ret_ptr->VarDefLeft->Lengths.size() - 1; i >= 0; i--)
                     {
                         type = KoopaVarType::ARRAY_Type(type, ret_ptr->VarDefLeft->Lengths[i]->value.GetImm());
                     }
