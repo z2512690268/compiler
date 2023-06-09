@@ -13,8 +13,9 @@ CompUnits : CompUnit
 						VarDecl : Type VarDef "," VarDef ";" 
 							Type : "int" 
 								"int" = "int"
-							VarDef : IDENT "=" InitVal 
-								IDENT = "i"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "i"
 								"=" = "="
 								InitVal : Exp 
 									Exp : LOrExp 
@@ -30,8 +31,9 @@ CompUnits : CompUnit
 																			Integer : OCT_INTEGER 
 																				OCT_INTEGER = "0"
 							"," = ","
-							VarDef : IDENT "=" InitVal 
-								IDENT = "pow"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "pow"
 								"=" = "="
 								InitVal : Exp 
 									Exp : LOrExp 

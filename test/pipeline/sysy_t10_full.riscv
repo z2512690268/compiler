@@ -6,20 +6,20 @@ half:
 half_entry:
 #   %1 = alloc i32
 	addi t0, sp, 0
-	sw t0, 8(sp)
-#   store @x, %1
-	lw t0, 8(sp)
-	sw a0, 0(t0)
-#   %0 = load %1
-	lw t0, 8(sp)
-	lw t0, 0(t0)
 	sw t0, 12(sp)
-#   %2 = div %0, 2
-	lw t1, 12(sp)
+#   store @x, %1
+	lw t0, 12(sp)
+	sw a0, 0(t0)
+#   %2 = load %1
+	lw t0, 12(sp)
+	lw t0, 0(t0)
+	sw t0, 8(sp)
+#   %3 = div %2, 2
+	lw t1, 8(sp)
 	li t2, 2
 	div t0, t1, t2
 	sw t0, 4(sp)
-#   ret %2
+#   ret %3
 	lw t0, 4(sp)
 	addi a0, t0, 0
 	addi sp, sp, 32

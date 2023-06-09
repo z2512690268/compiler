@@ -44,8 +44,9 @@ CompUnits : CompUnit
 						VarDecl : Type VarDef ";" 
 							Type : "int" 
 								"int" = "int"
-							VarDef : IDENT "=" InitVal 
-								IDENT = "y"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "y"
 								"=" = "="
 								InitVal : Exp 
 									Exp : LOrExp 

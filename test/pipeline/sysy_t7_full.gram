@@ -13,8 +13,9 @@ CompUnits : CompUnit
 						VarDecl : Type VarDef "," VarDef ";" 
 							Type : "int" 
 								"int" = "int"
-							VarDef : IDENT "=" InitVal 
-								IDENT = "a"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "a"
 								"=" = "="
 								InitVal : Exp 
 									Exp : LOrExp 
@@ -30,8 +31,9 @@ CompUnits : CompUnit
 																			Integer : DEC_INTEGER 
 																				DEC_INTEGER = "1"
 							"," = ","
-							VarDef : IDENT "=" InitVal 
-								IDENT = "b"
+							VarDef : VarDefLeft "=" InitVal 
+								VarDefLeft : IDENT 
+									IDENT = "b"
 								"=" = "="
 								InitVal : Exp 
 									Exp : LOrExp 
@@ -57,8 +59,9 @@ CompUnits : CompUnit
 										VarDecl : Type VarDef ";" 
 											Type : "int" 
 												"int" = "int"
-											VarDef : IDENT "=" InitVal 
-												IDENT = "a"
+											VarDef : VarDefLeft "=" InitVal 
+												VarDefLeft : IDENT 
+													IDENT = "a"
 												"=" = "="
 												InitVal : Exp 
 													Exp : LOrExp 

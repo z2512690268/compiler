@@ -1,0 +1,34 @@
+global @var = alloc i32, zeroinit
+decl @putarray(i32, *i32)
+decl @putch(i32)
+decl @stoptime()
+decl @putint(i32)
+decl @getarray(*i32) : i32
+decl @getch() : i32
+decl @starttime()
+decl @getint() : i32
+fun @func(@x : i32) : i32 {
+%entry:
+  %0 = load @var
+  %2 = alloc i32
+  store @x, %2
+  %3 = load %2
+  %4 = add %0, %3
+  store %4, @var
+  %5 = load @var
+  ret %5
+}
+fun @main() : i32 {
+%entry:
+  %0 = call @func(1)
+  call @putint(%0)
+  %2 = load @var
+  %3 = mul %2, 10
+  store %3, @var
+  %4 = call @func(2)
+  call @putint(%4)
+  call @putch(10)
+  %7 = load @var
+  ret %7
+}
+

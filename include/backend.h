@@ -309,9 +309,9 @@ struct RiscvGenerator : public KoopaGenerator {
 
     std::string GetLabel(std::string func_name, std::string label) {
         if(label[0] == '@') {
-            return label.substr(1);
+            return func_name.substr(1) + "_u_" + label.substr(1);
         } else {
-            return func_name.substr(1) + "_" + label.substr(1);
+            return func_name.substr(1) + "_t_" + label.substr(1);
         }
     }
 
@@ -335,6 +335,22 @@ struct RiscvGenerator : public KoopaGenerator {
         } else if(CheckMapReg_Gloabl(value_map)) {
             std::string temp_reg = GetTempReg();
             EmitLoadGlobl(temp_reg, value_map);
+            value_map = temp_reg;
+        }
+    }
+
+    void EmitUsedRegMap_All(std::string& value_map) {
+        if(CheckMapReg_Stack(value_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, value_map);
+            value_map = temp_reg;
+        } else if(CheckMapReg_Gloabl(value_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoadGlobl(temp_reg, value_map);
+            value_map = temp_reg;
+        } else if(CheckMapReg_Imm(value_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, value_map);
             value_map = temp_reg;
         }
     }
@@ -606,48 +622,87 @@ struct RiscvGenerator : public KoopaGenerator {
         }
     }
 
-    void EmitKoopaGetptrStmt(KoopaVar ret_var, KoopaVar varptr, int offset) {
+    void EmitKoopaGetptrStmt(KoopaVar ret_var, KoopaVar varptr, KoopaSymbol offset, int unit) {
         std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
-            EmitKoopaGetptrStmt_RetReg(ret_map, varptr, offset);
+            EmitKoopaGetptrStmt_RetReg(ret_map, varptr, offset, unit);
         } else if(CheckMapReg_Stack(ret_map)) {
             std::string temp_reg = GetTempReg();
-            EmitKoopaGetptrStmt_RetReg(temp_reg, varptr, offset);
+            EmitKoopaGetptrStmt_RetReg(temp_reg, varptr, offset, unit);
             EmitStore(temp_reg, ret_map);
             FreeTempReg();
         }
     }
 
-    void EmitKoopaGetptrStmt_RetReg(std::string ret_reg, KoopaVar varptr, int offset) {
+    void EmitKoopaGetptrStmt_RetReg(std::string ret_reg, KoopaVar varptr, KoopaSymbol offset, int unit) {
         std::string varptr_map = GetRegMap(varptr);
+        std::string offset_map = GetRegMap(offset);
 
         int temp_reg_count = GetTempRegCount();
         EmitUsedRegMap_IfStackVar(varptr_map);
 
-        EmitITypeOperation("addi", ret_reg, varptr_map, std::to_string(offset));
+        // offset * stmt->getptrStmt.varptr.type.ptrType.type->Size()
+        EmitUsedRegMap_IfStackVar(offset_map);
+        
+        if(CheckMapReg_Imm(offset_map)) {
+            int off_int = offset.GetImm() * unit;
+            if(off_int < -2048 || off_int > 2047) {
+                std::string temp_reg = GetTempReg();
+                EmitImm(temp_reg, std::to_string(off_int));
+                EmitRTypeOperation("add", ret_reg, varptr_map, temp_reg);
+                FreeTempReg();
+            } else {
+                EmitITypeOperation("addi", ret_reg, varptr_map, std::to_string(off_int));
+            }
+        } else {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, std::to_string(unit));
+            EmitRTypeOperation("mul", ret_reg, offset_map, temp_reg);
+            EmitRTypeOperation("add", ret_reg, ret_reg, varptr_map);
+        }
 
         ResetTempReg(temp_reg_count);
     }
 
-    void EmitKoopaGetelementptrStmt(KoopaVar ret_var, KoopaVar arrayptr, int offset) {
+    void EmitKoopaGetelementptrStmt(KoopaVar ret_var, KoopaVar arrayptr, KoopaSymbol offset, int unit) {
         std::string ret_map = GetRegMap(ret_var);
         if(CheckMapReg_Reg(ret_map)) {
-            EmitKoopaGetelementptrStmt_RetReg(ret_map, arrayptr, offset);
+            EmitKoopaGetelementptrStmt_RetReg(ret_map, arrayptr, offset, unit);
         } else if(CheckMapReg_Stack(ret_map)) {
             std::string temp_reg = GetTempReg();
-            EmitKoopaGetelementptrStmt_RetReg(temp_reg, arrayptr, offset);
+            EmitKoopaGetelementptrStmt_RetReg(temp_reg, arrayptr, offset, unit);
             EmitStore(temp_reg, ret_map);
             FreeTempReg();
         }
     }
 
-    void EmitKoopaGetelementptrStmt_RetReg(std::string ret_reg, KoopaVar arrayptr, int offset) {
+    void EmitKoopaGetelementptrStmt_RetReg(std::string ret_reg, KoopaVar arrayptr, KoopaSymbol offset, int unit) {
         std::string arrayptr_map = GetRegMap(arrayptr);
 
         int temp_reg_count = GetTempRegCount();
         EmitUsedRegMap_IfStackVar(arrayptr_map);
 
-        EmitITypeOperation("addi", ret_reg, arrayptr_map, std::to_string(offset));
+        // offset * stmt->getelementptrStmt.arrayptr.type.ptrType.type->Size()
+        std::string offset_map = GetRegMap(offset);
+        EmitUsedRegMap_IfStackVar(offset_map);
+
+        if(CheckMapReg_Imm(offset_map)) {
+            int off_int = offset.GetImm() * unit;
+            if(off_int < -2048 || off_int > 2047) {
+                std::string temp_reg = GetTempReg();
+                EmitImm(temp_reg, std::to_string(off_int));
+                EmitRTypeOperation("add", ret_reg, arrayptr_map, temp_reg);
+                FreeTempReg();
+            } else {
+                EmitITypeOperation("addi", ret_reg, arrayptr_map, std::to_string(off_int));
+            }
+        } else {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, std::to_string(unit));
+            EmitRTypeOperation("mul", ret_reg, offset_map, temp_reg);
+            EmitRTypeOperation("add", ret_reg, ret_reg, arrayptr_map);
+        }
+
 
         ResetTempReg(temp_reg_count);
     }
@@ -871,6 +926,7 @@ struct RiscvGenerator : public KoopaGenerator {
                 std::cout << "~~~" << item.first->allocStmt.var.varName << " " << item.second << std::endl;
             }
             for(auto& block : func->basicBlocks) {
+                std::cout << block->label << std::endl;
                 ++label_count;
                 label_map[block->label] = label_count;
                 EmitLabel(func->func_name, block->label);
@@ -880,6 +936,7 @@ struct RiscvGenerator : public KoopaGenerator {
                 std::string value2;
                 std::string ret_var;
                 for(auto& stmt : block->statements) {
+                    std::cout << stmt->type << std::endl;
                     std::string explain;
                     switch(stmt->type) {
                         case Statement::OPERATION:
@@ -956,6 +1013,7 @@ struct RiscvGenerator : public KoopaGenerator {
                             break;
                         case Statement::LOAD:
                             explain = "  " + stmt->loadStmt.var.varName + " = load " + stmt->loadStmt.addr.GetSymbol();
+                            std::cout << explain << std::endl;
                             EmitExplain(explain);
                             EmitKoopaLoadStmt(stmt->loadStmt.var.varName, stmt->loadStmt.addr.GetSymbol());
                             break;
@@ -976,12 +1034,12 @@ struct RiscvGenerator : public KoopaGenerator {
                             explain = "  " + stmt->getptrStmt.ret_var.varName + " = getptr " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol();
 
                             EmitExplain(explain);
-                            EmitKoopaGetptrStmt(stmt->getptrStmt.ret_var, stmt->getptrStmt.varptr, stmt->getptrStmt.offset.GetImm() * stmt->getptrStmt.varptr.type.ptrType.type->Size());
+                            EmitKoopaGetptrStmt(stmt->getptrStmt.ret_var, stmt->getptrStmt.varptr, stmt->getptrStmt.offset, stmt->getptrStmt.varptr.type.ptrType.type->Size());
                             break;
                         case Statement::GETELEMENTPTR:
                             explain = "  " + stmt->getelementptrStmt.arrayptr.varName + " = getelementptr" +  + ", " + stmt->getelementptrStmt.index.GetSymbol();
                             EmitExplain(explain);
-                            EmitKoopaGetelementptrStmt(stmt->getelementptrStmt.ret_var, stmt->getelementptrStmt.arrayptr, stmt->getelementptrStmt.index.GetImm() * stmt->getelementptrStmt.arrayptr.type.arrayType.type->Size());
+                            EmitKoopaGetelementptrStmt(stmt->getelementptrStmt.ret_var, stmt->getelementptrStmt.arrayptr, stmt->getelementptrStmt.index, stmt->getelementptrStmt.arrayptr.type.arrayType.type->Size());
                             break;
                     }
                 }

@@ -1,0 +1,131 @@
+	.data
+	.text
+	.global main
+main:
+	addi sp, sp, -144
+	sw ra, 140(sp)
+main_t_entry:
+#   @arr = alloc [i32, 10]
+	addi t0, sp, 0
+	sw t0, 68(sp)
+#   @n = alloc i32
+	addi t0, sp, 40
+	sw t0, 80(sp)
+#   @arr = getelementptr, 0
+	lw t1, 68(sp)
+	addi t0, t1, 0
+	sw t0, 92(sp)
+#   %1 = call @getarray(%0)
+	lw a0, 92(sp)
+	jal ra, getarray
+	mv t0, a0
+	sw t0, 100(sp)
+#   store %1, @n
+	lw t0, 80(sp)
+	lw t1, 100(sp)
+	sw t1, 0(t0)
+#   @i = alloc i32
+	addi t0, sp, 44
+	sw t0, 104(sp)
+#   store 0, @i
+	lw t0, 104(sp)
+	li t1, 0
+	sw t1, 0(t0)
+#   @sum = alloc i32
+	addi t0, sp, 48
+	sw t0, 120(sp)
+#   store 0, @sum
+	lw t0, 120(sp)
+	li t1, 0
+	sw t1, 0(t0)
+#   jump %while_entry
+	jal x0, main_t_while_entry
+main_t_while_entry:
+#   %2 = load @i
+	lw t0, 104(sp)
+	lw t0, 0(t0)
+	sw t0, 96(sp)
+#   %3 = load @n
+	lw t0, 80(sp)
+	lw t0, 0(t0)
+	sw t0, 72(sp)
+#   %4 = lt %2, %3
+	lw t1, 96(sp)
+	lw t2, 72(sp)
+	sub t0, t1, t2
+	slt t0, t0, x0
+	sw t0, 108(sp)
+#   br %4, %while_body, %while_end
+	lw t0, 108(sp)
+	bne t0, x0, main_t_while_body
+	jal x0, main_t_while_end
+main_t_while_body:
+#   jump %entry_0
+	jal x0, main_t_entry_0
+main_t_entry_0:
+#   %5 = load @sum
+	lw t0, 120(sp)
+	lw t0, 0(t0)
+	sw t0, 112(sp)
+#   %6 = load @i
+	lw t0, 104(sp)
+	lw t0, 0(t0)
+	sw t0, 116(sp)
+#   @arr = getelementptr, %6
+	lw t1, 68(sp)
+	lw t2, 116(sp)
+	li t3, 4
+	mul t0, t2, t3
+	add t0, t0, t1
+	sw t0, 84(sp)
+#   %7 = load %8
+	lw t0, 84(sp)
+	lw t0, 0(t0)
+	sw t0, 124(sp)
+#   %9 = add %5, %7
+	lw t1, 112(sp)
+	lw t2, 124(sp)
+	add t0, t1, t2
+	sw t0, 64(sp)
+#   store %9, @sum
+	lw t0, 120(sp)
+	lw t1, 64(sp)
+	sw t1, 0(t0)
+#   %10 = load @i
+	lw t0, 104(sp)
+	lw t0, 0(t0)
+	sw t0, 60(sp)
+#   %11 = add %10, 1
+	lw t1, 60(sp)
+	addi t0, t1, 1
+	sw t0, 76(sp)
+#   store %11, @i
+	lw t0, 104(sp)
+	lw t1, 76(sp)
+	sw t1, 0(t0)
+#   jump %entry_1
+	jal x0, main_t_entry_1
+main_t_entry_1:
+#   jump %while_entry
+	jal x0, main_t_while_entry
+main_t_while_end:
+#   %12 = load @sum
+	lw t0, 120(sp)
+	lw t0, 0(t0)
+	sw t0, 56(sp)
+#   %13 = call @putint(%12)
+	lw a0, 56(sp)
+	jal ra, putint
+	mv t0, a0
+	sw t0, 88(sp)
+#   %14 = call @putch(10)
+	li a0, 10
+	jal ra, putch
+	mv t0, a0
+	sw t0, 52(sp)
+#   ret 0
+	li a0, 0
+	lw ra, 140(sp)
+	addi sp, sp, 144
+	ret
+

@@ -28,6 +28,27 @@ obj=${buildpath}${obj}
 exe=${buildpath}${exe}
 
 sed -i 's/main/originmain/g' ${file}
+
+# decl @putch(i32)
+# decl @stoptime()
+# decl @putint(i32)
+# decl @starttime()
+# 如果原文件没有以上各行，则分别输出：
+if ! grep -q "decl @putch(i32)" ${file}; then
+  echo "decl @putch(i32)" >> ${file}
+fi
+if ! grep -q "decl @stoptime()" ${file}; then
+  echo "decl @stoptime()" >> ${file}
+fi
+if ! grep -q "decl @putint(i32)" ${file}; then
+  echo "decl @putint(i32)" >> ${file}
+fi
+if ! grep -q "decl @starttime()" ${file}; then
+  echo "decl @starttime()" >> ${file}
+fi
+
+
+
 echo "
 
 fun @main(): i32 {
