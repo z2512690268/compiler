@@ -390,12 +390,12 @@ SysyFrontend::InitVal_Struct *SysyFrontend::InitVal_func(KoopaVar *receiver)
         ret_ptr->type = SysyFrontend::InitVal_Struct::InitValType::InitValType_InitList;
         RESERVED_func(); // "{"
         ret_ptr->subStructPointer.InitList = new std::vector<SysyFrontend::InitVal_Struct *>();
-        if (curToken.rule[1] == "InitVal")
+        if (curToken.rule.size() > 1 && curToken.rule[1] == "InitVal")
         {
             ret_ptr->subStructPointer.InitList->push_back(InitVal_func());
             if (curToken.rule[2] == "\",\"")
             {
-                for (int i = 0; i < curToken.rule.size() - 1; i += 2)
+                for (int i = 2; i < curToken.rule.size() - 1; i += 2)
                 {
                     RESERVED_func(); // ","
                     ret_ptr->subStructPointer.InitList->push_back(InitVal_func());
