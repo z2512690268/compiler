@@ -266,7 +266,7 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
                         koopaIR->AddGetelementptrStatement(source, ret_ptr->subStructPointer.LVal->index[i]->value, dest);
                     }
                 }
-                koopaIR->AddStoreStatement(dest, ret_var);
+                koopaIR->AddLoadStatement(dest, ret_var);
             }
             else
             {

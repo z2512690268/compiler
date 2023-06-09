@@ -454,8 +454,7 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
             if (ret_ptr->subStructPointer.Assign.LVal->index.size() > 0)
             {
                 // 获取值
-                KoopaVar receiver = koopaIR->NewTempVar(KoopaVarType::KOOPA_INT32);
-                ret_ptr->subStructPointer.Assign.Exp = Exp_func(&receiver);
+                ret_ptr->subStructPointer.Assign.Exp = Exp_func();
 
                 // 值存入指针
                 KoopaVar param = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.Assign.LVal->ident));
@@ -473,7 +472,7 @@ SysyFrontend::NoIfStmt_Struct *SysyFrontend::NoIfStmt_func()
                         koopaIR->AddGetelementptrStatement(source, ret_ptr->subStructPointer.Assign.LVal->index[i]->value, dest);
                     }
                 }
-                koopaIR->AddStoreStatement(dest, receiver);
+                koopaIR->AddStoreStatement(dest, ret_ptr->subStructPointer.Assign.Exp->value);
             }
             else
             {
