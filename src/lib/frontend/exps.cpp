@@ -266,16 +266,31 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
                         koopaIR->AddGetelementptrStatement(source, ret_ptr->subStructPointer.LVal->index[i]->value, dest);
                     }
                 }
-                koopaIR->AddStoreStatement(dest, ret_var);
+                koopaIR->AddLoadStatement(dest, ret_var);
             }
             else
             {
-                KoopaVar old_var = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.LVal->ident));
-                KoopaVar temp_var = koopaIR->NewTempVar(old_var.type);
-                ret_var = koopaIR->NewTempVar(old_var.type);
-                koopaIR->AddAllocStatement(temp_var);
-                koopaIR->AddStoreStatement(temp_var, old_var);
-                koopaIR->AddLoadStatement(temp_var, ret_var);
+                if (IsAssigned(ret_ptr->subStructPointer.LVal->ident))
+                {
+                    if (IsArray(ret_ptr->subStructPointer.LVal->ident))
+                    {
+                        KoopaVar dest = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.LVal->ident));
+                        koopaIR->AddGetelementptrStatement(dest, 0, ret_var);
+                    }
+                    else
+                    {
+                        koopaIR->AddLoadStatement(GetIRName(ret_ptr->subStructPointer.LVal->ident), ret_var);
+                    }
+                }
+                else
+                {
+                    KoopaVar old_var = koopaIR->GetVar(GetIRName(ret_ptr->subStructPointer.LVal->ident));
+                    KoopaVar temp_var = koopaIR->NewTempVar(old_var.type);
+                    ret_var = koopaIR->NewTempVar(old_var.type);
+                    koopaIR->AddAllocStatement(temp_var);
+                    koopaIR->AddStoreStatement(temp_var, old_var);
+                    koopaIR->AddLoadStatement(temp_var, ret_var);
+                }
             }
         }
         else
