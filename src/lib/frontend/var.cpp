@@ -404,6 +404,7 @@ SysyFrontend::InitVal_Struct *SysyFrontend::InitVal_func(KoopaVar *receiver)
         }
         RESERVED_func(); // "}"
         KoopaInitList *initList = new KoopaInitList();
+        initList->initListType = KoopaInitList::KOOPA_INIT_AGGREGATE;
         for (int i = 0; i < ret_ptr->subStructPointer.InitList->size(); i++)
         {
             InitVal_Struct *initVal = ret_ptr->subStructPointer.InitList->at(i);
