@@ -680,8 +680,17 @@ struct RiscvGenerator : public KoopaGenerator {
         std::string arrayptr_map = GetRegMap(arrayptr);
 
         int temp_reg_count = GetTempRegCount();
-        EmitUsedRegMap_IfStackVar(arrayptr_map);
-
+        // EmitUsedRegMap_IfStackVar(arrayptr_map);
+        if(CheckMapReg_Stack(arrayptr_map)) {
+            std::string temp_reg = GetTempReg();
+            EmitLoad(temp_reg, arrayptr_map);
+            arrayptr_map = temp_reg;
+        } else if(CheckMapReg_Gloabl(arrayptr_map)) {
+            std::string temp_reg = GetTempReg();
+            // EmitLoadGlobl(, );
+            code += "\tla " + temp_reg + ", " + arrayptr_map.substr(1) + "\n";
+            arrayptr_map = temp_reg;
+        }
         // offset * stmt->getelementptrStmt.arrayptr.type.ptrType.type->Size()
         std::string offset_map = GetRegMap(offset);
         EmitUsedRegMap_IfStackVar(offset_map);
@@ -862,6 +871,7 @@ struct RiscvGenerator : public KoopaGenerator {
     }
 
     virtual std::string GenerateCode(KoopaIR* ir) {
+        std::cout << "AAAAA" << std::endl;
         global_scope = ir->global_scope;
         func_scopes = ir->func_scopes;
 
@@ -1050,7 +1060,7 @@ struct RiscvGenerator : public KoopaGenerator {
                             EmitKoopaGetptrStmt(stmt->getptrStmt.ret_var, stmt->getptrStmt.varptr, stmt->getptrStmt.offset, stmt->getptrStmt.varptr.type.ptrType.type->Size());
                             break;
                         case Statement::GETELEMENTPTR:
-                            explain = "  " + stmt->getelementptrStmt.arrayptr.varName + " = getelementptr" +  + ", " + stmt->getelementptrStmt.index.GetSymbol();
+                            explain = "  " + stmt->getelementptrStmt.ret_var.varName + " = getelemptr " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol();
                             EmitExplain(explain);
                             EmitKoopaGetelementptrStmt(stmt->getelementptrStmt.ret_var, stmt->getelementptrStmt.arrayptr, stmt->getelementptrStmt.index, stmt->getelementptrStmt.arrayptr.type.arrayType.type->Size());
                             break;

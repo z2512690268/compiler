@@ -4,7 +4,8 @@
 012 全局声明未支持
 015 全局声明未支持 -->
 020-021 数组未完全支持
-022-024 riscv segment fault
+<!-- 022-023 -->
+024 Koopa segment fault
 <!-- 028  koopa以外出错 -->
 <!-- 028全局声明未支持， -->
 <!-- 029 else后没分块 -->
@@ -21,8 +22,8 @@
 <!-- 54 递归未支持 -->
 <!-- 55 riscv出错 -->
 <!-- 56 递归未支持 -->
-58-64 丢变量语句
-65 riscv segment fault
+<!-- 58-64 丢变量语句 -->
+65 riscv Error
 66 丢变量语句
 67 riscv Error
 <!-- 68 -->
@@ -34,7 +35,8 @@
 <!-- 74 riscv出错 -->
 <!-- 75 莫名语法错误 -->
 <!-- 76 riscv Segmentation fault -->
-78-79 Riscv Segment Fault
+78 Riscv Segment Fault
+79 Riscv Error
 81 数组初始化未完全支持
 83-86 数组初始化未完全支持
 <!-- 88 全局声明未支持 -->
