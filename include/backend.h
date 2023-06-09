@@ -128,7 +128,7 @@ struct KoopaGenerator {
                             code += "  " + stmt->getptrStmt.ret_var.varName + " = getptr " + stmt->getptrStmt.varptr.varName + ", " + stmt->getptrStmt.offset.GetSymbol() + "\n";
                             break;
                         case Statement::GETELEMENTPTR:
-                            code += "  " + stmt->getelementptrStmt.arrayptr.varName + " = getelementptr" +  + ", " + stmt->getelementptrStmt.index.GetSymbol() + "\n";
+                            code += "  " + stmt->getelementptrStmt.ret_var.varName + " = getelemptr " + stmt->getelementptrStmt.arrayptr.varName + ", " + stmt->getelementptrStmt.index.GetSymbol() + "\n";
                             break;
                     }
                 }

@@ -84,9 +84,14 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
         FuncFParam_Struct *param = FuncFParam_func();
         ret_ptr->Params.push_back(param);
         std::string ir_name = koopaIR->GetUniqueName(param->IDENT->identifer);
-        KoopaVar koopa_param = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
+        KoopaVar koopa_param = koopaIR->NewVar(param->koopa_type, ir_name);
         ret_ptr->koopa_params.push_back(koopa_param);
-        AddName(param->IDENT->identifer, ir_name, false, true);
+        if (param->koopa_type == KoopaVarType::KOOPA_INT32)
+        {
+            AddName(param->IDENT->identifer, ir_name, false, true);
+        } else {
+            AddName(param->IDENT->identifer, ir_name, false, true, true);
+        }
         if (curToken.rule.size() > 1)
         {
             for (int i = 1; i < curToken.rule.size(); i += 2)
@@ -95,9 +100,14 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
                 param = FuncFParam_func();
                 ret_ptr->Params.push_back(param);
                 ir_name = koopaIR->GetUniqueName(param->IDENT->identifer);
-                koopa_param = koopaIR->NewVar(KoopaVarType::KOOPA_INT32, ir_name);
+                koopa_param = koopaIR->NewVar(param->koopa_type, ir_name);
                 ret_ptr->koopa_params.push_back(koopa_param);
-                AddName(param->IDENT->identifer, ir_name, false, true);
+                if (param->koopa_type == KoopaVarType::KOOPA_INT32)
+                {
+                    AddName(param->IDENT->identifer, ir_name, false, true);
+                } else {
+                    AddName(param->IDENT->identifer, ir_name, false, true, true);
+                }
             }
         }
     }
@@ -110,7 +120,7 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
     return ret_ptr;
 }
 
-// FuncFParam  ::= Type IDENT;
+// FuncFParam    ::= Type IDENT ["[" "]" {"[" ConstExp "]"}];
 SysyFrontend::FuncFParam_Struct *SysyFrontend::FuncFParam_func()
 {
     ENTRY_GRAMMER(SysyFrontend::FuncFParam_Struct);
@@ -119,6 +129,36 @@ SysyFrontend::FuncFParam_Struct *SysyFrontend::FuncFParam_func()
     {
         ret_ptr->Type = Type_func();
         ret_ptr->IDENT = IDENT_func();
+        if (curToken.rule.size() > 2 && curToken.rule[2] == "\"[\"")
+        {
+            RESERVED_func(); // "["
+            RESERVED_func(); // "]"
+            if (curToken.rule.size() > 4)
+            {
+                std::vector<int> size_list;
+                for (int i = 4; i < curToken.rule.size(); i += 3)
+                {
+                    RESERVED_func(); // "["
+                    ConstExp_Struct *exp = ConstExp_func();
+                    size_list.push_back(exp->value.GetImm());
+                    RESERVED_func(); // "]"
+                }
+                KoopaVarType type = KoopaVarType::KOOPA_INT32;
+                for (int i = size_list.size() - 1; i >= 0; i--)
+                {
+                    type = KoopaVarType::ARRAY_Type(type, size_list[i]);
+                }
+                ret_ptr->koopa_type = KoopaVarType::PTR_Type(type);
+            }
+            else
+            {
+                ret_ptr->koopa_type = KoopaVarType::PTR_Type(KoopaVarType::KOOPA_INT32);
+            }
+        }
+        else
+        {
+            ret_ptr->koopa_type = KoopaVarType::KOOPA_INT32;
+        }
     }
     else
     {
