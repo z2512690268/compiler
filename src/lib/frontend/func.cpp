@@ -29,6 +29,7 @@ SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
                                       ret_ptr->funcRetType->koopa_type);
         }
         RESERVED_func(); //)
+        func_list.push_back(ret_ptr);
         ret_ptr->Block = Block_func("%entry");
         if (ret_ptr->funcRetType->type == SysyFrontend::Type_Struct::Type::Type_Void)
         {
@@ -44,7 +45,6 @@ SysyFrontend::FuncDef_Struct *SysyFrontend::FuncDef_func()
         exit(1);
     }
     std::cout << "Exit -- " << curToken.token << std::endl;
-    func_list.push_back(ret_ptr);
     return ret_ptr;
 }
 
@@ -89,7 +89,9 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
         if (param->koopa_type == KoopaVarType::KOOPA_INT32)
         {
             AddName(param->IDENT->identifer, ir_name, false, true);
-        } else {
+        }
+        else
+        {
             AddName(param->IDENT->identifer, ir_name, false, true, true);
         }
         if (curToken.rule.size() > 1)
@@ -105,7 +107,9 @@ SysyFrontend::FuncFParams_Struct *SysyFrontend::FuncFParams_func()
                 if (param->koopa_type == KoopaVarType::KOOPA_INT32)
                 {
                     AddName(param->IDENT->identifer, ir_name, false, true);
-                } else {
+                }
+                else
+                {
                     AddName(param->IDENT->identifer, ir_name, false, true, true);
                 }
             }
