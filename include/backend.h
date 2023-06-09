@@ -334,7 +334,7 @@ struct RiscvGenerator : public KoopaGenerator {
             value_map = temp_reg;
         } else if(CheckMapReg_Gloabl(value_map)) {
             std::string temp_reg = GetTempReg();
-            EmitLoadGlobl(temp_reg, value_map);
+            EmitLoadGlobl(temp_reg, value_map.substr(1));
             value_map = temp_reg;
         }
     }
@@ -346,7 +346,7 @@ struct RiscvGenerator : public KoopaGenerator {
             value_map = temp_reg;
         } else if(CheckMapReg_Gloabl(value_map)) {
             std::string temp_reg = GetTempReg();
-            EmitLoadGlobl(temp_reg, value_map);
+            EmitLoadGlobl(temp_reg, value_map.substr(1));
             value_map = temp_reg;
         } else if(CheckMapReg_Imm(value_map)) {
             std::string temp_reg = GetTempReg();
@@ -765,28 +765,41 @@ struct RiscvGenerator : public KoopaGenerator {
         }
     }
 
+    int EmitKoopaStoreStmt_InitList_Recursive(int offset, std::string addr_stack, KoopaInitList init_list) {
+        int ret = 0;
+        if(init_list.GetInitListType() == "int") {
+            std::string temp_reg = GetTempReg();
+            EmitImm(temp_reg, std::to_string(init_list.initInt));
+            EmitStore(temp_reg, std::to_string(offset) + addr_stack);
+            FreeTempReg();
+            ret = 4;
+        } else if(init_list.GetInitListType() == "zeroinit") {
+            EmitStore("0", std::to_string(offset) + addr_stack);
+            ret = 4;
+        } else if(init_list.GetInitListType() == "aggregate") {
+            for(auto& list : init_list.initList) {
+                ret += EmitKoopaStoreStmt_InitList_Recursive(offset + ret, addr_stack, list);
+            }
+        }
+        return ret;
+    }
+
     void EmitKoopaStoreStmt_InitList(std::string addr, KoopaInitList init_list) {
         std::string addr_map = GetRegMap(addr);
 
         std::cout << init_list.GetInitString() << std::endl;
+        int temp_reg_count = GetTempRegCount();
+
         if(CheckMapReg_Stack(addr_map)) {
-            if(init_list.GetInitListType() == "int") {
-                std::string temp_reg = GetTempReg();
-                EmitImm(temp_reg, std::to_string(init_list.initInt));
-                EmitStore(temp_reg, addr_map);
-                FreeTempReg();
-            } else if(init_list.GetInitListType() == "zeroinit") {
-                EmitStore("0", addr_map);
-            } else if(init_list.GetInitListType() == "aggregate") {
-                // TODO: aggregate init
-                std::string temp_reg = GetTempReg();
-                // EmitKoopaAllocStmt_RetReg(temp_reg, init_list.GetInitListSize());
-                // EmitStore(temp_reg, addr_map);
-                FreeTempReg();
-            }
+            std::string addr_temp_reg = GetTempReg();
+            EmitLoad(addr_temp_reg, addr_map);
+            std::string addr_stack = "(" + addr_temp_reg + ")";
+            int cur_offset = 0;
+            EmitKoopaStoreStmt_InitList_Recursive(cur_offset, addr_stack, init_list);
         } else {
             std::cerr << "EmitKoopaStoreStmt: addr_map is not stack var" << std::endl;
         }
+        ResetTempReg(temp_reg_count);
     }
 
     void EmitGlobalInitList(KoopaInitList initList) {
