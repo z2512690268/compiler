@@ -299,7 +299,7 @@ SysyFrontend::PrimaryExp_Struct *SysyFrontend::PrimaryExp_func(KoopaVar *receive
             {
                 LVal_Struct *lval = ret_ptr->subStructPointer.LVal;
                 KoopaVar dest = koopaIR->GetVar(GetIRName(lval->ident));
-                KoopaVarType type = dest.type;
+                KoopaVarType type = *dest.type.arrayType.type.get();
                 for (int i = 0; i < lval->index.size(); i++)
                 {
                     KoopaVar source = dest;
